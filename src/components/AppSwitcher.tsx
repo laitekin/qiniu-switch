@@ -25,12 +25,14 @@ interface AppSwitcherProps {
   visibleApps?: VisibleApps;
 }
 
-const STORAGE_KEY = "cc-switch-last-app";
+const STORAGE_KEY = "qiniu-switch-last-app";
 
 const APP_ICON_NAME: Record<AppId, string> = {
   claude: "claude",
   "claude-desktop": "claude",
   codex: "openai",
+  workbuddy: "workbuddy",
+  antigravity: "antigravity",
   gemini: "gemini",
   grokbuild: "grok",
   opencode: "opencode",
@@ -44,6 +46,8 @@ const APP_DISPLAY_NAME: Record<AppId, string> = {
   claude: "Claude Code",
   "claude-desktop": "Claude Desktop",
   codex: "Codex",
+  workbuddy: "WorkBuddy",
+  antigravity: "Antigravity",
   gemini: "Gemini",
   grokbuild: "Grok Build",
   opencode: "OpenCode",

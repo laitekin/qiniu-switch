@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { McodeProviderForm } from "@/components/providers/forms/McodeProviderForm";
 import { mcodeProviderPresets } from "@/config/mcodeProviderPresets";
 import { piProviderPresets } from "@/config/piProviderPresets";
+import { workbuddyProviderPresets } from "@/config/workbuddyProviderPresets";
 
 vi.mock("@/components/JsonEditor", () => ({
   default: ({
@@ -42,6 +43,41 @@ const original = {
 };
 
 describe("McodeProviderForm", () => {
+  it("offers WorkBuddy presets and saves Qiniu models without changing the source preset", async () => {
+    const submit = vi.fn();
+    render(
+      <McodeProviderForm
+        appId="workbuddy"
+        submitLabel="Save"
+        onSubmit={submit}
+        onCancel={() => {}}
+      />,
+    );
+    const preset = screen
+      .getAllByRole("button")
+      .find(
+        (button) =>
+          button.textContent?.includes("Qiniu") ||
+          button.textContent?.includes("providerForm.presets.qiniu"),
+      );
+    expect(preset).toBeDefined();
+    fireEvent.click(preset!);
+    fireEvent.change(screen.getByLabelText("API Key"), {
+      target: { value: "sk-test-model-key" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(submit).toHaveBeenCalledOnce());
+    const saved = JSON.parse(submit.mock.calls[0][0].settingsConfig);
+    expect(saved.api).toBe("openai-completions");
+    expect(saved.vendor).toBe("Qiniu");
+    expect(saved.models["gpt-6-astra"].options.supportsImages).toBe(true);
+    expect(saved.options.apiKey).toBe("sk-test-model-key");
+    expect(
+      workbuddyProviderPresets.find((p) => p.name === "Qiniu")!.settingsConfig
+        .options.apiKey,
+    ).toBe("");
+    expect(screen.getByText("workbuddy.protocol")).toBeInTheDocument();
+  });
   it.each([true, false])(
     "edits native fields while preserving model options and unknown settings (explicit API: %s)",
     async (explicitApi) => {

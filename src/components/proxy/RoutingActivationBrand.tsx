@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { APP_WEBSITE } from "@/config/branding";
+import brandIcon from "@/assets/brand/qiniu-tray.svg?url";
 
 const BURST_LIFETIME_MS = 980;
 
@@ -85,7 +87,7 @@ export function RoutingActivationBrand({
       )}
 
       <motion.a
-        href="https://ccswitch.io"
+        href={APP_WEBSITE}
         target="_blank"
         rel="noreferrer"
         className={cn(
@@ -122,7 +124,13 @@ export function RoutingActivationBrand({
             : { duration: 0.28, ease: [0.22, 1, 0.36, 1] }
         }
       >
-        CC Switch
+        <img
+          src={brandIcon}
+          alt=""
+          aria-hidden="true"
+          className="inline-block h-6 w-6 mr-2 align-middle"
+        />
+        Qiniu Switch
       </motion.a>
 
       {showBurst && (

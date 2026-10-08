@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 // Generates the website download manifest (manifest.json) from a directory of
-// downloaded release assets. Consumed by ccswitch.io/download. The manifest
-// schema is mirrored in cc-switch-website/src/lib/downloads.ts — keep both in
-// sync when changing fields or classification rules.
+// downloaded release assets. Retained for a future Qiniu Switch release channel.
 //
 // Usage: node scripts/generate-download-manifest.mjs <assets-dir> <tag> <base-url> [output] [pub-date]
 

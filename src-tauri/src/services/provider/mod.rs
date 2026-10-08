@@ -153,7 +153,7 @@ mod tests {
             #[cfg(windows)]
             let original_local_app_data = env::var("LOCALAPPDATA").ok();
             let original_userprofile = env::var("USERPROFILE").ok();
-            let original_test_home = env::var("CC_SWITCH_TEST_HOME").ok();
+            let original_test_home = env::var("QINIU_SWITCH_TEST_HOME").ok();
             #[cfg(target_os = "linux")]
             let original_xdg_config_home = env::var_os("XDG_CONFIG_HOME");
 
@@ -161,7 +161,7 @@ mod tests {
             #[cfg(windows)]
             env::set_var("LOCALAPPDATA", dir.path().join("AppData").join("Local"));
             env::set_var("USERPROFILE", dir.path());
-            env::set_var("CC_SWITCH_TEST_HOME", dir.path());
+            env::set_var("QINIU_SWITCH_TEST_HOME", dir.path());
             // Claude Desktop Linux paths follow XDG_CONFIG_HOME; pin them under the temp home.
             #[cfg(target_os = "linux")]
             env::remove_var("XDG_CONFIG_HOME");
@@ -200,8 +200,8 @@ mod tests {
             }
 
             match &self.original_test_home {
-                Some(value) => env::set_var("CC_SWITCH_TEST_HOME", value),
-                None => env::remove_var("CC_SWITCH_TEST_HOME"),
+                Some(value) => env::set_var("QINIU_SWITCH_TEST_HOME", value),
+                None => env::remove_var("QINIU_SWITCH_TEST_HOME"),
             }
 
             #[cfg(target_os = "linux")]
@@ -250,9 +250,9 @@ mod tests {
     fn with_test_home<T>(test: impl FnOnce(&AppState, &Path) -> T) -> T {
         let _guard = test_guard();
         let temp = tempfile::tempdir().expect("tempdir");
-        let old_test_home = std::env::var_os("CC_SWITCH_TEST_HOME");
+        let old_test_home = std::env::var_os("QINIU_SWITCH_TEST_HOME");
         let old_home = std::env::var_os("HOME");
-        std::env::set_var("CC_SWITCH_TEST_HOME", temp.path());
+        std::env::set_var("QINIU_SWITCH_TEST_HOME", temp.path());
         std::env::set_var("HOME", temp.path());
 
         let db = Arc::new(Database::memory().expect("in-memory database"));
@@ -260,8 +260,8 @@ mod tests {
         let result = test(&state, temp.path());
 
         match old_test_home {
-            Some(value) => std::env::set_var("CC_SWITCH_TEST_HOME", value),
-            None => std::env::remove_var("CC_SWITCH_TEST_HOME"),
+            Some(value) => std::env::set_var("QINIU_SWITCH_TEST_HOME", value),
+            None => std::env::remove_var("QINIU_SWITCH_TEST_HOME"),
         }
         match old_home {
             Some(value) => std::env::set_var("HOME", value),
@@ -1681,7 +1681,7 @@ GEMINI_TIMEOUT_MS=30000
     #[test]
     fn extract_codex_common_config_strips_provider_fields_and_injected_artifacts() {
         // 顶层 experimental_bearer_token 模拟无活跃路由时的 fallback 注入；
-        // web_search = "disabled" 是 cc-switch 对黑名单网关注入的哨兵；
+        // web_search = "disabled" 是 qiniu-switch 对黑名单网关注入的哨兵；
         // 顶层 wire_api 模拟无 model_provider 时的 fallback 写法；
         // [mcp.servers] 是历史错误格式，sync_all_enabled 清不掉它。
         let config_toml = r#"model_provider = "azure"
@@ -1689,7 +1689,7 @@ model = "gpt-4"
 wire_api = "chat"
 disable_response_storage = true
 experimental_bearer_token = "sk-live-secret"
-model_catalog_json = "cc-switch-model-catalog.json"
+model_catalog_json = "qiniu-switch-model-catalog.json"
 web_search = "disabled"
 
 [model_providers.azure]
@@ -1751,7 +1751,7 @@ command = "legacy-cmd"
         );
         assert!(
             !extracted.contains("web_search"),
-            "should strip the cc-switch web_search disabled sentinel, got: {extracted}"
+            "should strip the qiniu-switch web_search disabled sentinel, got: {extracted}"
         );
         // 真正可共享的键保留
         assert!(
@@ -1824,7 +1824,7 @@ command = "legacy-cmd"
             &get_claude_settings_path(),
             &json!({
                 "env": {
-                    "ANTHROPIC_BASE_URL": "http://127.0.0.1:15721",
+                    "ANTHROPIC_BASE_URL": "http://127.0.0.1:15722",
                     "ANTHROPIC_API_KEY": "PROXY_MANAGED",
                     "ANTHROPIC_MODEL": "stale-model"
                 },
@@ -2131,7 +2131,7 @@ requires_openai_auth = true
         let profile: Value = read_json_file(&profile_path).expect("read desktop profile");
         assert_eq!(
             profile["inferenceGatewayBaseUrl"],
-            json!("http://127.0.0.1:15721/claude-desktop"),
+            json!("http://127.0.0.1:15722/claude-desktop"),
             "desktop profile should stay pointed at the local gateway during takeover"
         );
         assert_eq!(profile["inferenceGatewayAuthScheme"], json!("bearer"));
@@ -5041,6 +5041,26 @@ impl ProviderService {
             }
             return Ok(saved);
         }
+        if app_type == AppType::WorkBuddy {
+            let native = crate::workbuddy_config::get_providers()?;
+            let mut saved = state.db.get_all_providers("workbuddy")?;
+            for (id, config) in &native {
+                if !saved.contains_key(id) {
+                    saved.insert(
+                        id.clone(),
+                        Provider::with_id(id.clone(), "WorkBuddy".into(), config.clone(), None),
+                    );
+                }
+            }
+            for (id, provider) in &mut saved {
+                if let Some(config) = native.get(id) {
+                    provider.settings_config = config.clone();
+                }
+                Self::set_provider_live_config_managed(provider, native.contains_key(id));
+                state.db.save_provider("workbuddy", provider)?;
+            }
+            return Ok(saved);
+        }
         state.db.get_all_providers(app_type.as_str())
     }
 
@@ -5074,6 +5094,28 @@ impl ProviderService {
                 match previous {
                     Some(previous) => state.db.save_provider("mcode", &previous)?,
                     None => state.db.delete_provider("mcode", &provider.id)?,
+                }
+                return Err(error);
+            }
+        }
+        Ok(true)
+    }
+
+    fn save_workbuddy_provider(
+        state: &AppState,
+        provider: &Provider,
+        write_live: bool,
+    ) -> Result<bool, AppError> {
+        let previous = state.db.get_provider_by_id(&provider.id, "workbuddy")?;
+        state.db.save_provider("workbuddy", provider)?;
+        if write_live {
+            if let Err(error) = crate::workbuddy_config::set_provider(
+                &provider.id,
+                provider.settings_config.clone(),
+            ) {
+                match previous {
+                    Some(previous) => state.db.save_provider("workbuddy", &previous)?,
+                    None => state.db.delete_provider("workbuddy", &provider.id)?,
                 }
                 return Err(error);
             }
@@ -5167,6 +5209,9 @@ impl ProviderService {
 
         if app_type == AppType::Mcode {
             return Self::save_mcode_provider(state, &provider, add_to_live);
+        }
+        if app_type == AppType::WorkBuddy {
+            return Self::save_workbuddy_provider(state, &provider, add_to_live);
         }
 
         // Save to database
@@ -5365,6 +5410,9 @@ impl ProviderService {
 
             if app_type == AppType::Mcode {
                 return Self::save_mcode_provider(state, &provider, live_config_managed);
+            }
+            if app_type == AppType::WorkBuddy {
+                return Self::save_workbuddy_provider(state, &provider, live_config_managed);
             }
 
             // Save to database after live-config presence is resolved so parse errors
@@ -5611,6 +5659,7 @@ impl ProviderService {
                     AppType::OpenClaw => remove_openclaw_provider_from_live(id)?,
                     AppType::Hermes => remove_hermes_provider_from_live(id)?,
                     AppType::Mcode => crate::mcode_config::remove_provider(id)?,
+                    AppType::WorkBuddy => crate::workbuddy_config::remove_provider(id)?,
                     _ => {}
                 }
             }
@@ -5681,6 +5730,7 @@ impl ProviderService {
                 remove_hermes_provider_from_live(id)?;
             }
             AppType::Mcode => crate::mcode_config::remove_provider(id)?,
+            AppType::WorkBuddy => crate::workbuddy_config::remove_provider(id)?,
             _ => {
                 return Err(AppError::Message(format!(
                     "App {} does not support remove from live config",
@@ -5710,6 +5760,14 @@ impl ProviderService {
     ///    d. Write target provider config to live files
     ///    e. Sync MCP configuration
     pub fn switch(state: &AppState, app_type: AppType, id: &str) -> Result<SwitchResult, AppError> {
+        if id == "qiniu-default"
+            && state
+                .db
+                .get_provider_by_id(id, app_type.as_str())?
+                .is_some_and(|provider| provider.needs_qiniu_api_key())
+        {
+            return Err(AppError::Message("请先配置七牛云模型 API Key".into()));
+        }
         if app_type == AppType::Pi {
             return pi::enable(state, id);
         }
@@ -6050,6 +6108,7 @@ impl ProviderService {
                     AppType::OpenClaw => remove_openclaw_provider_from_live(&provider.id),
                     AppType::Hermes => remove_hermes_provider_from_live(&provider.id),
                     AppType::Mcode => crate::mcode_config::remove_provider(&provider.id),
+                    AppType::WorkBuddy => crate::workbuddy_config::remove_provider(&provider.id),
                     _ => Ok(()),
                 };
 
@@ -6204,7 +6263,7 @@ impl ProviderService {
     /// 不会误删其它供应商共享的内容。
     ///
     /// **作用域**：Claude + Codex。Codex 提取器（`extract_codex_common_config`）
-    /// 已剥离全部供应商专属与 cc-switch 注入内容：`model` / `model_provider` /
+    /// 已剥离全部供应商专属与 qiniu-switch 注入内容：`model` / `model_provider` /
     /// 顶层 `base_url` / 整张 `model_providers` 表（含端点与统一会话桶）、
     /// `mcp_servers`（SSOT 在 DB 表）、顶层 `experimental_bearer_token`
     /// fallback、`model_catalog_json`、`web_search = "disabled"` 哨兵——密钥与
@@ -6314,7 +6373,9 @@ impl ProviderService {
             AppType::OpenCode => Self::extract_opencode_common_config(&provider.settings_config),
             AppType::OpenClaw => Self::extract_openclaw_common_config(&provider.settings_config),
             AppType::Hermes => Ok(String::new()), // Hermes doesn't use common config snippets
-            AppType::Pi | AppType::Mcode => Ok(String::new()),
+            AppType::Pi | AppType::Mcode | AppType::WorkBuddy | AppType::Antigravity => {
+                Ok(String::new())
+            }
         }
     }
 
@@ -6332,7 +6393,9 @@ impl ProviderService {
             AppType::OpenCode => Self::extract_opencode_common_config(settings_config),
             AppType::OpenClaw => Self::extract_openclaw_common_config(settings_config),
             AppType::Hermes => Ok(String::new()), // Hermes doesn't use common config snippets
-            AppType::Pi | AppType::Mcode => Ok(String::new()),
+            AppType::Pi | AppType::Mcode | AppType::WorkBuddy | AppType::Antigravity => {
+                Ok(String::new())
+            }
         }
     }
 
@@ -6531,14 +6594,14 @@ impl ProviderService {
             }
         }
 
-        // cc-switch 写 live 时注入的产物一律不进共享片段：
+        // qiniu-switch 写 live 时注入的产物一律不进共享片段：
         // - experimental_bearer_token 正常写在 [model_providers.<id>] 内（上面
         //   整表已剥），但无活跃路由 / 内建保留 id / 路由表缺失三种 fallback
         //   会落在顶层——不剥等于把 API 密钥写进共享片段。
         root.remove("experimental_bearer_token");
         // - model_catalog_json 指向按供应商生成的 catalog 投影文件（DB 为 SSOT）。
         root.remove("model_catalog_json");
-        // - web_search 只剥 cc-switch 注入的 "disabled" 哨兵；用户手设的其它值
+        // - web_search 只剥 qiniu-switch 注入的 "disabled" 哨兵；用户手设的其它值
         //   属于可共享偏好，保留。
         if root
             .get(crate::codex_config::CODEX_WEB_SEARCH_FIELD)
@@ -7101,6 +7164,12 @@ impl ProviderService {
             AppType::Mcode => {
                 crate::mcode_config::validate_provider(&provider.id, &provider.settings_config)?
             }
+            AppType::WorkBuddy => {
+                crate::workbuddy_config::validate_provider(&provider.id, &provider.settings_config)?
+            }
+            AppType::Antigravity => {
+                crate::antigravity_config::validate_provider(&provider.settings_config)?
+            }
             AppType::Pi => {
                 crate::pi_config::validate_provider_node(&provider.id, &provider.settings_config)?;
             }
@@ -7254,7 +7323,7 @@ impl ProviderService {
 
                 Ok((api_key, base_url))
             }
-            AppType::Gemini => {
+            AppType::Gemini | AppType::Antigravity => {
                 use crate::gemini_config::json_to_env;
 
                 let env_map = json_to_env(&provider.settings_config)?;
@@ -7308,7 +7377,11 @@ impl ProviderService {
 
                 Ok((api_key, base_url))
             }
-            AppType::OpenClaw | AppType::Hermes | AppType::Pi | AppType::Mcode => {
+            AppType::OpenClaw
+            | AppType::Hermes
+            | AppType::Pi
+            | AppType::Mcode
+            | AppType::WorkBuddy => {
                 // These native formats use apiKey and baseUrl directly on the object.
                 let api_key = provider
                     .settings_config

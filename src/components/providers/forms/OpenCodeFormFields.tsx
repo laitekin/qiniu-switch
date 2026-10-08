@@ -156,6 +156,8 @@ function ModelOptionKeyInput({
 
 interface OpenCodeFormFieldsProps {
   apiFormats?: ReadonlyArray<{ value: string; label: string }>;
+  showApiFormat?: boolean;
+  showRequestOptions?: boolean;
   // NPM Package
   npm: string;
   onNpmChange: (value: string) => void;
@@ -188,6 +190,8 @@ interface OpenCodeFormFieldsProps {
 
 export function OpenCodeFormFields({
   apiFormats = opencodeNpmPackages,
+  showApiFormat = true,
+  showRequestOptions = true,
   npm,
   onNpmChange,
   apiKey,
@@ -526,35 +530,37 @@ export function OpenCodeFormFields({
   return (
     <>
       {/* NPM Package Selector */}
-      <div className="space-y-2">
-        <FormLabel htmlFor="opencode-npm">
-          {t("opencode.npmPackage", {
-            defaultValue: "接口格式",
-          })}
-        </FormLabel>
-        <Select value={npm} onValueChange={onNpmChange}>
-          <SelectTrigger id="opencode-npm">
-            <SelectValue
-              placeholder={t("opencode.selectPackage", {
-                defaultValue: "Select a package",
-              })}
-            />
-          </SelectTrigger>
-          <SelectContent>
-            {apiFormats.map((pkg) => (
-              <SelectItem key={pkg.value} value={pkg.value}>
-                {pkg.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground">
-          {t("opencode.npmPackageHint", {
-            defaultValue:
-              "Select the AI SDK package that matches your provider.",
-          })}
-        </p>
-      </div>
+      {showApiFormat && (
+        <div className="space-y-2">
+          <FormLabel htmlFor="opencode-npm">
+            {t("opencode.npmPackage", {
+              defaultValue: "接口格式",
+            })}
+          </FormLabel>
+          <Select value={npm} onValueChange={onNpmChange}>
+            <SelectTrigger id="opencode-npm">
+              <SelectValue
+                placeholder={t("opencode.selectPackage", {
+                  defaultValue: "Select a package",
+                })}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {apiFormats.map((pkg) => (
+                <SelectItem key={pkg.value} value={pkg.value}>
+                  {pkg.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            {t("opencode.npmPackageHint", {
+              defaultValue:
+                "Select the AI SDK package that matches your provider.",
+            })}
+          </p>
+        </div>
+      )}
 
       {/* API Key */}
       <ApiKeySection
@@ -586,93 +592,99 @@ export function OpenCodeFormFields({
         </p>
       </div>
 
-      <RequestHeadersEditor
-        headers={headers}
-        onHeadersChange={onHeadersChange}
-      />
+      {showRequestOptions && (
+        <>
+          <RequestHeadersEditor
+            headers={headers}
+            onHeadersChange={onHeadersChange}
+          />
 
-      {/* Extra Options Editor */}
-      <div className="space-y-2 border-l border-border-default pl-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="max-w-3xl space-y-1">
-            <FormLabel>
-              {t("opencode.extraOptions", {
-                defaultValue: "Extra SDK Options",
-              })}
-            </FormLabel>
-            <p className="text-xs text-muted-foreground">
-              {t("opencode.extraOptionsHint", {
-                defaultValue:
-                  "Advanced SDK options not exposed by the structured fields.",
-              })}
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleAddExtraOption}
-            className="h-7 gap-1"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            {t("opencode.addExtraOption", { defaultValue: "Add" })}
-          </Button>
-        </div>
-
-        <div className="max-w-3xl">
-          {Object.keys(extraOptions).length === 0 ? (
-            <p className="text-sm text-muted-foreground py-1">
-              {t("opencode.noExtraOptions", {
-                defaultValue: "No extra SDK options configured",
-              })}
-            </p>
-          ) : (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground px-1 mb-1">
-                <span className="flex-1">
-                  {t("opencode.extraOptionKey", { defaultValue: "Key" })}
-                </span>
-                <span className="flex-1">
-                  {t("opencode.extraOptionValue", { defaultValue: "Value" })}
-                </span>
-                <span className="w-9" />
+          {/* Extra Options Editor */}
+          <div className="space-y-2 border-l border-border-default pl-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="max-w-3xl space-y-1">
+                <FormLabel>
+                  {t("opencode.extraOptions", {
+                    defaultValue: "Extra SDK Options",
+                  })}
+                </FormLabel>
+                <p className="text-xs text-muted-foreground">
+                  {t("opencode.extraOptionsHint", {
+                    defaultValue:
+                      "Advanced SDK options not exposed by the structured fields.",
+                  })}
+                </p>
               </div>
-              {Object.entries(extraOptions).map(([key, value]) => (
-                <div key={key} className="flex items-center gap-2">
-                  <ExtraOptionKeyInput
-                    optionKey={key}
-                    onChange={(newKey) =>
-                      handleExtraOptionKeyChange(key, newKey)
-                    }
-                    placeholder={t("opencode.extraOptionKeyPlaceholder", {
-                      defaultValue: "timeout",
-                    })}
-                  />
-                  <ImeSafeInput
-                    value={value}
-                    onValueChange={(nextValue) =>
-                      handleExtraOptionValueChange(key, nextValue)
-                    }
-                    placeholder={t("opencode.extraOptionValuePlaceholder", {
-                      defaultValue: "600000",
-                    })}
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemoveExtraOption(key)}
-                    className="h-9 w-9 text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddExtraOption}
+                className="h-7 gap-1"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {t("opencode.addExtraOption", { defaultValue: "Add" })}
+              </Button>
             </div>
-          )}
-        </div>
-      </div>
+
+            <div className="max-w-3xl">
+              {Object.keys(extraOptions).length === 0 ? (
+                <p className="text-sm text-muted-foreground py-1">
+                  {t("opencode.noExtraOptions", {
+                    defaultValue: "No extra SDK options configured",
+                  })}
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground px-1 mb-1">
+                    <span className="flex-1">
+                      {t("opencode.extraOptionKey", { defaultValue: "Key" })}
+                    </span>
+                    <span className="flex-1">
+                      {t("opencode.extraOptionValue", {
+                        defaultValue: "Value",
+                      })}
+                    </span>
+                    <span className="w-9" />
+                  </div>
+                  {Object.entries(extraOptions).map(([key, value]) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <ExtraOptionKeyInput
+                        optionKey={key}
+                        onChange={(newKey) =>
+                          handleExtraOptionKeyChange(key, newKey)
+                        }
+                        placeholder={t("opencode.extraOptionKeyPlaceholder", {
+                          defaultValue: "timeout",
+                        })}
+                      />
+                      <ImeSafeInput
+                        value={value}
+                        onValueChange={(nextValue) =>
+                          handleExtraOptionValueChange(key, nextValue)
+                        }
+                        placeholder={t("opencode.extraOptionValuePlaceholder", {
+                          defaultValue: "600000",
+                        })}
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveExtraOption(key)}
+                        className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Models Editor */}
       <div className="space-y-3 border-l border-border-default pl-3">

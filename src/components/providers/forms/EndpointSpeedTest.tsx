@@ -20,6 +20,8 @@ const ENDPOINT_TIMEOUT_SECS: Record<AppId, number> = {
   hermes: 8,
   pi: 8,
   mcode: 8,
+  workbuddy: 8,
+  antigravity: 8,
 };
 
 interface TestResult {

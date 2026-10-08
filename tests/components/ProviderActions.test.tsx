@@ -52,6 +52,27 @@ function renderPiActions({
 }
 
 describe("ProviderActions Pi provider switching", () => {
+  it("opens configuration instead of enabling an empty Qiniu key, even in failover mode", async () => {
+    const onSwitch = vi.fn();
+    const onEdit = vi.fn();
+    const onToggleFailover = vi.fn();
+    render(
+      <ProviderActions
+        appId="claude-desktop"
+        isCurrent={false}
+        needsApiKey
+        isAutoFailoverEnabled
+        onToggleFailover={onToggleFailover}
+        onSwitch={onSwitch}
+        onEdit={onEdit}
+        onDelete={vi.fn()}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "配置 API Key" }));
+    expect(onEdit).toHaveBeenCalledOnce();
+    expect(onSwitch).not.toHaveBeenCalled();
+    expect(onToggleFailover).not.toHaveBeenCalled();
+  });
   it("omits duplication when the caller disallows it", () => {
     render(
       <ProviderActions

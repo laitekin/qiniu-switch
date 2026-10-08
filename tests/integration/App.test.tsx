@@ -9,6 +9,7 @@ import {
   setCurrentProviderId,
   setLiveProviderIds,
   setProviders,
+  setSettings,
 } from "../msw/state";
 import { emitTauriEvent } from "../msw/tauriMocks";
 import { server } from "../msw/server";
@@ -204,8 +205,32 @@ describe("App integration with MSW", () => {
     toastErrorMock.mockReset();
     skillsPanelMocks.checkUpdates.mockReset();
     skillsPanelMocks.openDiscovery.mockReset();
-    localStorage.removeItem("cc-switch-last-view");
-    localStorage.removeItem("cc-switch-last-app");
+    localStorage.removeItem("qiniu-switch-last-view");
+    localStorage.removeItem("qiniu-switch-last-app");
+  });
+
+  it("opens a separate model marketplace and returns to the existing client page", async () => {
+    setSettings({ firstRunNoticeConfirmed: true });
+    server.use(
+      http.post("http://tauri.local/qiniu_market_models", () =>
+        HttpResponse.json({
+          models: [],
+          sourceUrl: "https://www.qiniu.com/ai/models",
+          fetchedAt: "2026-09-29T00:00:00Z",
+        }),
+      ),
+    );
+    const { default: App } = await import("@/App");
+    renderApp(App);
+    await screen.findByTestId("provider-list");
+    fireEvent.click(screen.getByRole("button", { name: "模型广场" }));
+    expect(
+      await screen.findByPlaceholderText("搜索模型名称、能力…"),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("provider-list")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "客户端配置" }));
+    expect(await screen.findByTestId("provider-list")).toBeInTheDocument();
+    expect(screen.getByText("switch-codex")).toBeInTheDocument();
   });
 
   it("covers basic provider flows via real hooks", async () => {
@@ -391,7 +416,7 @@ describe("App integration with MSW", () => {
   });
 
   it("refreshes MiniMax Code provider membership after removing it from live config", async () => {
-    localStorage.setItem("cc-switch-last-app", "mcode");
+    localStorage.setItem("qiniu-switch-last-app", "mcode");
     let liveConfigManaged = true;
     let providerRequests = 0;
     server.use(
@@ -446,7 +471,7 @@ describe("App integration with MSW", () => {
   });
 
   it("warns without blocking when removing Pi's global default provider", async () => {
-    localStorage.setItem("cc-switch-last-app", "pi");
+    localStorage.setItem("qiniu-switch-last-app", "pi");
     setProviders("pi", {
       custom: {
         id: "custom",
@@ -539,7 +564,7 @@ describe("App integration with MSW", () => {
   });
 
   it("hosts the Skills check-update action in the App toolbar", async () => {
-    localStorage.setItem("cc-switch-last-view", "skills");
+    localStorage.setItem("qiniu-switch-last-view", "skills");
     const { default: App } = await import("@/App");
     renderApp(App);
 
@@ -556,7 +581,7 @@ describe("App integration with MSW", () => {
   });
 
   it("routes the Skills discover toolbar action through the panel guard", async () => {
-    localStorage.setItem("cc-switch-last-view", "skills");
+    localStorage.setItem("qiniu-switch-last-view", "skills");
     const { default: App } = await import("@/App");
     renderApp(App);
 

@@ -139,7 +139,9 @@ impl McpService {
                 mcp::sync_single_server_to_claude(&Default::default(), &server.id, &server.server)?;
             }
             AppType::ClaudeDesktop => {
-                log::debug!("Claude Desktop 3P profiles do not use CC Switch MCP sync, skipping");
+                log::debug!(
+                    "Claude Desktop 3P profiles do not use Qiniu Switch MCP sync, skipping"
+                );
             }
             AppType::Codex => {
                 // Codex uses TOML format, must use the correct function
@@ -172,6 +174,7 @@ impl McpService {
             }
             AppType::Mcode => mcp::mcode::sync(&server.id, Some(&server.server))?,
             AppType::Pi => {}
+            AppType::WorkBuddy | AppType::Antigravity => {}
         }
         Ok(())
     }
@@ -196,7 +199,9 @@ impl McpService {
         match app {
             AppType::Claude => mcp::remove_server_from_claude(id)?,
             AppType::ClaudeDesktop => {
-                log::debug!("Claude Desktop 3P profiles do not use CC Switch MCP sync, skipping");
+                log::debug!(
+                    "Claude Desktop 3P profiles do not use Qiniu Switch MCP sync, skipping"
+                );
             }
             AppType::Codex => mcp::remove_server_from_codex(id)?,
             AppType::Gemini => mcp::remove_server_from_gemini(id)?,
@@ -213,6 +218,7 @@ impl McpService {
             }
             AppType::Mcode => mcp::mcode::sync(id, None)?,
             AppType::Pi => {}
+            AppType::WorkBuddy | AppType::Antigravity => {}
         }
         Ok(())
     }

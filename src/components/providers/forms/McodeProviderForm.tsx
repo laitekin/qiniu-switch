@@ -10,6 +10,8 @@ import { useDarkMode } from "@/hooks/useDarkMode";
 import type { ProviderFormData } from "@/lib/schemas/provider";
 import type { OpenCodeModel, OpenCodeProviderOptions } from "@/types";
 import { mcodeProviderPresets } from "@/config/mcodeProviderPresets";
+import { workbuddyProviderPresets } from "@/config/workbuddyProviderPresets";
+import { deepClone } from "@/utils/deepClone";
 import { BasicFormFields } from "./BasicFormFields";
 import { OpenCodeFormFields } from "./OpenCodeFormFields";
 import { ProviderPresetSelector } from "./ProviderPresetSelector";
@@ -30,6 +32,9 @@ const PRESET_ENTRIES = mcodeProviderPresets.map((preset, index) => ({
   id: String(index),
   preset,
 }));
+const WORKBUDDY_PRESET_ENTRIES = workbuddyProviderPresets.map(
+  (preset, index) => ({ id: String(index), preset }),
+);
 const configSchema = z
   .object({
     api: z.string().optional(),
@@ -64,6 +69,7 @@ const configSchema = z
 type McodeConfig = z.infer<typeof configSchema>;
 
 export function McodeProviderForm({
+  appId,
   providerId,
   initialData,
   onSubmit,
@@ -75,20 +81,25 @@ export function McodeProviderForm({
 }: ProviderFormProps) {
   const { t } = useTranslation();
   const isDarkMode = useDarkMode();
+  const isWorkBuddy = appId === "workbuddy";
+  const emptyConfig: McodeConfig = {
+    kind: "custom",
+    enabled: true,
+    api: isWorkBuddy ? "openai-completions" : "anthropic-messages",
+    options: isWorkBuddy ? { baseURL: "https://api.qnaigc.com" } : {},
+    models: {},
+  };
   const [config, setConfig] = useState<McodeConfig>(
-    initialData?.settingsConfig ?? {
-      kind: "custom",
-      enabled: true,
-      api: "anthropic-messages",
-      options: {},
-      models: {},
-    },
+    initialData?.settingsConfig ?? emptyConfig,
   );
   const [jsonText, setJsonText] = useState(JSON.stringify(config, null, 2));
   const [jsonValid, setJsonValid] = useState(true);
   const [presetId, setPresetId] = useState("custom");
+  const availablePresets = isWorkBuddy
+    ? workbuddyProviderPresets
+    : mcodeProviderPresets;
   const preset =
-    presetId === "custom" ? undefined : mcodeProviderPresets[Number(presetId)];
+    presetId === "custom" ? undefined : availablePresets[Number(presetId)];
   const category = initialData?.category ?? preset?.category ?? "custom";
   const [extraOptions, setExtraOptions] = useState(
     toOpencodeExtraOptions(config.options ?? {}),
@@ -108,6 +119,7 @@ export function McodeProviderForm({
   const name = form.watch("name");
   const ready = Boolean(
     jsonValid &&
+      (!isWorkBuddy || config.api === "openai-completions") &&
       name.trim() &&
       config.options?.baseURL?.trim() &&
       config.options?.apiKey?.trim() &&
@@ -125,17 +137,10 @@ export function McodeProviderForm({
     update({ ...config, options: { ...config.options, ...next } });
   const choosePreset = (id: string) => {
     setPresetId(id);
-    const selected =
-      id === "custom" ? undefined : mcodeProviderPresets[Number(id)];
-    const next = selected?.settingsConfig ?? {
-      kind: "custom",
-      enabled: true,
-      api: "anthropic-messages",
-      options: {},
-      models: {},
-    };
+    const selected = id === "custom" ? undefined : availablePresets[Number(id)];
+    const next = deepClone(selected?.settingsConfig ?? emptyConfig);
     update(next);
-    setExtraOptions(toOpencodeExtraOptions(next.options));
+    setExtraOptions(toOpencodeExtraOptions(next.options ?? {}));
     form.reset({
       name: selected?.name ?? "",
       notes: "",
@@ -172,6 +177,12 @@ export function McodeProviderForm({
                 ...config,
                 name: identity.name.trim(),
                 kind: "custom",
+                ...(isWorkBuddy
+                  ? {
+                      vendor:
+                        preset?.name ?? config.vendor ?? identity.name.trim(),
+                    }
+                  : {}),
                 options,
               }),
             });
@@ -186,7 +197,9 @@ export function McodeProviderForm({
         {!initialData && (
           <ProviderPresetSelector
             selectedPresetId={presetId}
-            presetEntries={PRESET_ENTRIES}
+            presetEntries={
+              isWorkBuddy ? WORKBUDDY_PRESET_ENTRIES : PRESET_ENTRIES
+            }
             presetCategoryLabels={{
               custom: t("providerPreset.custom"),
               cn_official: t("providerForm.categoryCnOfficial"),
@@ -196,6 +209,15 @@ export function McodeProviderForm({
             onPresetChange={choosePreset}
             category={category}
           />
+        )}
+        {isWorkBuddy && (
+          <div className="rounded-lg border bg-muted/30 p-3 text-sm space-y-1">
+            <p className="font-medium">{t("workbuddy.protocol")}</p>
+            <p className="text-muted-foreground">{t("workbuddy.presetHint")}</p>
+            <p className="text-muted-foreground">
+              {t("workbuddy.credentialHint")}
+            </p>
+          </div>
         )}
         {error && (
           <p role="alert" className="text-sm text-destructive">
@@ -208,7 +230,18 @@ export function McodeProviderForm({
         >
           <BasicFormFields form={form} />
           <OpenCodeFormFields
-            apiFormats={API_FORMATS}
+            showApiFormat={!isWorkBuddy}
+            showRequestOptions={!isWorkBuddy}
+            apiFormats={
+              isWorkBuddy
+                ? [
+                    {
+                      value: "openai-completions",
+                      label: "OpenAI Chat Completions",
+                    },
+                  ]
+                : API_FORMATS
+            }
             npm={config.api ?? "anthropic-messages"}
             onNpmChange={(api) => update({ ...config, api })}
             apiKey={config.options?.apiKey ?? ""}
@@ -249,11 +282,21 @@ export function McodeProviderForm({
           />
         </fieldset>
         <div className="space-y-2">
-          <Label htmlFor="mcode-settings-config">
+          <Label
+            htmlFor={
+              isWorkBuddy
+                ? "workbuddy-settings-config"
+                : "mcode-settings-config"
+            }
+          >
             {t("provider.configJson")}
           </Label>
           <JsonEditor
-            id="mcode-settings-config"
+            id={
+              isWorkBuddy
+                ? "workbuddy-settings-config"
+                : "mcode-settings-config"
+            }
             ariaLabel={t("provider.configJson")}
             value={jsonText}
             darkMode={isDarkMode}

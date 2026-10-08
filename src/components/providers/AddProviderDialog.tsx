@@ -54,6 +54,8 @@ export function AddProviderDialog({
     appId !== "hermes" &&
     appId !== "pi" &&
     appId !== "mcode" &&
+    appId !== "workbuddy" &&
+    appId !== "antigravity" &&
     appId !== "grokbuild" &&
     appId !== "claude-desktop";
   const [activeTab, setActiveTab] = useState<"app-specific" | "universal">(

@@ -107,6 +107,16 @@ import ToolsPanel from "@/components/openclaw/ToolsPanel";
 import AgentsDefaultsPanel from "@/components/openclaw/AgentsDefaultsPanel";
 import OpenClawHealthBanner from "@/components/openclaw/OpenClawHealthBanner";
 import HermesMemoryPanel from "@/components/hermes/HermesMemoryPanel";
+import { WorkBuddyMemoryPanel } from "@/components/workbuddy/WorkBuddyMemoryPanel";
+import { ModelMarketplace } from "@/components/marketplace/ModelMarketplace";
+import {
+  MarketConnection,
+  type MarketConnectionStatus,
+} from "@/components/marketplace/MarketConnection";
+import { MarketChatDialog } from "@/components/marketplace/MarketChatDialog";
+import { MarketConfigureDialog } from "@/components/marketplace/MarketConfigureDialog";
+import { qiniuMarketApi, type QiniuMarketModel } from "@/lib/api/qiniuMarket";
+import type { FetchedModel } from "@/lib/api/model-fetch";
 import {
   APP_IDS,
   DEFAULT_VISIBLE_APPS,
@@ -115,6 +125,7 @@ import {
 
 type View =
   | "providers"
+  | "marketplace"
   | "settings"
   | "prompts"
   | "skills"
@@ -138,7 +149,7 @@ interface SyncStatusUpdatedPayload {
 const DEFAULT_DRAG_BAR_HEIGHT = isWindows() || isLinux() ? 0 : 28; // px
 const HEADER_HEIGHT = 64; // px
 
-const STORAGE_KEY = "cc-switch-last-app";
+const STORAGE_KEY = "qiniu-switch-last-app";
 const getInitialApp = (): AppId => {
   const saved = localStorage.getItem(STORAGE_KEY) as AppId | null;
   if (saved && APP_IDS.includes(saved)) {
@@ -147,9 +158,10 @@ const getInitialApp = (): AppId => {
   return "claude";
 };
 
-const VIEW_STORAGE_KEY = "cc-switch-last-view";
+const VIEW_STORAGE_KEY = "qiniu-switch-last-view";
 const VALID_VIEWS: View[] = [
   "providers",
+  "marketplace",
   "settings",
   "prompts",
   "skills",
@@ -181,10 +193,25 @@ function App() {
   const sharedFeatureApp: AppId =
     activeApp === "claude-desktop" ? "claude" : activeApp;
   const [currentView, setCurrentView] = useState<View>(getInitialView);
+  const [marketApiKey, setMarketApiKey] = useState("");
+  const [marketModels, setMarketModels] = useState<FetchedModel[]>([]);
+  const [marketConnectionStatus, setMarketConnectionStatus] =
+    useState<MarketConnectionStatus>("idle");
+  const [marketAction, setMarketAction] = useState<{
+    kind: "configure" | "chat";
+    model: QiniuMarketModel;
+    modelId: string;
+    initialApp: AppId;
+  } | null>(null);
+  const [marketVisibleApp, setMarketVisibleApp] = useState<AppId | null>(null);
+  const marketActionSequence = useRef(0);
+  const [marketActionLoading, setMarketActionLoading] = useState(false);
+  const lastPrimaryView = useRef<"providers" | "marketplace">("providers");
   const [skillsDiscoverySource, setSkillsDiscoverySource] =
     useState<SkillsPageSource>("repos");
   const [settingsDefaultTab, setSettingsDefaultTab] = useState("general");
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [workbuddyMemoryOpen, setWorkbuddyMemoryOpen] = useState(false);
   const [isWindowMaximized, setIsWindowMaximized] = useState(false);
   const [mcpManagementBusy, setMcpManagementBusy] = useState(false);
   const [skillsManagementBusy, setSkillsManagementBusy] = useState(false);
@@ -199,19 +226,32 @@ function App() {
 
   useEffect(() => {
     localStorage.setItem(VIEW_STORAGE_KEY, currentView);
+    if (currentView === "providers" || currentView === "marketplace")
+      lastPrimaryView.current = currentView;
+    if (currentView !== "marketplace") {
+      marketActionSequence.current += 1;
+      setMarketActionLoading(false);
+      setMarketConnectionStatus((status) =>
+        status === "loading" ? "idle" : status,
+      );
+    }
   }, [currentView]);
 
   const { data: settingsData } = useSettingsQuery();
   const useAppWindowControls =
     isLinux() && (settingsData?.useAppWindowControls ?? false);
   const dragBarHeight = useAppWindowControls ? 32 : DEFAULT_DRAG_BAR_HEIGHT;
-  const contentTopOffset = dragBarHeight + HEADER_HEIGHT;
+  const isPrimaryView =
+    currentView === "providers" || currentView === "marketplace";
+  const headerHeight = HEADER_HEIGHT + (currentView === "providers" ? 56 : 0);
+  const contentTopOffset = dragBarHeight + headerHeight;
   const visibleApps = useMemo<VisibleApps>(
     () => ({
       ...DEFAULT_VISIBLE_APPS,
       ...settingsData?.visibleApps,
+      ...(marketVisibleApp ? { [marketVisibleApp]: true } : {}),
     }),
-    [settingsData?.visibleApps],
+    [settingsData?.visibleApps, marketVisibleApp],
   );
 
   const getFirstVisibleApp = (): AppId => {
@@ -226,7 +266,10 @@ function App() {
 
   // Fallback from sessions view when switching to an app without session support
   useEffect(() => {
-    if (currentView === "mcp" && sharedFeatureApp === "pi") {
+    if (
+      currentView === "mcp" &&
+      (sharedFeatureApp === "pi" || sharedFeatureApp === "antigravity")
+    ) {
       setCurrentView("providers");
       return;
     }
@@ -324,7 +367,10 @@ function App() {
       currentView === "openclawAgents");
   const { data: openclawHealthWarnings = [] } =
     useOpenClawHealth(isOpenClawView);
-  const hasSkillsSupport = sharedFeatureApp !== "openclaw";
+  const hasSkillsSupport =
+    sharedFeatureApp !== "openclaw" &&
+    sharedFeatureApp !== "workbuddy" &&
+    sharedFeatureApp !== "antigravity";
   const hasSessionSupport =
     sharedFeatureApp === "claude" ||
     sharedFeatureApp === "codex" ||
@@ -335,7 +381,10 @@ function App() {
     sharedFeatureApp === "hermes" ||
     sharedFeatureApp === "pi" ||
     sharedFeatureApp === "mcode";
-  const hasMcpSupport = sharedFeatureApp !== "pi";
+  const hasMcpSupport =
+    sharedFeatureApp !== "pi" &&
+    sharedFeatureApp !== "workbuddy" &&
+    sharedFeatureApp !== "antigravity";
 
   const {
     addProvider,
@@ -634,7 +683,12 @@ function App() {
   useEffect(() => {
     const checkEnvOnSwitch = async () => {
       try {
-        if (activeApp === "mcode") return;
+        if (
+          activeApp === "mcode" ||
+          activeApp === "workbuddy" ||
+          activeApp === "antigravity"
+        )
+          return;
         const conflicts = await checkEnvConflicts(activeApp);
 
         if (conflicts.length > 0) {
@@ -777,9 +831,9 @@ function App() {
         await queryClient.invalidateQueries({
           queryKey: hermesKeys.liveProviderIds,
         });
-      } else if (activeApp === "mcode") {
+      } else if (activeApp === "mcode" || activeApp === "workbuddy") {
         await queryClient.invalidateQueries({
-          queryKey: ["providers", "mcode"],
+          queryKey: ["providers", activeApp],
         });
       }
       toast.success(
@@ -883,6 +937,9 @@ function App() {
         provider.id,
         existingKeys,
       );
+      duplicatedProvider.addToLive = false;
+    }
+    if (activeApp === "workbuddy") {
       duplicatedProvider.addToLive = false;
     }
 
@@ -1027,14 +1084,142 @@ function App() {
     setCurrentView("skillsDiscovery");
   };
 
+  const handleMarketAction = async (
+    kind: "configure" | "chat",
+    model: QiniuMarketModel,
+  ) => {
+    if (marketConnectionStatus !== "ready") {
+      toast.error(
+        t("marketplace.connectFirst", {
+          defaultValue: "请先连接七牛模型 API Key",
+        }),
+      );
+      document
+        .getElementById("market-connection")
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    const current = ++marketActionSequence.current;
+    setMarketActionLoading(true);
+    try {
+      // Public catalog and detail protocol metadata can differ. Recheck the
+      // selected model's authoritative detail before constructing client config.
+      const details = await queryClient.fetchQuery({
+        queryKey: ["qiniu", "model-market-detail", model.id],
+        queryFn: () => qiniuMarketApi.detail(model.id),
+        staleTime: 60_000,
+      });
+      if (current !== marketActionSequence.current) return;
+      if (
+        !details.available ||
+        details.retired ||
+        (kind === "chat" && !details.supportsChat)
+      ) {
+        throw new Error("unsupported");
+      }
+      const ids = new Set(marketModels.map((item) => item.id));
+      const modelId = [details.id, ...details.apiIds, ...model.apiIds].find(
+        (id) => ids.has(id),
+      );
+      if (!modelId) {
+        toast.error(
+          t("marketplace.modelNotReturned", {
+            defaultValue: "当前 Key 的模型列表未返回此模型",
+          }),
+        );
+        return;
+      }
+      setMarketAction({ kind, model: details, modelId, initialApp: activeApp });
+    } catch {
+      if (current !== marketActionSequence.current) return;
+      toast.error(
+        t("marketplace.actionUnavailable", {
+          defaultValue: "暂时无法使用此模型，请刷新模型详情后重试",
+        }),
+      );
+    } finally {
+      if (current === marketActionSequence.current)
+        setMarketActionLoading(false);
+    }
+  };
+
+  const handleMarketConfigured = async (app: AppId, providerId: string) => {
+    setMarketAction(null);
+    await queryClient.invalidateQueries({ queryKey: ["providers", app] });
+    if (app === "pi") await invalidatePiProviderCaches(queryClient);
+    setMarketVisibleApp(app);
+    setActiveApp(app);
+    setCurrentView("providers");
+    // The existing provider list owns scrolling and rendering; mark the newly
+    // added row without changing its card/actions behavior.
+    window.setTimeout(() => {
+      const card = Array.from(
+        document.querySelectorAll<HTMLElement>("[data-provider-id]"),
+      ).find((element) => element.dataset.providerId === providerId);
+      card?.scrollIntoView({ behavior: "smooth", block: "center" });
+      card?.animate?.(
+        [
+          { outline: "3px solid #60a5fa" },
+          { outline: "3px solid transparent" },
+        ],
+        { duration: 2500 },
+      );
+    }, 250);
+  };
+
   const renderContent = () => {
     const content = (() => {
       switch (currentView) {
+        case "marketplace":
+          return (
+            <ModelMarketplace
+              onConfigure={(model) =>
+                void handleMarketAction("configure", model)
+              }
+              onChat={(model) => void handleMarketAction("chat", model)}
+              connection={
+                <div id="market-connection">
+                  <MarketConnection
+                    apiKey={marketApiKey}
+                    initialModels={marketModels}
+                    initialStatus={marketConnectionStatus}
+                    onApiKeyChange={(key) => {
+                      marketActionSequence.current += 1;
+                      setMarketActionLoading(false);
+                      setMarketApiKey(key);
+                      setMarketModels([]);
+                      setMarketConnectionStatus("idle");
+                      setMarketAction(null);
+                    }}
+                    onModelsChange={setMarketModels}
+                    onStatusChange={(status) => {
+                      setMarketConnectionStatus(status);
+                      if (status !== "ready") {
+                        marketActionSequence.current += 1;
+                        setMarketActionLoading(false);
+                      }
+                    }}
+                  />
+                  {marketActionLoading && (
+                    <p
+                      role="status"
+                      className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"
+                    >
+                      <Loader2 size={14} className="animate-spin" />
+                      {t("marketplace.checkingModel", {
+                        defaultValue: "正在核对模型信息…",
+                      })}
+                    </p>
+                  )}
+                </div>
+              }
+            />
+          );
         case "settings":
           return (
             <SettingsPage
               open={true}
-              onOpenChange={() => setCurrentView("providers")}
+              onOpenChange={() => setCurrentView(lastPrimaryView.current)}
               onImportSuccess={handleImportSuccess}
               defaultTab={settingsDefaultTab}
             />
@@ -1152,7 +1337,8 @@ function App() {
                         activeApp === "openclaw" ||
                         activeApp === "hermes" ||
                         activeApp === "pi" ||
-                        activeApp === "mcode"
+                        activeApp === "mcode" ||
+                        activeApp === "workbuddy"
                           ? (provider) =>
                               setConfirmAction({ provider, action: "remove" })
                           : undefined
@@ -1291,12 +1477,12 @@ function App() {
           {
             ...DRAG_REGION_STYLE,
             top: dragBarHeight,
-            height: HEADER_HEIGHT,
+            height: headerHeight,
           } as any
         }
       >
         <div
-          className="flex h-full items-center justify-between gap-2 px-6"
+          className="flex h-16 items-center justify-between gap-2 px-6"
           {...DRAG_REGION_ATTR}
           style={{ ...DRAG_REGION_STYLE } as any}
         >
@@ -1304,7 +1490,7 @@ function App() {
             className="flex items-center gap-1"
             style={{ WebkitAppRegion: "no-drag" } as any}
           >
-            {currentView !== "providers" ? (
+            {!isPrimaryView ? (
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
@@ -1315,7 +1501,9 @@ function App() {
                     setCurrentView(
                       currentView === "skillsDiscovery"
                         ? "skills"
-                        : "providers",
+                        : currentView === "settings"
+                          ? lastPrimaryView.current
+                          : "providers",
                     )
                   }
                   className={cn(
@@ -1351,12 +1539,41 @@ function App() {
             ) : (
               <div className="flex items-center gap-2">
                 <RoutingActivationBrand
-                  active={isProxyRunning && isCurrentAppTakeoverActive}
+                  active={
+                    currentView === "providers" &&
+                    isProxyRunning &&
+                    isCurrentAppTakeoverActive
+                  }
                   contextKey={activeApp}
                   ready={
                     proxyStatus !== undefined && takeoverStatus !== undefined
                   }
                 />
+                <nav
+                  aria-label={t("marketplace.navigation", {
+                    defaultValue: "主导航",
+                  })}
+                  className="ml-4 flex shrink-0 rounded-lg bg-muted/60 p-1"
+                >
+                  {(["marketplace", "providers"] as const).map((view) => (
+                    <Button
+                      key={view}
+                      size="sm"
+                      variant={currentView === view ? "default" : "ghost"}
+                      aria-current={currentView === view ? "page" : undefined}
+                      onClick={() => setCurrentView(view)}
+                      className="px-4"
+                    >
+                      {view === "marketplace"
+                        ? t("marketplace.navTitle", {
+                            defaultValue: "模型广场",
+                          })
+                        : t("marketplace.clientConfiguration", {
+                            defaultValue: "客户端配置",
+                          })}
+                    </Button>
+                  ))}
+                </nav>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -1375,7 +1592,7 @@ function App() {
                     setCurrentView("settings");
                   }}
                 />
-                {isCurrentAppTakeoverActive && (
+                {currentView === "providers" && isCurrentAppTakeoverActive && (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -1395,7 +1612,13 @@ function App() {
             )}
           </div>
 
-          <div className="flex flex-1 min-w-0 items-center justify-end gap-1.5">
+          <div
+            className={cn(
+              "flex flex-1 min-w-0 items-center justify-end gap-1.5",
+              currentView === "providers" &&
+                "absolute left-6 right-6 top-16 h-14",
+            )}
+          >
             {currentView === "providers" &&
               (activeApp === "claude-desktop" || proxyAppId) && (
                 <div
@@ -1418,6 +1641,8 @@ function App() {
               )}
             {currentView === "providers" &&
               activeApp !== "mcode" &&
+              activeApp !== "workbuddy" &&
+              activeApp !== "antigravity" &&
               (settingsData?.showProfileSwitcher ?? true) && (
                 <div
                   className="flex shrink-0 items-center"
@@ -1609,7 +1834,17 @@ function App() {
                           exit={{ opacity: 0 }}
                           transition={{ duration: 0.15 }}
                         >
-                          {activeApp === "hermes" ? (
+                          {activeApp === "workbuddy" ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-8 px-2"
+                              title={t("workbuddy.memoryEditor.title")}
+                              onClick={() => setWorkbuddyMemoryOpen(true)}
+                            >
+                              <Brain className="h-4 w-4" />
+                            </Button>
+                          ) : activeApp === "hermes" ? (
                             <>
                               <Button
                                 variant="ghost"
@@ -1715,15 +1950,17 @@ function App() {
                               >
                                 <Wrench className="flex-shrink-0 w-4 h-4" />
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setCurrentView("prompts")}
-                                className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 w-8 px-2"
-                                title={t("prompts.manage")}
-                              >
-                                <Book className="w-4 h-4" />
-                              </Button>
+                              {sharedFeatureApp !== "workbuddy" && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setCurrentView("prompts")}
+                                  className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 w-8 px-2"
+                                  title={t("prompts.manage")}
+                                >
+                                  <Book className="w-4 h-4" />
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -1789,6 +2026,9 @@ function App() {
         appId={activeApp}
         onSubmit={addProvider}
       />
+      {workbuddyMemoryOpen && (
+        <WorkBuddyMemoryPanel onClose={() => setWorkbuddyMemoryOpen(false)} />
+      )}
 
       <EditProviderDialog
         open={Boolean(editingProvider)}
@@ -1852,7 +2092,32 @@ function App() {
         onCancel={() => setLaunchDashboardOpen(false)}
       />
 
-      <DeepLinkImportDialog />
+      <DeepLinkImportDialog
+        onProviderImported={(app) => {
+          setActiveApp(app);
+          setCurrentView("providers");
+        }}
+      />
+      <MarketChatDialog
+        open={marketAction?.kind === "chat"}
+        onOpenChange={(open) => {
+          if (!open) setMarketAction(null);
+        }}
+        apiKey={marketConnectionStatus === "ready" ? marketApiKey : ""}
+        modelId={marketAction?.modelId ?? ""}
+        modelName={marketAction?.model.name}
+      />
+      <MarketConfigureDialog
+        open={marketAction?.kind === "configure"}
+        onOpenChange={(open) => {
+          if (!open) setMarketAction(null);
+        }}
+        model={marketAction?.model ?? null}
+        apiKey={marketApiKey}
+        modelId={marketAction?.modelId ?? ""}
+        initialApp={marketAction?.initialApp ?? activeApp}
+        onConfigured={handleMarketConfigured}
+      />
       <FirstRunNoticeDialog />
     </div>
   );

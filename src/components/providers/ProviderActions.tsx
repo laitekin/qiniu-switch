@@ -32,6 +32,7 @@ interface OpenClawDefaultModelOption {
 }
 
 interface ProviderActionsProps {
+  needsApiKey?: boolean;
   appId?: AppId;
   isCurrent: boolean;
   isInConfig?: boolean;
@@ -74,6 +75,7 @@ interface MainButtonState {
 }
 
 export function ProviderActions({
+  needsApiKey = false,
   appId,
   isCurrent,
   isInConfig = false,
@@ -116,6 +118,10 @@ export function ProviderActions({
   const piStateChangeHint = t("pi.current.stateUnavailableHint");
 
   const handleMainButtonClick = () => {
+    if (needsApiKey) {
+      onEdit();
+      return;
+    }
     if (isOmo) {
       if (isCurrent) {
         onDisableOmo?.();
@@ -141,6 +147,15 @@ export function ProviderActions({
   };
 
   const getMainButtonState = (): MainButtonState => {
+    if (needsApiKey) {
+      return {
+        disabled: false,
+        variant: "default",
+        className: "",
+        icon: <Edit className="h-4 w-4" />,
+        text: t("provider.configureApiKey", { defaultValue: "配置 API Key" }),
+      };
+    }
     if (isOmo) {
       if (isCurrent) {
         return {
@@ -368,7 +383,7 @@ export function ProviderActions({
       <span
         title={buttonState.title}
         className={cn(
-          "inline-flex",
+          "inline-flex shrink-0",
           buttonState.disabled && "cursor-not-allowed",
         )}
       >
@@ -377,7 +392,10 @@ export function ProviderActions({
           variant={buttonState.variant}
           onClick={handleMainButtonClick}
           disabled={buttonState.disabled}
-          className={cn("w-[4.5rem] px-2.5", buttonState.className)}
+          className={cn(
+            "min-w-[4.5rem] shrink-0 px-2.5 [&_svg]:shrink-0",
+            buttonState.className,
+          )}
         >
           {buttonState.icon}
           {buttonState.text}

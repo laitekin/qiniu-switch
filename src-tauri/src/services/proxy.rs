@@ -26,7 +26,7 @@ const PROXY_TOKEN_PLACEHOLDER: &str = "PROXY_MANAGED";
 
 /// 代理接管模式下需要从 Claude Live 配置中移除的"模型覆盖"字段。
 ///
-/// 原因：接管模式下 `*_MODEL` 必须由 CC Switch 写成稳定的 Claude 角色别名，
+/// 原因：接管模式下 `*_MODEL` 必须由 Qiniu Switch 写成稳定的 Claude 角色别名，
 /// 再由本地代理映射到当前供应商真实模型；`*_MODEL_NAME` 也需要同步接管，
 /// 否则 Claude Code 模型菜单会残留上一个供应商的显示名称。
 const CLAUDE_MODEL_OVERRIDE_ENV_KEYS: [&str; 12] = [
@@ -365,7 +365,7 @@ impl CodexAuthFileTransaction {
             .and_then(|name| name.to_str())
             .unwrap_or("auth.json");
         Ok(parent.join(format!(
-            ".{file_name}.cc-switch-{label}-{}",
+            ".{file_name}.qiniu-switch-{label}-{}",
             uuid::Uuid::new_v4()
         )))
     }
@@ -1851,7 +1851,7 @@ impl ProxyService {
             // 跳过已被代理接管的 Live：避免把代理占位符当作"原始 Live"存进备份槽。
             // 否则下次 start_with_takeover 在异常历史状态下（Live 已是占位符）再次
             // 调用本函数，会用代理配置覆盖一个原本正常的备份；之后 stop 恢复时
-            // 即便走到备份路径也会把代理占位符再写回 Live，永久卡在 127.0.0.1:15721。
+            // 即便走到备份路径也会把代理占位符再写回 Live，永久卡在 127.0.0.1:15722。
             if Self::live_has_proxy_placeholder_for_app(&AppType::Claude, &config) {
                 log::warn!("claude Live 已被代理接管，不备份（避免把代理配置固化进备份槽）；下次 stop 会从 SSOT 重建 Live");
             } else {
@@ -2327,7 +2327,7 @@ impl ProxyService {
 
             // 备份若是代理占位符（异常历史：上次 stop 失败导致 Live 留在了代理状态，
             // 下次接管时又被错误地备份成"原始 Live"），不能直接用 — 否则 stop 后
-            // Live 永远卡在 127.0.0.1:15721。落到下面的 SSOT 兜底重建。
+            // Live 永远卡在 127.0.0.1:15722。落到下面的 SSOT 兜底重建。
             if Self::live_has_proxy_placeholder_for_app(app_type, &config) {
                 log::warn!(
                     "{app_type_str} 备份本身已是代理占位符（异常历史状态），跳过备份，改走 SSOT 重建 Live"
@@ -3619,7 +3619,7 @@ impl ProxyService {
     }
 
     /// The login state Codex will observe for `config_text`, as far as
-    /// cc-switch can tell without touching the keyring: `Some(true)` signed
+    /// qiniu-switch can tell without touching the keyring: `Some(true)` signed
     /// in, `Some(false)` signed out, `None` undecidable. Which store Codex
     /// reads is decided first (`cli_auth_credentials_store`), and
     /// `auth.json` is only opened for the one mode that reads it:
@@ -4120,11 +4120,11 @@ mod tests {
             let dir = TempDir::new().expect("failed to create temp home");
             let original_home = env::var("HOME").ok();
             let original_userprofile = env::var("USERPROFILE").ok();
-            let original_test_home = env::var("CC_SWITCH_TEST_HOME").ok();
+            let original_test_home = env::var("QINIU_SWITCH_TEST_HOME").ok();
 
             env::set_var("HOME", dir.path());
             env::set_var("USERPROFILE", dir.path());
-            env::set_var("CC_SWITCH_TEST_HOME", dir.path());
+            env::set_var("QINIU_SWITCH_TEST_HOME", dir.path());
 
             Self {
                 dir,
@@ -4148,8 +4148,8 @@ mod tests {
             }
 
             match &self.original_test_home {
-                Some(value) => env::set_var("CC_SWITCH_TEST_HOME", value),
-                None => env::remove_var("CC_SWITCH_TEST_HOME"),
+                Some(value) => env::set_var("QINIU_SWITCH_TEST_HOME", value),
+                None => env::remove_var("QINIU_SWITCH_TEST_HOME"),
             }
         }
     }
@@ -4303,7 +4303,7 @@ mod tests {
         let mut live_config = provider.settings_config.clone();
         ProxyService::apply_claude_takeover_fields_for_provider(
             &mut live_config,
-            "http://127.0.0.1:15721",
+            "http://127.0.0.1:15722",
             &provider,
         );
 
@@ -4360,7 +4360,7 @@ mod tests {
         });
         ProxyService::apply_claude_takeover_fields_for_provider(
             &mut live_config,
-            "http://127.0.0.1:15721",
+            "http://127.0.0.1:15722",
             &provider,
         );
 
@@ -4431,7 +4431,7 @@ mod tests {
         });
         ProxyService::apply_claude_takeover_fields_for_provider(
             &mut live_config,
-            "http://127.0.0.1:15721",
+            "http://127.0.0.1:15722",
             &provider,
         );
 
@@ -4478,7 +4478,7 @@ mod tests {
         });
         ProxyService::apply_claude_takeover_fields_for_provider(
             &mut live_config,
-            "http://127.0.0.1:15721",
+            "http://127.0.0.1:15722",
             &provider,
         );
 
@@ -4531,7 +4531,7 @@ mod tests {
         let mut live_config = provider.settings_config.clone();
         ProxyService::apply_claude_takeover_fields_for_provider(
             &mut live_config,
-            "http://127.0.0.1:15721",
+            "http://127.0.0.1:15722",
             &provider,
         );
 
@@ -4569,7 +4569,7 @@ mod tests {
         });
         ProxyService::apply_claude_takeover_fields_for_provider(
             &mut live_config,
-            "http://127.0.0.1:15721",
+            "http://127.0.0.1:15722",
             &provider,
         );
 
@@ -4602,7 +4602,7 @@ mod tests {
         let mut live_config = provider.settings_config.clone();
         ProxyService::apply_claude_takeover_fields_for_provider(
             &mut live_config,
-            "http://127.0.0.1:15721",
+            "http://127.0.0.1:15722",
             &provider,
         );
 
@@ -4641,7 +4641,7 @@ mod tests {
         });
         ProxyService::apply_claude_takeover_fields_for_provider(
             &mut live_config,
-            "http://127.0.0.1:15721",
+            "http://127.0.0.1:15722",
             &provider,
         );
 
@@ -4679,7 +4679,7 @@ mod tests {
         });
         ProxyService::apply_claude_takeover_fields_for_provider(
             &mut live_config,
-            "http://127.0.0.1:15721",
+            "http://127.0.0.1:15722",
             &provider,
         );
 
@@ -4720,7 +4720,7 @@ mod tests {
         });
         ProxyService::apply_claude_takeover_fields_for_provider(
             &mut live_config,
-            "http://127.0.0.1:15721",
+            "http://127.0.0.1:15722",
             &provider,
         );
 
@@ -4743,7 +4743,7 @@ mod tests {
             }
         });
 
-        ProxyService::apply_claude_takeover_fields(&mut live_config, "http://127.0.0.1:15721");
+        ProxyService::apply_claude_takeover_fields(&mut live_config, "http://127.0.0.1:15722");
 
         assert_eq!(
             live_config
@@ -5023,7 +5023,7 @@ model = "gpt-5-codex"
 
 [model_providers.rightcode]
 name = "RightCode"
-base_url = "http://127.0.0.1:15721/v1"
+base_url = "http://127.0.0.1:15722/v1"
 wire_api = "responses"
 "#
         });
@@ -6430,7 +6430,7 @@ model = "deepseek-v4-flash"
 
 [model_providers.deepseek]
 name = "DeepSeek"
-base_url = "http://127.0.0.1:15721/v1"
+base_url = "http://127.0.0.1:15722/v1"
 wire_api = "responses"
 experimental_bearer_token = "PROXY_MANAGED"
 "#,
@@ -6462,7 +6462,7 @@ experimental_bearer_token = "PROXY_MANAGED"
             "cleanup should remove config.toml proxy bearer placeholder"
         );
         assert!(
-            !live_config.contains("http://127.0.0.1:15721"),
+            !live_config.contains("http://127.0.0.1:15722"),
             "cleanup should remove local proxy base_url"
         );
     }
@@ -6509,7 +6509,7 @@ requires_openai_auth = true
         let mut takeover_settings = provider.settings_config.clone();
         ProxyService::apply_codex_takeover_fields_for_provider(
             &mut takeover_settings,
-            "http://127.0.0.1:15721/v1",
+            "http://127.0.0.1:15722/v1",
             &provider,
         )
         .expect("apply takeover fields");
@@ -6529,7 +6529,7 @@ requires_openai_auth = true
             )),
             "placeholder must still ride as the provider token; got:\n{live_config}"
         );
-        assert!(live_config.contains("base_url = \"http://127.0.0.1:15721/v1\""));
+        assert!(live_config.contains("base_url = \"http://127.0.0.1:15722/v1\""));
         assert!(
             !crate::codex_config::get_codex_auth_path().exists(),
             "takeover must not create auth.json"
@@ -6589,7 +6589,7 @@ wire_api = "responses"
         let mut takeover_settings = provider.settings_config.clone();
         ProxyService::apply_codex_takeover_fields_for_provider(
             &mut takeover_settings,
-            "http://127.0.0.1:15721/v1",
+            "http://127.0.0.1:15722/v1",
             &provider,
         )
         .expect("apply takeover fields");
@@ -6657,7 +6657,7 @@ wire_api = "responses"
         let mut takeover_settings = provider.settings_config.clone();
         ProxyService::apply_codex_takeover_fields_for_provider(
             &mut takeover_settings,
-            "http://127.0.0.1:15721/v1",
+            "http://127.0.0.1:15722/v1",
             &provider,
         )
         .expect("apply takeover fields");
@@ -6723,7 +6723,7 @@ requires_openai_auth = true
             let mut takeover_settings = provider.settings_config.clone();
             ProxyService::apply_codex_takeover_fields_for_provider(
                 &mut takeover_settings,
-                "http://127.0.0.1:15721/v1",
+                "http://127.0.0.1:15722/v1",
                 &provider,
             )
             .expect("apply takeover fields");
@@ -6789,7 +6789,7 @@ requires_openai_auth = true
         let mut takeover_settings = provider.settings_config.clone();
         ProxyService::apply_codex_takeover_fields_for_provider(
             &mut takeover_settings,
-            "http://127.0.0.1:15721/v1",
+            "http://127.0.0.1:15722/v1",
             &provider,
         )
         .expect("apply takeover fields");
@@ -6862,7 +6862,7 @@ requires_openai_auth = false
         let mut takeover_settings = provider.settings_config.clone();
         ProxyService::apply_codex_takeover_fields_for_provider(
             &mut takeover_settings,
-            "http://127.0.0.1:15721/v1",
+            "http://127.0.0.1:15722/v1",
             &provider,
         )
         .expect("apply takeover fields");
@@ -6944,7 +6944,7 @@ requires_openai_auth = true
             let mut takeover_settings = provider.settings_config.clone();
             ProxyService::apply_codex_takeover_fields_for_provider(
                 &mut takeover_settings,
-                "http://127.0.0.1:15721/v1",
+                "http://127.0.0.1:15722/v1",
                 &provider,
             )
             .expect("apply takeover fields");
@@ -7025,7 +7025,7 @@ requires_openai_auth = true
         let mut takeover_settings = provider.settings_config.clone();
         ProxyService::apply_codex_takeover_fields_for_provider(
             &mut takeover_settings,
-            "http://127.0.0.1:15721/v1",
+            "http://127.0.0.1:15722/v1",
             &provider,
         )
         .expect("apply takeover fields");
@@ -7119,7 +7119,7 @@ model = "gpt-5-codex"
 
 [model_providers.rightcode]
 name = "RightCode"
-base_url = "http://127.0.0.1:15721/v1"
+base_url = "http://127.0.0.1:15722/v1"
 wire_api = "responses"
 "#
         });
@@ -7198,9 +7198,9 @@ requires_openai_auth = true
         for input in [
             "",
             "model = \"gpt-5\"\nbase_url = \"https://old.example/v1\"\n",
-            "model_providers = { cc-switch = { name = \"Existing\", base_url = \"https://keep.example/v1\" } }\n",
+            "model_providers = { qiniu-switch = { name = \"Existing\", base_url = \"https://keep.example/v1\" } }\n",
         ] {
-            let url = "http://127.0.0.1:15721/v1";
+            let url = "http://127.0.0.1:15722/v1";
             let projected = ProxyService::apply_codex_proxy_toml_config_for_provider(input, url, None).unwrap();
             let auth = json!({"OPENAI_API_KEY": PROXY_TOKEN_PLACEHOLDER});
             let live = crate::codex_config::prepare_codex_provider_live_config(&auth, &projected).unwrap();
@@ -7213,7 +7213,7 @@ requires_openai_auth = true
             assert_eq!(table["wire_api"].as_str(), Some("responses"));
             assert_eq!(table["experimental_bearer_token"].as_str(), Some(PROXY_TOKEN_PLACEHOLDER));
             if input.contains("Existing") {
-                assert_eq!(doc["model_providers"]["cc-switch"]["base_url"].as_str(), Some("https://keep.example/v1"));
+                assert_eq!(doc["model_providers"]["qiniu-switch"]["base_url"].as_str(), Some("https://keep.example/v1"));
             }
             let repeated = ProxyService::apply_codex_proxy_toml_config_for_provider(&live, url, None).unwrap();
             let repeated = crate::codex_config::prepare_codex_provider_live_config(&auth, &repeated).unwrap();
@@ -7273,7 +7273,7 @@ wire_api = "chat"
         )
         .expect("apply official proxy config");
         let parsed: toml::Value = toml::from_str(&output).expect("valid official route");
-        let route_id = crate::codex_config::CC_SWITCH_CODEX_OFFICIAL_PROXY_PROVIDER_ID;
+        let route_id = crate::codex_config::QINIU_SWITCH_CODEX_OFFICIAL_PROXY_PROVIDER_ID;
         let route = &parsed["model_providers"][route_id];
 
         assert_eq!(parsed["model_provider"].as_str(), Some(route_id));
@@ -7687,7 +7687,7 @@ model = "gpt-5.1-codex"
         service
             .write_claude_live(&json!({
                 "env": {
-                    "ANTHROPIC_BASE_URL": "http://127.0.0.1:15721",
+                    "ANTHROPIC_BASE_URL": "http://127.0.0.1:15722",
                     "ANTHROPIC_API_KEY": PROXY_TOKEN_PLACEHOLDER,
                     "ANTHROPIC_MODEL": "stale-model",
                     "ANTHROPIC_DEFAULT_SONNET_MODEL_NAME": "Stale Sonnet",
@@ -7719,7 +7719,7 @@ model = "gpt-5.1-codex"
             live.get("env")
                 .and_then(|env| env.get("ANTHROPIC_BASE_URL"))
                 .and_then(|v| v.as_str()),
-            Some("http://127.0.0.1:15721"),
+            Some("http://127.0.0.1:15722"),
             "takeover proxy URL should remain active"
         );
         assert!(
@@ -8353,9 +8353,9 @@ base_url = "https://codex.example/v1"
         crate::codex_config::write_codex_live_atomic(
             &rotated_live_auth,
             Some(
-                r#"model_provider = "cc-switch"
-[model_providers.cc-switch]
-base_url = "http://127.0.0.1:15721/v1"
+                r#"model_provider = "qiniu-switch"
+[model_providers.qiniu-switch]
+base_url = "http://127.0.0.1:15722/v1"
 wire_api = "responses"
 "#,
             ),
@@ -8698,7 +8698,7 @@ model = "gpt-5.4"
 
 [model_providers.rightcode]
 name = "RightCode"
-base_url = "http://127.0.0.1:15721/v1"
+base_url = "http://127.0.0.1:15722/v1"
 wire_api = "responses"
 requires_openai_auth = true
 "#
@@ -8768,7 +8768,7 @@ requires_openai_auth = true
                 .and_then(|v| v.get("aihubmix"))
                 .and_then(|v| v.get("base_url"))
                 .and_then(|v| v.as_str()),
-            Some("http://127.0.0.1:15721/v1"),
+            Some("http://127.0.0.1:15722/v1"),
             "taken-over live config should stay pointed at the local proxy"
         );
 
@@ -8873,7 +8873,7 @@ model = "responses-model"
 
 [model_providers.stable]
 name = "Stable"
-base_url = "http://127.0.0.1:15721/v1"
+base_url = "http://127.0.0.1:15722/v1"
 wire_api = "responses"
 requires_openai_auth = true
 "#
@@ -8910,7 +8910,7 @@ requires_openai_auth = true
                 .and_then(|v| v.get("deepseek"))
                 .and_then(|v| v.get("base_url"))
                 .and_then(|v| v.as_str()),
-            Some("http://127.0.0.1:15721/v1")
+            Some("http://127.0.0.1:15722/v1")
         );
         assert_eq!(
             parsed_live.get("model").and_then(|v| v.as_str()),
@@ -9127,7 +9127,7 @@ requires_openai_auth = true
         let catalog_path = crate::codex_config::get_codex_model_catalog_path();
         assert!(
             catalog_path.exists(),
-            "cc-switch-model-catalog.json must be created on provider switch"
+            "qiniu-switch-model-catalog.json must be created on provider switch"
         );
         let catalog_text = std::fs::read_to_string(&catalog_path).expect("read catalog json");
         let catalog: serde_json::Value =
@@ -9271,7 +9271,7 @@ requires_openai_auth = true
             message.contains("写入 Codex 配置失败")
                 || message.contains("原子替换失败")
                 || (message.contains("捕获 Codex 热切换前状态失败")
-                    && message.contains("cc-switch-model-catalog.json")),
+                    && message.contains("qiniu-switch-model-catalog.json")),
             "switch should surface catalog write failure, got: {message}"
         );
     }
@@ -9499,7 +9499,7 @@ requires_openai_auth = true
         let db = Arc::new(Database::memory().expect("init db"));
         let service = ProxyService::new(db.clone());
 
-        // Pre-takeover Live state: config.toml points at the cc-switch generated
+        // Pre-takeover Live state: config.toml points at the qiniu-switch generated
         // catalog file, and that file exists on disk (takeover never touches it).
         let catalog_path = crate::codex_config::get_codex_model_catalog_path();
         if let Some(parent) = catalog_path.parent() {
@@ -9544,7 +9544,7 @@ requires_openai_auth = true
         );
         assert!(
             restored.contains(pointer.as_str()),
-            "restored pointer must still reference the cc-switch generated catalog file"
+            "restored pointer must still reference the qiniu-switch generated catalog file"
         );
     }
 
@@ -9607,7 +9607,7 @@ requires_openai_auth = true
         );
         assert!(
             catalog_path.exists(),
-            "restore must generate the cc-switch catalog file on disk"
+            "restore must generate the qiniu-switch catalog file on disk"
         );
         let catalog: Value = serde_json::from_str(
             &std::fs::read_to_string(&catalog_path).expect("read generated catalog"),
@@ -9676,7 +9676,7 @@ requires_openai_auth = true
         );
         assert!(
             crate::codex_config::get_codex_model_catalog_path().exists(),
-            "empty-auth restore must generate the cc-switch catalog file"
+            "empty-auth restore must generate the qiniu-switch catalog file"
         );
         assert!(
             !crate::codex_config::get_codex_auth_path().exists(),
@@ -9719,7 +9719,7 @@ requires_openai_auth = true
         let corrupted_backup = serde_json::to_string(&json!({
             "env": {
                 "ANTHROPIC_AUTH_TOKEN": PROXY_TOKEN_PLACEHOLDER,
-                "ANTHROPIC_BASE_URL": "http://127.0.0.1:15721"
+                "ANTHROPIC_BASE_URL": "http://127.0.0.1:15722"
             }
         }))
         .expect("serialize corrupted backup");
@@ -9732,7 +9732,7 @@ requires_openai_auth = true
             .write_claude_live(&json!({
                 "env": {
                     "ANTHROPIC_AUTH_TOKEN": PROXY_TOKEN_PLACEHOLDER,
-                    "ANTHROPIC_BASE_URL": "http://127.0.0.1:15721"
+                    "ANTHROPIC_BASE_URL": "http://127.0.0.1:15722"
                 }
             }))
             .expect("seed taken-over live file");
@@ -10501,7 +10501,7 @@ base_url = "https://third.example/v1"
             .write_claude_live(&json!({
                 "env": {
                     "ANTHROPIC_AUTH_TOKEN": PROXY_TOKEN_PLACEHOLDER,
-                    "ANTHROPIC_BASE_URL": "http://127.0.0.1:15721"
+                    "ANTHROPIC_BASE_URL": "http://127.0.0.1:15722"
                 }
             }))
             .expect("seed taken-over live file");
@@ -10569,7 +10569,7 @@ base_url = "https://third.example/v1"
             .write_claude_live(&json!({
                 "env": {
                     "ANTHROPIC_AUTH_TOKEN": PROXY_TOKEN_PLACEHOLDER,
-                    "ANTHROPIC_BASE_URL": "http://127.0.0.1:15721"
+                    "ANTHROPIC_BASE_URL": "http://127.0.0.1:15722"
                 }
             }))
             .expect("seed claude live");
@@ -10581,7 +10581,7 @@ base_url = "https://third.example/v1"
 
 [model_providers.custom]
 name = "Custom"
-base_url = "http://127.0.0.1:15721/v1"
+base_url = "http://127.0.0.1:15722/v1"
 wire_api = "chat"
 experimental_bearer_token = "PROXY_MANAGED"
 "#,
@@ -10736,7 +10736,7 @@ experimental_bearer_token = "PROXY_MANAGED"
             provider_a.settings_config["config"]
                 .as_str()
                 .expect("provider config"),
-            "http://127.0.0.1:15721/grokbuild/v1",
+            "http://127.0.0.1:15722/grokbuild/v1",
             PROXY_TOKEN_PLACEHOLDER,
         )
         .expect("build takeover config");

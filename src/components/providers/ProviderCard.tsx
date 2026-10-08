@@ -16,6 +16,7 @@ import type { AppId } from "@/lib/api";
 import { authApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { ProviderActions } from "@/components/providers/ProviderActions";
+import { needsQiniuApiKey } from "@/config/qiniuDefaultProvider";
 import { ProviderIcon } from "@/components/ProviderIcon";
 import UsageFooter from "@/components/UsageFooter";
 import SubscriptionQuotaFooter from "@/components/SubscriptionQuotaFooter";
@@ -231,7 +232,10 @@ export function ProviderCard({
   const isAnyOmo = isOmo || isOmoSlim;
   const handleDisableAnyOmo = isOmoSlim ? onDisableOmoSlim : onDisableOmo;
   const isAdditiveMode =
-    (appId === "opencode" && !isAnyOmo) || appId === "pi" || appId === "mcode";
+    (appId === "opencode" && !isAnyOmo) ||
+    appId === "pi" ||
+    appId === "mcode" ||
+    appId === "workbuddy";
 
   const { data: health } = useProviderHealth(
     provider.id,
@@ -361,7 +365,10 @@ export function ProviderCard({
     ? isCurrent
     : appId === "openclaw"
       ? Boolean(isDefaultModel)
-      : appId === "opencode" || appId === "pi" || appId === "mcode"
+      : appId === "opencode" ||
+          appId === "pi" ||
+          appId === "mcode" ||
+          appId === "workbuddy"
         ? false
         : isAutoFailoverEnabled
           ? activeProviderId === provider.id
@@ -378,6 +385,7 @@ export function ProviderCard({
 
   return (
     <div
+      data-provider-id={provider.id}
       className={cn(
         "relative overflow-hidden rounded-xl border border-border p-4 transition-all duration-300",
         "bg-card text-card-foreground group",
@@ -690,8 +698,14 @@ export function ProviderCard({
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 flex-shrink-0 opacity-0 pointer-events-none group-hover:opacity-100 group-focus-within:opacity-100 group-hover:pointer-events-auto group-focus-within:pointer-events-auto transition-opacity duration-200">
+          <div
+            className={cn(
+              "flex items-center gap-1.5 flex-shrink-0 group-hover:opacity-100 group-focus-within:opacity-100 group-hover:pointer-events-auto group-focus-within:pointer-events-auto transition-opacity duration-200",
+              !needsQiniuApiKey(provider) && "opacity-0 pointer-events-none",
+            )}
+          >
             <ProviderActions
+              needsApiKey={needsQiniuApiKey(provider)}
               appId={appId}
               isCurrent={isCurrent}
               isInConfig={isInConfig}
@@ -707,9 +721,12 @@ export function ProviderCard({
                 // 连通检测对第三方/自定义/Copilot/Codex-OAuth 供应商开放（这些正是旧的
                 // 真实请求探测会误报、而可达性探测能正确处理的对象）。官方供应商
                 // (category === "official") 一律隐藏：它们 base_url 故意留空、走客户端
-                // 默认/OAuth 端点，cc-switch 没有可靠的探测目标（尤其 Claude Desktop
+                // 默认/OAuth 端点，qiniu-switch 没有可靠的探测目标（尤其 Claude Desktop
                 // 官方是原生 1P 模式，根本不在请求路径上）。
-                onTest && appId !== "mcode" && provider.category !== "official"
+                onTest &&
+                appId !== "mcode" &&
+                appId !== "workbuddy" &&
+                provider.category !== "official"
                   ? () => onTest(provider)
                   : undefined
               }

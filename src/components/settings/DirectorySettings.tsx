@@ -6,7 +6,10 @@ import { useTranslation } from "react-i18next";
 import type { AppId } from "@/lib/api";
 import type { ResolvedDirectories } from "@/hooks/useSettings";
 
-type DirectoryAppId = Exclude<AppId, "claude-desktop" | "mcode">;
+type DirectoryAppId = Exclude<
+  AppId,
+  "claude-desktop" | "mcode" | "workbuddy" | "antigravity"
+>;
 
 interface DirectorySettingsProps {
   appConfigDir?: string;
@@ -49,7 +52,7 @@ export function DirectorySettings({
 
   return (
     <div className="space-y-6">
-      {/* CC Switch 配置目录 - 独立区块 */}
+      {/* Qiniu Switch 配置目录 - 独立区块 */}
       <section className="space-y-4">
         <header className="space-y-1">
           <h3 className="text-sm font-medium">{t("settings.appConfigDir")}</h3>

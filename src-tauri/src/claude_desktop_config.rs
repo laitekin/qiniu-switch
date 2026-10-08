@@ -11,8 +11,8 @@ use crate::database::CLAUDE_DESKTOP_OFFICIAL_PROVIDER_ID;
 use crate::error::AppError;
 use crate::provider::{ClaudeDesktopMode, Provider};
 
-pub const PROFILE_ID: &str = "00000000-0000-4000-8000-000000157210";
-pub const PROFILE_NAME: &str = "CC Switch";
+pub const PROFILE_ID: &str = "6354e5e2-7b9c-43f6-83b5-bc4f8cfde62e";
+pub const PROFILE_NAME: &str = "Qiniu Switch";
 
 #[cfg(any(target_os = "macos", windows, target_os = "linux", test))]
 const CONFIG_FILE: &str = "claude_desktop_config.json";
@@ -1013,7 +1013,7 @@ fn apply_provider_to_paths_inner(
 fn restore_official_at_paths_inner(paths: &ClaudeDesktopPaths) -> Result<(), AppError> {
     write_deployment_mode(&paths.normal_config_path, "1p")?;
     write_deployment_mode(&paths.threep_config_path, "1p")?;
-    remove_cc_switch_enterprise_config(&paths.threep_config_path)?;
+    remove_qiniu_switch_enterprise_config(&paths.threep_config_path)?;
 
     if paths.profile_path.exists() {
         delete_file(&paths.profile_path)?;
@@ -1112,7 +1112,7 @@ fn write_deployment_mode(path: &Path, mode: &str) -> Result<(), AppError> {
     write_json_file(path, &value)
 }
 
-fn remove_cc_switch_enterprise_config(path: &Path) -> Result<(), AppError> {
+fn remove_qiniu_switch_enterprise_config(path: &Path) -> Result<(), AppError> {
     if !path.exists() {
         return Ok(());
     }
@@ -1246,7 +1246,7 @@ fn current_platform_paths() -> Result<ClaudeDesktopPaths, AppError> {
 /// not expose a directory override or attempt to recover a host-custom
 /// XDG_CONFIG_HOME: Flatpak replaces that variable with its private path, so
 /// its original host value is not available reliably from the sandbox. Users
-/// with a custom host XDG_CONFIG_HOME should run the native CC Switch package.
+/// with a custom host XDG_CONFIG_HOME should run the native Qiniu Switch package.
 #[cfg(target_os = "linux")]
 fn linux_config_dir() -> PathBuf {
     let xdg_config_home = std::env::var_os("XDG_CONFIG_HOME").map(PathBuf::from);
@@ -1414,9 +1414,9 @@ mod tests {
 
     #[cfg(any(target_os = "linux", all(test, unix)))]
     #[test]
-    fn linux_config_dir_uses_host_config_when_cc_switch_runs_in_flatpak() {
+    fn linux_config_dir_uses_host_config_when_qiniu_switch_runs_in_flatpak() {
         let home = Path::new("/home/tester");
-        let private_xdg = Path::new("/home/tester/.var/app/com.ccswitch.desktop/config");
+        let private_xdg = Path::new("/home/tester/.var/app/com.qiniuswitch.desktop/config");
 
         assert_eq!(
             linux_config_dir_from_home(home, Some(private_xdg), true),
@@ -1652,7 +1652,7 @@ mod tests {
         let profile: Value = read_json_file(&paths.profile_path).expect("read profile");
         assert_eq!(
             profile["inferenceGatewayBaseUrl"],
-            json!("http://127.0.0.1:15721/claude-desktop")
+            json!("http://127.0.0.1:15722/claude-desktop")
         );
         assert_eq!(profile["inferenceGatewayAuthScheme"], json!("bearer"));
         assert_eq!(profile["coworkEgressAllowedHosts"], json!(["*"]));
@@ -1686,7 +1686,7 @@ mod tests {
             let profile: Value = read_json_file(&paths.profile_path).expect("read profile");
             assert_eq!(
                 profile["inferenceGatewayBaseUrl"],
-                json!("http://127.0.0.1:15721/claude-desktop")
+                json!("http://127.0.0.1:15722/claude-desktop")
             );
             assert_eq!(
                 profile["inferenceModels"],
@@ -2211,7 +2211,7 @@ mod tests {
     }
 
     #[test]
-    fn claude_desktop_restore_switches_to_1p_and_removes_cc_switch_profile() {
+    fn claude_desktop_restore_switches_to_1p_and_removes_qiniu_switch_profile() {
         let temp = TempDir::new().expect("tempdir");
         let paths = test_paths(temp.path());
         let provider = direct_provider("direct");

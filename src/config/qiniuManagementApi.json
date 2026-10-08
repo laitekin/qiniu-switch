@@ -1,0 +1,289 @@
+[
+  {
+    "id": "key_enabled",
+    "method": "PUT",
+    "path": "/ai/inapi/v2/apikey/enabled",
+    "summary": "启用或禁用 API Key",
+    "available": false,
+    "parameters": []
+  },
+  {
+    "id": "key_delete",
+    "method": "DELETE",
+    "path": "/ai/inapi/v2/apikey",
+    "summary": "删除 API Key",
+    "available": false,
+    "parameters": []
+  },
+  {
+    "id": "key_create",
+    "method": "POST",
+    "path": "/ai/inapi/v2/apikey",
+    "summary": "创建 API Key",
+    "available": false,
+    "parameters": []
+  },
+  {
+    "id": "keys",
+    "method": "GET",
+    "path": "/ai/inapi/v3/apikeys",
+    "summary": "获取所有 API Key 列表（含配额及用量信息）",
+    "available": true,
+    "parameters": []
+  },
+  {
+    "id": "key_name",
+    "method": "PUT",
+    "path": "/ai/inapi/v2/apikey/name",
+    "summary": "修改 API Key 名称",
+    "available": false,
+    "parameters": []
+  },
+  {
+    "id": "key_quota",
+    "method": "PUT",
+    "path": "/ai/inapi/v2/apikey/quota/{api_key}",
+    "summary": "新增或更新 API Key 限额",
+    "available": false,
+    "parameters": []
+  },
+  {
+    "id": "bill",
+    "method": "GET",
+    "path": "/ai/inapi/v3/stat/bill",
+    "summary": "查询单月账单",
+    "available": true,
+    "parameters": [
+      {
+        "name": "month",
+        "required": true,
+        "type": "string"
+      },
+      {
+        "name": "api_key",
+        "required": false,
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "id": "bill_all",
+    "method": "GET",
+    "path": "/ai/inapi/v3/stat/bill/all_keys",
+    "summary": "查询单月所有 API Key 的账单",
+    "available": true,
+    "parameters": [
+      {
+        "name": "month",
+        "required": true,
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "id": "bill_range",
+    "method": "GET",
+    "path": "/ai/inapi/v3/stat/bill/range",
+    "summary": "查询时间范围内的账单（支持多粒度）",
+    "available": true,
+    "parameters": [
+      {
+        "name": "start",
+        "required": true,
+        "type": "string",
+        "format": "date-time"
+      },
+      {
+        "name": "end",
+        "required": true,
+        "type": "string",
+        "format": "date-time"
+      },
+      {
+        "name": "grain",
+        "required": true,
+        "type": "string",
+        "options": ["month", "day", "hour", "five_minute", "minute"]
+      },
+      {
+        "name": "api_key",
+        "required": false,
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "id": "bill_range_all",
+    "method": "GET",
+    "path": "/ai/inapi/v3/stat/bill/range/all_keys",
+    "summary": "查询时间范围内所有 API Key 的账单（支持多粒度）",
+    "available": true,
+    "parameters": [
+      {
+        "name": "start",
+        "required": true,
+        "type": "string",
+        "format": "date-time"
+      },
+      {
+        "name": "end",
+        "required": true,
+        "type": "string",
+        "format": "date-time"
+      },
+      {
+        "name": "grain",
+        "required": true,
+        "type": "string",
+        "options": ["month", "day", "hour", "five_minute", "minute"]
+      }
+    ]
+  },
+  {
+    "id": "logs",
+    "method": "GET",
+    "path": "/ai/inapi/v3/stat/log",
+    "summary": "请求日志接口",
+    "available": true,
+    "parameters": [
+      {
+        "name": "start",
+        "required": false,
+        "type": "string",
+        "format": "date-time"
+      },
+      {
+        "name": "end",
+        "required": false,
+        "type": "string",
+        "format": "date-time"
+      },
+      {
+        "name": "page",
+        "required": true,
+        "type": "integer",
+        "min": 1
+      },
+      {
+        "name": "page_size",
+        "required": true,
+        "type": "integer",
+        "min": 1,
+        "max": 100
+      },
+      {
+        "name": "model",
+        "required": false,
+        "type": "string"
+      },
+      {
+        "name": "code",
+        "required": false,
+        "type": "integer"
+      },
+      {
+        "name": "status",
+        "required": false,
+        "type": "string",
+        "options": ["success", "failure", "client_error", "server_error"]
+      },
+      {
+        "name": "apikey",
+        "required": false,
+        "type": "string"
+      },
+      {
+        "name": "server_type",
+        "required": false,
+        "type": "string",
+        "options": ["chat", "image", "video"]
+      },
+      {
+        "name": "id",
+        "required": false,
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "id": "log_detail",
+    "method": "GET",
+    "path": "/ai/inapi/v3/stat/log/detail",
+    "summary": "查询单条日志详情",
+    "available": true,
+    "parameters": [
+      {
+        "name": "request_id",
+        "required": true,
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "id": "usage",
+    "method": "GET",
+    "path": "/ai/inapi/v3/stat/new",
+    "summary": "查询用量数据（新版）",
+    "available": true,
+    "parameters": [
+      {
+        "name": "start",
+        "required": false,
+        "type": "string",
+        "format": "date-time"
+      },
+      {
+        "name": "end",
+        "required": false,
+        "type": "string",
+        "format": "date-time"
+      },
+      {
+        "name": "g",
+        "required": false,
+        "type": "string",
+        "options": ["month", "day", "hour", "five_minute", "minute"]
+      },
+      {
+        "name": "api_key",
+        "required": false,
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "id": "pricing",
+    "method": "GET",
+    "path": "/ai/inapi/v3/market/pricingitems",
+    "summary": "获取计费项列表",
+    "available": true,
+    "parameters": []
+  },
+  {
+    "id": "models",
+    "method": "GET",
+    "path": "/ai/v1/market/models",
+    "summary": "获取模型市场列表",
+    "available": true,
+    "parameters": [
+      {
+        "name": "sort",
+        "required": false,
+        "type": "string",
+        "options": ["rank", "id"]
+      },
+      {
+        "name": "order",
+        "required": false,
+        "type": "string",
+        "options": ["asc", "desc"]
+      },
+      {
+        "name": "overseas",
+        "required": false,
+        "type": "string",
+        "options": ["true", "false"]
+      }
+    ]
+  }
+]

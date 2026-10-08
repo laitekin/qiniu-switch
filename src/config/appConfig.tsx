@@ -20,6 +20,8 @@ export const APP_IDS: AppId[] = [
   "claude",
   "claude-desktop",
   "codex",
+  "workbuddy",
+  "antigravity",
   "gemini",
   "grokbuild",
   "opencode",
@@ -33,6 +35,8 @@ export const DEFAULT_VISIBLE_APPS: VisibleApps = {
   claude: true,
   "claude-desktop": true,
   codex: true,
+  workbuddy: true,
+  antigravity: true,
   gemini: true,
   grokbuild: true,
   opencode: true,
@@ -43,7 +47,11 @@ export const DEFAULT_VISIBLE_APPS: VisibleApps = {
 };
 
 /** App IDs shown in Skills panels. */
-export const SKILLS_APP_IDS: AppId[] = [
+export type SkillsAppId = Exclude<
+  AppId,
+  "claude-desktop" | "openclaw" | "workbuddy" | "antigravity"
+>;
+export const SKILLS_APP_IDS: SkillsAppId[] = [
   "claude",
   "codex",
   "gemini",
@@ -73,11 +81,12 @@ export function isProxyAppId(appId: string): appId is ProxyAppId {
 
 export type AdditiveAppId = Extract<
   AppId,
-  "opencode" | "openclaw" | "hermes" | "pi" | "mcode"
+  "opencode" | "openclaw" | "hermes" | "pi" | "mcode" | "workbuddy"
 >;
 
 export const ADDITIVE_APP_IDS: AdditiveAppId[] = [
   "mcode",
+  "workbuddy",
   "opencode",
   "openclaw",
   "hermes",
@@ -89,7 +98,10 @@ export function isAdditiveAppId(appId: string): appId is AdditiveAppId {
 }
 
 /** Pi has no native MCP registry; do not manufacture a disabled mirror. */
-export type McpAppId = Exclude<AppId, "claude-desktop" | "openclaw" | "pi">;
+export type McpAppId = Exclude<
+  AppId,
+  "claude-desktop" | "openclaw" | "pi" | "workbuddy" | "antigravity"
+>;
 export const MCP_APP_IDS: McpAppId[] = [
   "claude",
   "codex",
@@ -128,6 +140,22 @@ export const APP_ICON_MAP: Record<AppId, AppConfig> = {
       "bg-green-500/10 ring-1 ring-green-500/20 hover:bg-green-500/20 text-green-600 dark:text-green-400",
     badgeClass:
       "bg-green-500/10 text-green-700 dark:text-green-300 hover:bg-green-500/20 border-0 gap-1.5",
+  },
+  workbuddy: {
+    label: "WorkBuddy",
+    icon: <ProviderIcon icon="workbuddy" name="WorkBuddy" size={14} />,
+    activeClass:
+      "bg-emerald-500/10 ring-1 ring-emerald-500/20 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400",
+    badgeClass:
+      "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 border-0 gap-1.5",
+  },
+  antigravity: {
+    label: "Antigravity",
+    icon: <ProviderIcon icon="antigravity" name="Antigravity" size={14} />,
+    activeClass:
+      "bg-violet-500/10 ring-1 ring-violet-500/20 hover:bg-violet-500/20 text-violet-600 dark:text-violet-400",
+    badgeClass:
+      "bg-violet-500/10 text-violet-700 dark:text-violet-300 hover:bg-violet-500/20 border-0 gap-1.5",
   },
   gemini: {
     label: "Gemini",

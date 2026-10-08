@@ -1,9 +1,17 @@
 use std::str::FromStr;
 
-use cc_switch_lib::AppType;
+use qiniu_switch_lib::AppType;
 
 #[test]
 fn parse_known_apps_case_insensitive_and_trim() {
+    assert!(matches!(
+        AppType::from_str("antigravity"),
+        Ok(AppType::Antigravity)
+    ));
+    assert!(matches!(
+        AppType::from_str(" Anti-Gravity "),
+        Ok(AppType::Antigravity)
+    ));
     assert!(matches!(AppType::from_str("claude"), Ok(AppType::Claude)));
     assert!(matches!(AppType::from_str("codex"), Ok(AppType::Codex)));
     assert!(matches!(

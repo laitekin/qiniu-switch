@@ -101,7 +101,7 @@ const KIMI_K3_COMPAT = {
 const piProviderPresetDefinitions: PiProviderPreset[] = [
   {
     name: "Kimi",
-    providerKey: "cc-switch-kimi",
+    providerKey: "qiniu-switch-kimi",
     websiteUrl: "https://platform.kimi.com?aff=cc-switch",
     apiKeyUrl: "https://platform.kimi.com/console/api-keys?aff=cc-switch",
     settingsConfig: {
@@ -137,7 +137,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   // API 开放平台海外/Global 变体：platform.kimi.ai + api.moonshot.ai 端点
   {
     name: "Kimi Global",
-    providerKey: "cc-switch-kimi-global",
+    providerKey: "qiniu-switch-kimi-global",
     websiteUrl: "https://platform.kimi.ai?aff=cc-switch",
     apiKeyUrl: "https://platform.kimi.ai/console/api-keys?aff=cc-switch",
     settingsConfig: {
@@ -171,7 +171,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Kimi For Coding",
-    providerKey: "cc-switch-kimi-for-coding",
+    providerKey: "qiniu-switch-kimi-for-coding",
     websiteUrl: "https://www.kimi.com/code/?aff=cc-switch",
     apiKeyUrl: "https://platform.kimi.com/console/api-keys?aff=cc-switch",
     settingsConfig: {
@@ -195,7 +195,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   // 海外/Global 变体：kimi.ai/code + api.kimi.ai 端点，其余与国内版一致
   {
     name: "Kimi For Coding Global",
-    providerKey: "cc-switch-kimi-for-coding-global",
+    providerKey: "qiniu-switch-kimi-for-coding-global",
     websiteUrl: "https://www.kimi.ai/code?aff=cc-switch",
     apiKeyUrl: "https://www.kimi.ai/code?aff=cc-switch",
     settingsConfig: {
@@ -217,7 +217,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "PackyCode",
-    providerKey: "cc-switch-packy-code",
+    providerKey: "qiniu-switch-packy-code",
     websiteUrl: "https://www.packyapi.ai",
     apiKeyUrl: "https://www.packyapi.ai/register?aff=cc-switch",
     settingsConfig: {
@@ -243,7 +243,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "ZetaAPI",
-    providerKey: "cc-switch-zeta-api",
+    providerKey: "qiniu-switch-zeta-api",
     websiteUrl: "https://zetaapi.ai",
     apiKeyUrl: "https://zetaapi.ai/go/u117",
     settingsConfig: {
@@ -264,7 +264,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "APINebula",
-    providerKey: "cc-switch-apinebula",
+    providerKey: "qiniu-switch-apinebula",
     websiteUrl: "https://apinebula.ai",
     apiKeyUrl: "https://apinebula.ai/VjM74M",
     settingsConfig: {
@@ -286,7 +286,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "AICodeMirror",
-    providerKey: "cc-switch-aicode-mirror",
+    providerKey: "qiniu-switch-aicode-mirror",
     websiteUrl: "https://www.aicodemirror.ai",
     apiKeyUrl: "https://www.aicodemirror.ai/register?invitecode=9915W3",
     settingsConfig: {
@@ -311,7 +311,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "FennoAI",
-    providerKey: "cc-switch-fenno-ai",
+    providerKey: "qiniu-switch-fenno-ai",
     websiteUrl: "https://api.fenno.ai",
     apiKeyUrl:
       "https://api.fenno.ai/register?redirect=/purchase?tab=subscription%26group=16&aff=P9MR3D3PLCNL",
@@ -333,7 +333,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "RunAPI",
-    providerKey: "cc-switch-run-api",
+    providerKey: "qiniu-switch-run-api",
     websiteUrl: "https://runapi.co",
     apiKeyUrl: "https://runapi.co/register?aff=iOKB",
     settingsConfig: {
@@ -363,7 +363,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   {
     name: "Shengsuanyun",
     nameKey: "providerForm.presets.shengsuanyun",
-    providerKey: "cc-switch-shengsuanyun",
+    providerKey: "qiniu-switch-shengsuanyun",
     websiteUrl: "https://www.shengsuanyun.com/?from=CH_4HHXMRYF",
     apiKeyUrl: "https://www.shengsuanyun.com/?from=CH_4HHXMRYF",
     settingsConfig: {
@@ -393,7 +393,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "AIGoCode",
-    providerKey: "cc-switch-aigo-code",
+    providerKey: "qiniu-switch-aigo-code",
     websiteUrl: "https://aigocode.app",
     apiKeyUrl: "https://aigocode.app/invite/CC-SWITCH",
     settingsConfig: {
@@ -419,7 +419,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   {
     name: "Qiniu",
     nameKey: "providerForm.presets.qiniu",
-    providerKey: "cc-switch-qiniu",
+    providerKey: "qiniu-switch-qiniu",
     websiteUrl: "https://s.qiniu.com/nMvAvy",
     apiKeyUrl: "https://s.qiniu.com/nMvAvy",
     settingsConfig: {
@@ -443,7 +443,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "AICoding",
-    providerKey: "cc-switch-aicoding",
+    providerKey: "qiniu-switch-aicoding",
     websiteUrl: "https://aicoding.inc",
     apiKeyUrl: "https://aicoding.inc/i/CCSWITCH",
     settingsConfig: {
@@ -468,7 +468,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "SubRouter",
-    providerKey: "cc-switch-sub-router",
+    providerKey: "qiniu-switch-sub-router",
     websiteUrl: "https://subrouter.ai",
     apiKeyUrl: "https://subrouter.ai/register?aff=l3ri",
     settingsConfig: {
@@ -500,7 +500,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   // 有、国际 team 部署未实测，与 Codex 侧不声明 codexChatReasoning 同理
   {
     name: "FluxA Token Plan",
-    providerKey: "cc-switch-fluxa-token-plan",
+    providerKey: "qiniu-switch-fluxa-token-plan",
     websiteUrl: "https://agentmarket.fluxapay.xyz/",
     apiKeyUrl: "https://agentmarket.fluxapay.xyz/marketplace/tokenplans",
     settingsConfig: {
@@ -529,7 +529,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "APIKEY.FUN",
-    providerKey: "cc-switch-apikey-fun",
+    providerKey: "qiniu-switch-apikey-fun",
     websiteUrl: "https://apikey.fan",
     apiKeyUrl: "https://apikey.fan/register?aff=CCSwitch",
     settingsConfig: {
@@ -556,7 +556,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "9527CODE",
-    providerKey: "cc-switch-9527-code",
+    providerKey: "qiniu-switch-9527-code",
     websiteUrl: "https://9527.codes",
     apiKeyUrl: "https://9527.codes/register?aff=e5zI",
     settingsConfig: {
@@ -585,7 +585,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Code0",
-    providerKey: "cc-switch-code0",
+    providerKey: "qiniu-switch-code0",
     websiteUrl: "https://code0.ai",
     apiKeyUrl: "https://code0.ai/agent/register/B2XHxGjGmRvqgznY",
     settingsConfig: {
@@ -607,7 +607,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "TeamoRouter",
-    providerKey: "cc-switch-teamo-router",
+    providerKey: "qiniu-switch-teamo-router",
     websiteUrl: "https://teamorouter.cn",
     apiKeyUrl:
       "https://teamorouter.cn/?utm_source=cc_switch&utm_medium=referral&utm_campaign=ai_directory",
@@ -629,7 +629,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "PPIO",
-    providerKey: "cc-switch-ppio",
+    providerKey: "qiniu-switch-ppio",
     websiteUrl: "https://ppio.com",
     apiKeyUrl: "https://ppio.com/activity/ccswitch",
     settingsConfig: {
@@ -658,7 +658,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "ClaudeCN",
-    providerKey: "cc-switch-claude-cn",
+    providerKey: "qiniu-switch-claude-cn",
     websiteUrl: "https://claudecn.top",
     apiKeyUrl: "https://claudecn.ai/register?aff=HEL9",
     settingsConfig: {
@@ -687,7 +687,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "火山Agentplan",
-    providerKey: "cc-switch-agentplan",
+    providerKey: "qiniu-switch-agentplan",
     websiteUrl:
       "https://www.volcengine.com/activity/codingplan?ac=MMAP8JTTCAQ2&rc=6J6FV5N2&utm_campaign=hw&utm_content=ccswitch&utm_medium=devrel_tool_web&utm_source=OWO&utm_term=ccswitch",
     apiKeyUrl:
@@ -711,7 +711,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "BytePlus",
-    providerKey: "cc-switch-byte-plus",
+    providerKey: "qiniu-switch-byte-plus",
     websiteUrl:
       "https://www.byteplus.com/en/product/modelark?utm_campaign=hw&utm_content=ccswitch&utm_medium=devrel_tool_web&utm_source=OWO&utm_term=ccswitch",
     apiKeyUrl:
@@ -736,7 +736,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   {
     name: "Volcengine Doubao",
     nameKey: "providerForm.presets.doubaoseed",
-    providerKey: "cc-switch-dou-bao-seed",
+    providerKey: "qiniu-switch-dou-bao-seed",
     websiteUrl:
       "https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey?apikey=%7B%7D&utm_campaign=hw&utm_content=ccswitch&utm_medium=devrel_tool_web&utm_source=OWO&utm_term=ccswitch",
     apiKeyUrl:
@@ -760,7 +760,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "A6API",
-    providerKey: "cc-switch-a6-api",
+    providerKey: "qiniu-switch-a6-api",
     websiteUrl: "https://www.a6api.com",
     apiKeyUrl: "https://a6api.com/register?aff=AqNr",
     settingsConfig: {
@@ -782,7 +782,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "CCSub",
-    providerKey: "cc-switch-ccsub",
+    providerKey: "qiniu-switch-ccsub",
     websiteUrl: "https://www.ccsub.net",
     apiKeyUrl: "https://www.ccsub.net/register?ref=Y6Z8DXEA",
     settingsConfig: {
@@ -803,7 +803,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "SSSAiCode",
-    providerKey: "cc-switch-sssai-code",
+    providerKey: "qiniu-switch-sssai-code",
     websiteUrl: "https://sssaicodeapi.com",
     apiKeyUrl: "https://sssaicodeapi.com/register?ref=DCP0SM",
     settingsConfig: {
@@ -828,7 +828,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "SoleAPI",
-    providerKey: "cc-switch-sole-api",
+    providerKey: "qiniu-switch-sole-api",
     websiteUrl: "https://soleapi.com",
     apiKeyUrl: "https://soleapi.com/r/ccswitch",
     settingsConfig: {
@@ -855,7 +855,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Micu",
-    providerKey: "cc-switch-micu",
+    providerKey: "qiniu-switch-micu",
     websiteUrl: "https://www.micuapi.ai",
     apiKeyUrl: "https://www.micuapi.ai/register?aff=aOYQ",
     settingsConfig: {
@@ -880,7 +880,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "RightCode",
-    providerKey: "cc-switch-right-code",
+    providerKey: "qiniu-switch-right-code",
     websiteUrl: "https://www.rightapi.ai",
     apiKeyUrl: "https://www.rightapi.ai/register?aff=CCSWITCH",
     settingsConfig: {
@@ -902,7 +902,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "ETok.ai",
-    providerKey: "cc-switch-etok-ai",
+    providerKey: "qiniu-switch-etok-ai",
     websiteUrl: "https://etok.ai",
     apiKeyUrl: "https://etok.ai",
     settingsConfig: {
@@ -927,7 +927,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Cubence",
-    providerKey: "cc-switch-cubence",
+    providerKey: "qiniu-switch-cubence",
     websiteUrl: "https://cubence.com",
     apiKeyUrl: "https://cubence.com/signup?code=CCSWITCH&source=ccs",
     settingsConfig: {
@@ -952,7 +952,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "CrazyRouter",
-    providerKey: "cc-switch-crazy-router",
+    providerKey: "qiniu-switch-crazy-router",
     websiteUrl: "https://www.crazyrouter.com",
     apiKeyUrl: "https://www.crazyrouter.com/register?aff=OZcm&ref=cc-switch",
     settingsConfig: {
@@ -978,7 +978,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "DMXAPI",
-    providerKey: "cc-switch-dmxapi",
+    providerKey: "qiniu-switch-dmxapi",
     websiteUrl: "https://www.dmxapi.cn",
     apiKeyUrl: "https://www.dmxapi.cn",
     settingsConfig: {
@@ -1001,7 +1001,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "SudoCode.chat",
-    providerKey: "cc-switch-sudo-code-chat",
+    providerKey: "qiniu-switch-sudo-code-chat",
     websiteUrl: "https://sudocode.chat",
     apiKeyUrl:
       "https://sudocode.chat/sign-up?aff=CC-SWITCH&utm_source=cc-switch&utm_medium=sponsor&utm_campaign=ccswitch",
@@ -1026,7 +1026,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "SudoCode.us",
-    providerKey: "cc-switch-sudo-code-us",
+    providerKey: "qiniu-switch-sudo-code-us",
     websiteUrl: "https://sudocode.us",
     apiKeyUrl: "https://sudocode.us",
     settingsConfig: {
@@ -1048,7 +1048,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Amux",
-    providerKey: "cc-switch-amux",
+    providerKey: "qiniu-switch-amux",
     websiteUrl: "https://amux.ai",
     apiKeyUrl: "https://amux.ai",
     settingsConfig: {
@@ -1068,7 +1068,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "AtlasCloud",
-    providerKey: "cc-switch-atlas-cloud",
+    providerKey: "qiniu-switch-atlas-cloud",
     websiteUrl: "https://www.atlascloud.ai/console/coding-plan",
     apiKeyUrl: "https://www.atlascloud.ai/console/coding-plan",
     settingsConfig: {
@@ -1088,7 +1088,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Soshow",
-    providerKey: "cc-switch-soshow",
+    providerKey: "qiniu-switch-soshow",
     websiteUrl: "https://aimarket.so-show.com",
     apiKeyUrl: "https://aimarket.so-show.com/workbench/access-key",
     settingsConfig: {
@@ -1110,7 +1110,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "DeepSeek",
-    providerKey: "cc-switch-deep-seek",
+    providerKey: "qiniu-switch-deep-seek",
     websiteUrl: "https://platform.deepseek.com",
     apiKeyUrl: "https://platform.deepseek.com/api_keys",
     settingsConfig: {
@@ -1135,7 +1135,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Zhipu GLM",
-    providerKey: "cc-switch-zhipu-glm",
+    providerKey: "qiniu-switch-zhipu-glm",
     websiteUrl: "https://open.bigmodel.cn",
     apiKeyUrl: "https://www.bigmodel.cn/claude-code?ic=RRVJPB5SII",
     settingsConfig: {
@@ -1156,7 +1156,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Zhipu GLM en",
-    providerKey: "cc-switch-zhipu-glm-en",
+    providerKey: "qiniu-switch-zhipu-glm-en",
     websiteUrl: "https://z.ai",
     apiKeyUrl: "https://z.ai/subscribe?ic=8JVLJQFSKB",
     settingsConfig: {
@@ -1177,7 +1177,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "千问AI平台",
-    providerKey: "cc-switch-qianwenai",
+    providerKey: "qiniu-switch-qianwenai",
     websiteUrl: "https://platform.qianwenai.com/?utm_content=g_20000002971",
     apiKeyUrl:
       "https://platform.qianwenai.com/home/api-keys?utm_content=g_20000002972",
@@ -1201,7 +1201,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "千问AI平台 Token Plan",
-    providerKey: "cc-switch-qianwenai-token-plan",
+    providerKey: "qiniu-switch-qianwenai-token-plan",
     websiteUrl:
       "https://platform.qianwenai.com/pricing/token-plan?utm_content=g_20000002977",
     apiKeyUrl:
@@ -1232,7 +1232,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   // 按量付费与 Token Plan 都走 OpenAI 兼容层（/compatible-mode/v1）。
   {
     name: "QwenCloud",
-    providerKey: "cc-switch-qwencloud",
+    providerKey: "qiniu-switch-qwencloud",
     websiteUrl: "https://home.qwencloud.com/?utm_content=g_20000002974",
     apiKeyUrl: "https://home.qwencloud.com/api-keys?utm_content=g_20000002975",
     settingsConfig: {
@@ -1261,7 +1261,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "QwenCloud For Coding",
-    providerKey: "cc-switch-qwencloud-coding",
+    providerKey: "qiniu-switch-qwencloud-coding",
     websiteUrl: "https://www.qwencloud.com",
     apiKeyUrl: "https://home.qwencloud.com/api-keys",
     settingsConfig: {
@@ -1283,7 +1283,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "QwenCloud Token Plan",
-    providerKey: "cc-switch-qwencloud-token-plan",
+    providerKey: "qiniu-switch-qwencloud-token-plan",
     websiteUrl:
       "https://www.qwencloud.com/pricing/token-plan?utm_content=g_20000002980",
     apiKeyUrl: "https://home.qwencloud.com/api-keys?utm_content=g_20000002981",
@@ -1314,7 +1314,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "StepFun",
-    providerKey: "cc-switch-step-fun",
+    providerKey: "qiniu-switch-step-fun",
     websiteUrl: "https://platform.stepfun.com/step-plan",
     apiKeyUrl: "https://platform.stepfun.com/interface-key",
     settingsConfig: {
@@ -1340,7 +1340,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "StepFun en",
-    providerKey: "cc-switch-step-fun-en",
+    providerKey: "qiniu-switch-step-fun-en",
     websiteUrl: "https://platform.stepfun.ai/step-plan",
     apiKeyUrl: "https://platform.stepfun.ai/interface-key",
     settingsConfig: {
@@ -1366,7 +1366,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "StepFun Step Plan",
-    providerKey: "cc-switch-step-fun-step-plan",
+    providerKey: "qiniu-switch-step-fun-step-plan",
     websiteUrl: "https://platform.stepfun.com/docs/zh/step-plan/overview",
     apiKeyUrl: "https://platform.stepfun.com/interface-key",
     settingsConfig: {
@@ -1388,7 +1388,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "ModelScope",
-    providerKey: "cc-switch-model-scope",
+    providerKey: "qiniu-switch-model-scope",
     websiteUrl: "https://modelscope.cn",
     apiKeyUrl: "https://modelscope.cn/my/myaccesstoken",
     settingsConfig: {
@@ -1408,7 +1408,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "KAT-Coder",
-    providerKey: "cc-switch-kat-coder",
+    providerKey: "qiniu-switch-kat-coder",
     websiteUrl: "https://console.streamlake.ai",
     apiKeyUrl: "https://console.streamlake.ai/console/api-key",
     settingsConfig: {
@@ -1428,7 +1428,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Longcat",
-    providerKey: "cc-switch-longcat",
+    providerKey: "qiniu-switch-longcat",
     websiteUrl: "https://longcat.chat/platform",
     apiKeyUrl: "https://longcat.chat/platform/api_keys",
     settingsConfig: {
@@ -1448,7 +1448,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "MiniMax",
-    providerKey: "cc-switch-mini-max",
+    providerKey: "qiniu-switch-mini-max",
     websiteUrl: "https://platform.minimax.cn",
     apiKeyUrl: "https://platform.minimax.cn/subscribe/token-plan",
     settingsConfig: {
@@ -1473,7 +1473,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "MiniMax en",
-    providerKey: "cc-switch-mini-max-en",
+    providerKey: "qiniu-switch-mini-max-en",
     websiteUrl: "https://platform.minimax.io",
     apiKeyUrl: "https://platform.minimax.io/subscribe/coding-plan",
     settingsConfig: {
@@ -1498,7 +1498,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "BaiLing",
-    providerKey: "cc-switch-bai-ling",
+    providerKey: "qiniu-switch-bai-ling",
     websiteUrl: "https://developer.ant-ling.com/zh-CN/docs/",
     apiKeyUrl: "https://chat.ant-ling.com/open",
     settingsConfig: {
@@ -1516,7 +1516,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Xiaomi MiMo",
-    providerKey: "cc-switch-xiaomi-mi-mo",
+    providerKey: "qiniu-switch-xiaomi-mi-mo",
     websiteUrl: "https://platform.xiaomimimo.com",
     apiKeyUrl: "https://platform.xiaomimimo.com/#/console/api-keys",
     settingsConfig: {
@@ -1559,7 +1559,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Xiaomi MiMo Token Plan (China)",
-    providerKey: "cc-switch-xiaomi-mi-mo-token-plan-china",
+    providerKey: "qiniu-switch-xiaomi-mi-mo-token-plan-china",
     websiteUrl: "https://platform.xiaomimimo.com/#/token-plan",
     apiKeyUrl: "https://platform.xiaomimimo.com/#/console/plan-manage",
     settingsConfig: {
@@ -1590,7 +1590,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "OpenCode Go",
-    providerKey: "cc-switch-open-code-go",
+    providerKey: "qiniu-switch-open-code-go",
     websiteUrl: "https://opencode.ai/go",
     apiKeyUrl: "https://opencode.ai/go?ref=2YTRG2NGTX",
     settingsConfig: {
@@ -1642,7 +1642,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "AiHubMix",
-    providerKey: "cc-switch-ai-hub-mix",
+    providerKey: "qiniu-switch-ai-hub-mix",
     websiteUrl: "https://aihubmix.com",
     apiKeyUrl: "https://aihubmix.com",
     settingsConfig: {
@@ -1667,7 +1667,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "CherryIN",
-    providerKey: "cc-switch-cherry-in",
+    providerKey: "qiniu-switch-cherry-in",
     websiteUrl: "https://open.cherryin.ai",
     apiKeyUrl: "https://open.cherryin.ai/console/token",
     settingsConfig: {
@@ -1692,7 +1692,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "OpenRouter",
-    providerKey: "cc-switch-open-router",
+    providerKey: "qiniu-switch-open-router",
     websiteUrl: "https://openrouter.ai",
     apiKeyUrl: "https://openrouter.ai/keys",
     settingsConfig: {
@@ -1721,7 +1721,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "TheRouter",
-    providerKey: "cc-switch-the-router",
+    providerKey: "qiniu-switch-the-router",
     websiteUrl: "https://therouter.ai",
     apiKeyUrl: "https://dashboard.therouter.ai",
     settingsConfig: {
@@ -1751,7 +1751,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Novita AI",
-    providerKey: "cc-switch-novita-ai",
+    providerKey: "qiniu-switch-novita-ai",
     websiteUrl: "https://novita.ai",
     apiKeyUrl: "https://novita.ai",
     settingsConfig: {
@@ -1774,7 +1774,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Nvidia",
-    providerKey: "cc-switch-nvidia",
+    providerKey: "qiniu-switch-nvidia",
     websiteUrl: "https://build.nvidia.com",
     apiKeyUrl: "https://build.nvidia.com/settings/api-keys",
     settingsConfig: {
@@ -1796,7 +1796,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "PIPELLM",
-    providerKey: "cc-switch-pipellm",
+    providerKey: "qiniu-switch-pipellm",
     websiteUrl: "https://code.pipellm.ai",
     apiKeyUrl: "https://code.pipellm.ai/login?ref=uvw650za",
     settingsConfig: {
@@ -1824,7 +1824,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "AICodeWith",
-    providerKey: "cc-switch-aicode-with",
+    providerKey: "qiniu-switch-aicode-with",
     websiteUrl: "https://aicodewith.ai",
     apiKeyUrl: "https://aicodewith.ai/login?tab=register",
     settingsConfig: {
@@ -1847,7 +1847,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "E-FlowCode",
-    providerKey: "cc-switch-e-flow-code",
+    providerKey: "qiniu-switch-e-flow-code",
     websiteUrl: "https://e-flowcode.cc",
     apiKeyUrl: "https://e-flowcode.cc",
     settingsConfig: {
@@ -1874,7 +1874,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "AWS Bedrock",
-    providerKey: "cc-switch-aws-bedrock",
+    providerKey: "qiniu-switch-aws-bedrock",
     websiteUrl: "https://aws.amazon.com/bedrock/",
     settingsConfig: {
       name: "AWS Bedrock",
@@ -1916,7 +1916,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   // endpointCandidates 字段），需要第二地域的用户在 UI 中手动改 baseUrl。
   {
     name: "Tencent Token Plan",
-    providerKey: "cc-switch-tencent-token-plan",
+    providerKey: "qiniu-switch-tencent-token-plan",
     websiteUrl: "https://cloud.tencent.com/product/tokenhub",
     apiKeyUrl: "https://console.cloud.tencent.com/tokenhub/tokenplan",
     settingsConfig: {
@@ -1956,7 +1956,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Tencent Token Plan (Intl)",
-    providerKey: "cc-switch-tencent-token-plan-intl",
+    providerKey: "qiniu-switch-tencent-token-plan-intl",
     websiteUrl: "https://www.tencentcloud.com/products/tokenhub",
     apiKeyUrl: "https://console.tencentcloud.com/tokenhub/tokenplan",
     settingsConfig: {
@@ -1993,7 +1993,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Tencent Token Plan Enterprise Pro",
-    providerKey: "cc-switch-tencent-token-plan-enterprise-pro",
+    providerKey: "qiniu-switch-tencent-token-plan-enterprise-pro",
     websiteUrl: "https://cloud.tencent.com/product/tokenhub",
     apiKeyUrl: "https://console.cloud.tencent.com/tokenhub/tokenplan-e",
     settingsConfig: {
@@ -2073,7 +2073,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Tencent Token Plan Enterprise Pro (Intl)",
-    providerKey: "cc-switch-tencent-token-plan-enterprise-pro-intl",
+    providerKey: "qiniu-switch-tencent-token-plan-enterprise-pro-intl",
     websiteUrl: "https://www.tencentcloud.com/products/tokenhub",
     apiKeyUrl: "https://console.tencentcloud.com/tokenhub/tokenplan-e",
     settingsConfig: {
@@ -2148,7 +2148,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Tencent Token Plan Enterprise Lite",
-    providerKey: "cc-switch-tencent-token-plan-enterprise-lite",
+    providerKey: "qiniu-switch-tencent-token-plan-enterprise-lite",
     websiteUrl: "https://cloud.tencent.com/product/tokenhub",
     apiKeyUrl: "https://console.cloud.tencent.com/tokenhub/tokenplan-e",
     settingsConfig: {
@@ -2164,7 +2164,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Tencent Token Plan Enterprise Lite (Intl)",
-    providerKey: "cc-switch-tencent-token-plan-enterprise-lite-intl",
+    providerKey: "qiniu-switch-tencent-token-plan-enterprise-lite-intl",
     websiteUrl: "https://www.tencentcloud.com/products/tokenhub",
     apiKeyUrl: "https://console.tencentcloud.com/tokenhub/tokenplan-e",
     settingsConfig: {
@@ -2185,7 +2185,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   // 专用模型不收录（无法用于编码 agent）。
   {
     name: "Tencent TokenHub",
-    providerKey: "cc-switch-tencent-tokenhub",
+    providerKey: "qiniu-switch-tencent-tokenhub",
     websiteUrl: "https://cloud.tencent.com/product/tokenhub",
     apiKeyUrl: "https://console.cloud.tencent.com/tokenhub/apikey",
     settingsConfig: {
@@ -2278,7 +2278,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
   },
   {
     name: "Tencent TokenHub (Intl)",
-    providerKey: "cc-switch-tencent-tokenhub-intl",
+    providerKey: "qiniu-switch-tencent-tokenhub-intl",
     websiteUrl: "https://www.tencentcloud.com/products/tokenhub",
     apiKeyUrl: "https://console.tencentcloud.com/tokenhub/apikey",
     settingsConfig: {

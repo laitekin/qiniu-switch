@@ -1,4 +1,5 @@
 import { getVersion } from "@tauri-apps/api/app";
+import { APP_UPDATES_ENABLED } from "@/config/branding";
 
 export type UpdateChannel = "stable" | "beta";
 
@@ -28,6 +29,8 @@ export async function checkForUpdate(
   { status: "up-to-date" } | { status: "available"; info: UpdateInfo }
 > {
   // 动态引入，避免在未安装插件时导致打包期问题
+  if (!APP_UPDATES_ENABLED)
+    throw new Error("Qiniu Switch updates are not configured");
   const { check } = await import("@tauri-apps/plugin-updater");
 
   const currentVersion = await getCurrentVersion();

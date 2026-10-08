@@ -672,6 +672,45 @@ impl Database {
         Ok(false)
     }
 
+    /// Seed the frontend's existing Qiniu preset once, without activating it or
+    /// writing native configs. The transaction also preserves deliberate deletion.
+    pub fn ensure_qiniu_default(&self, app: &str, provider: &Provider) -> Result<(), AppError> {
+        if provider.id != "qiniu-default" || provider.icon.as_deref() != Some("qiniu") {
+            return Err(AppError::Message("Invalid Qiniu default provider".into()));
+        }
+        let mut conn = lock_conn!(self.conn);
+        let tx = conn
+            .transaction()
+            .map_err(|e| AppError::Database(e.to_string()))?;
+        let flag = format!("qiniu_default_seeded_{app}");
+        let seeded: bool = tx
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM settings WHERE key = ?1 AND value = 'true')",
+                [&flag],
+                |row| row.get(0),
+            )
+            .map_err(|e| AppError::Database(e.to_string()))?;
+        if !seeded {
+            tx.execute(
+                "INSERT OR IGNORE INTO providers
+                 (id, app_type, name, settings_config, website_url, category, icon, meta, created_at, sort_index)
+                 SELECT ?1, ?2, ?3, ?4, ?5, 'aggregator', 'qiniu', ?6, ?7,
+                   COALESCE((SELECT MAX(sort_index) + 1 FROM providers WHERE app_type = ?2), 0)
+                 WHERE NOT EXISTS (SELECT 1 FROM providers WHERE app_type = ?2 AND icon = 'qiniu')",
+                params![provider.id, app, provider.name, provider.settings_config.to_string(),
+                    provider.website_url, serde_json::to_string(&provider.meta.clone().unwrap_or_default())
+                        .map_err(|e| AppError::Database(e.to_string()))?,
+                    chrono::Utc::now().timestamp_millis()],
+            ).map_err(|e| AppError::Database(e.to_string()))?;
+            tx.execute(
+                "INSERT OR REPLACE INTO settings (key, value) VALUES (?1, 'true')",
+                [&flag],
+            )
+            .map_err(|e| AppError::Database(e.to_string()))?;
+        }
+        tx.commit().map_err(|e| AppError::Database(e.to_string()))
+    }
+
     /// 计算指定 app 下一个可用的 sort_index（追加到末尾）。
     fn next_sort_index_for_app(&self, app_type: &str) -> Result<usize, AppError> {
         let conn = lock_conn!(self.conn);
@@ -813,6 +852,54 @@ mod ensure_official_seed_tests {
         Database, CLAUDE_DESKTOP_OFFICIAL_PROVIDER_ID, CODEX_OFFICIAL_PROVIDER_ID,
         GROKBUILD_OFFICIAL_PROVIDER_ID,
     };
+
+    #[test]
+    fn qiniu_default_is_once_only_and_preserves_existing_config() {
+        use crate::provider::Provider;
+        let db = Database::memory().unwrap();
+        db.init_default_official_providers().unwrap();
+        db.set_current_provider("claude-desktop", CLAUDE_DESKTOP_OFFICIAL_PROVIDER_ID)
+            .unwrap();
+        let mut seed = Provider::with_id(
+            "qiniu-default".into(),
+            "七牛云".into(),
+            serde_json::json!({"env":{"ANTHROPIC_BASE_URL":"https://api.qnaigc.com","ANTHROPIC_AUTH_TOKEN":""}}),
+            None,
+        );
+        seed.icon = Some("qiniu".into());
+        db.ensure_qiniu_default("claude-desktop", &seed).unwrap();
+        assert_eq!(
+            db.get_current_provider("claude-desktop")
+                .unwrap()
+                .as_deref(),
+            Some(CLAUDE_DESKTOP_OFFICIAL_PROVIDER_ID)
+        );
+        assert!(seed.needs_qiniu_api_key());
+        let mut configured = seed.clone();
+        configured.settings_config["env"]["ANTHROPIC_AUTH_TOKEN"] = "saved-key".into();
+        db.save_provider("claude-desktop", &configured).unwrap();
+        db.ensure_qiniu_default("claude-desktop", &seed).unwrap();
+        assert_eq!(
+            db.get_provider_by_id(&seed.id, "claude-desktop")
+                .unwrap()
+                .unwrap()
+                .settings_config,
+            configured.settings_config
+        );
+        assert!(!configured.needs_qiniu_api_key());
+        db.delete_provider("claude-desktop", &seed.id).unwrap();
+        db.ensure_qiniu_default("claude-desktop", &seed).unwrap();
+        assert!(db
+            .get_provider_by_id(&seed.id, "claude-desktop")
+            .unwrap()
+            .is_none());
+
+        // Existing user-created Qiniu providers must not acquire a duplicate.
+        configured.id = "my-qiniu".into();
+        db.save_provider("claude", &configured).unwrap();
+        db.ensure_qiniu_default("claude", &seed).unwrap();
+        assert!(db.get_provider_by_id(&seed.id, "claude").unwrap().is_none());
+    }
 
     #[test]
     fn ensure_inserts_when_missing() {

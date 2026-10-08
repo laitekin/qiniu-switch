@@ -3,7 +3,52 @@ use crate::deeplink::{
     import_skill_from_deeplink, parse_deeplink_url, DeepLinkImportRequest,
 };
 use crate::store::AppState;
+use std::sync::Mutex;
 use tauri::State;
+
+/// Retain the latest request until the frontend has installed its listener.
+/// Kept in memory only: deep links can contain API keys.
+#[derive(Default)]
+pub struct PendingDeepLink(Mutex<Option<DeepLinkImportRequest>>);
+
+impl PendingDeepLink {
+    pub fn put(&self, request: DeepLinkImportRequest) -> Result<(), String> {
+        *self.0.lock().map_err(|_| "Deep link queue unavailable")? = Some(request);
+        Ok(())
+    }
+
+    fn take(&self) -> Result<Option<DeepLinkImportRequest>, String> {
+        Ok(self
+            .0
+            .lock()
+            .map_err(|_| "Deep link queue unavailable")?
+            .take())
+    }
+}
+
+#[tauri::command]
+pub fn take_pending_deeplink(
+    state: State<'_, PendingDeepLink>,
+) -> Result<Option<DeepLinkImportRequest>, String> {
+    state.take()
+}
+
+#[cfg(test)]
+mod pending_tests {
+    use super::*;
+
+    #[test]
+    fn cold_start_request_is_retained_and_consumed_once() {
+        let pending = PendingDeepLink::default();
+        let request = parse_deeplink_url("qiniuswitch://v1/import?resource=provider&app=claude&name=Demo&endpoint=https%3A%2F%2Fapi.qnaigc.com&apiKey=sk-demo").unwrap();
+        pending.put(request).unwrap();
+        assert_eq!(
+            pending.take().unwrap().unwrap().name.as_deref(),
+            Some("Demo")
+        );
+        assert!(pending.take().unwrap().is_none());
+    }
+}
 
 /// Parse a deep link URL and return the parsed request for frontend confirmation
 #[tauri::command]

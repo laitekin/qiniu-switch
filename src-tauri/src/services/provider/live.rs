@@ -191,6 +191,9 @@ pub(crate) fn provider_exists_in_live_config(
         AppType::Pi => crate::pi_config::pi_provider_exists(provider_id),
         AppType::Mcode => crate::mcode_config::get_providers()
             .map(|providers| providers.contains_key(provider_id)),
+        AppType::WorkBuddy => crate::workbuddy_config::get_providers()
+            .map(|providers| providers.contains_key(provider_id)),
+        AppType::Antigravity => Ok(false),
         _ => Ok(false),
     }
 }
@@ -534,6 +537,8 @@ fn settings_contain_common_config(app_type: &AppType, settings: &Value, snippet:
         | AppType::Hermes
         | AppType::Pi
         | AppType::Mcode
+        | AppType::WorkBuddy
+        | AppType::Antigravity
         | AppType::ClaudeDesktop => false,
     }
 }
@@ -610,6 +615,8 @@ pub(crate) fn remove_common_config_from_settings(
         | AppType::Hermes
         | AppType::Pi
         | AppType::Mcode
+        | AppType::WorkBuddy
+        | AppType::Antigravity
         | AppType::ClaudeDesktop => Ok(settings.clone()),
     }
 }
@@ -671,6 +678,8 @@ fn apply_common_config_to_settings(
         | AppType::Hermes
         | AppType::Pi
         | AppType::Mcode
+        | AppType::WorkBuddy
+        | AppType::Antigravity
         | AppType::ClaudeDesktop => Ok(settings.clone()),
     }
 }
@@ -1148,7 +1157,7 @@ fn restore_live_settings_for_provider_backfill(
         }
     }
 
-    // `modelCatalog` is a cc-switch–private field whose SSOT is the DB. Live's
+    // `modelCatalog` is a qiniu-switch–private field whose SSOT is the DB. Live's
     // `config.toml` only carries a lossy projection (`model_catalog_json` →
     // generated catalog file) that proxy takeover/restore cycles and Codex.app
     // config rewrites can drop, so `read_live_settings` may reconstruct it as
@@ -1361,6 +1370,9 @@ pub(crate) fn write_live_snapshot(app_type: &AppType, provider: &Provider) -> Re
         AppType::GrokBuild => {
             crate::grok_config::write_grok_provider_live(provider)?;
         }
+        AppType::Antigravity => {
+            crate::antigravity_config::write_provider_live(&provider.settings_config)?;
+        }
         AppType::OpenCode => {
             // OpenCode uses additive mode - write provider to config
             use crate::opencode_config;
@@ -1467,6 +1479,9 @@ pub(crate) fn write_live_snapshot(app_type: &AppType, provider: &Provider) -> Re
         }
         AppType::Mcode => {
             crate::mcode_config::set_provider(&provider.id, provider.settings_config.clone())?
+        }
+        AppType::WorkBuddy => {
+            crate::workbuddy_config::set_provider(&provider.id, provider.settings_config.clone())?
         }
         AppType::Pi => {
             return Err(AppError::InvalidInput(
@@ -1746,8 +1761,8 @@ pub fn read_live_settings(app_type: AppType) -> Result<Value, AppError> {
     match app_type {
         AppType::Codex => {
             let mut result = crate::codex_config::read_codex_live_settings()?;
-            // `modelCatalog` is a cc-switch private field that lives only in
-            // the DB SSOT plus the `cc-switch-model-catalog.json` projection
+            // `modelCatalog` is a qiniu-switch private field that lives only in
+            // the DB SSOT plus the `qiniu-switch-model-catalog.json` projection
             // file — it is never inlined into `auth.json` or `config.toml`.
             // Reverse-parse the projection so the edit form for the active
             // Codex provider doesn't see an empty mapping table.
@@ -1809,6 +1824,7 @@ pub fn read_live_settings(app_type: AppType) -> Result<Value, AppError> {
                 "config": config_obj
             }))
         }
+        AppType::Antigravity => crate::antigravity_config::read_live_settings(),
         AppType::OpenCode => {
             use crate::opencode_config::{get_opencode_config_path, read_opencode_config};
 
@@ -1854,6 +1870,7 @@ pub fn read_live_settings(app_type: AppType) -> Result<Value, AppError> {
             Ok(config)
         }
         AppType::Mcode => Ok(json!(crate::mcode_config::get_providers()?)),
+        AppType::WorkBuddy => Ok(json!(crate::workbuddy_config::get_providers()?)),
         AppType::Pi => Err(AppError::InvalidInput(
             "Pi providers are read from Pi's native models file".to_string(),
         )),
@@ -1865,6 +1882,12 @@ pub fn read_live_settings(app_type: AppType) -> Result<Value, AppError> {
 /// Returns `Ok(true)` if a provider was actually imported,
 /// `Ok(false)` if skipped (providers already exist for this app).
 pub fn import_default_config(state: &AppState, app_type: AppType) -> Result<bool, AppError> {
+    // Antigravity stores credentials only in the launching process environment.
+    // settings.json alone cannot reconstruct a usable provider profile.
+    if app_type == AppType::Antigravity {
+        return Ok(false);
+    }
+
     // Additive mode apps (OpenCode, OpenClaw) should use their dedicated
     // import_xxx_providers_from_live functions, not this generic default config import
     if app_type.is_additive_mode() {
@@ -1965,8 +1988,14 @@ pub fn import_default_config(state: &AppState, app_type: AppType) -> Result<bool
                 "config": config_obj
             })
         }
+        AppType::Antigravity => crate::antigravity_config::read_live_settings()?,
         // OpenCode, OpenClaw and Hermes use additive mode and are handled by early return above
-        AppType::OpenCode | AppType::OpenClaw | AppType::Hermes | AppType::Pi | AppType::Mcode => {
+        AppType::OpenCode
+        | AppType::OpenClaw
+        | AppType::Hermes
+        | AppType::Pi
+        | AppType::Mcode
+        | AppType::WorkBuddy => {
             unreachable!("additive mode apps are handled by early return")
         }
     };
@@ -2147,7 +2176,7 @@ pub(crate) fn remove_opencode_provider_from_live(provider_id: &str) -> Result<()
 /// Import all providers from OpenCode live config to database
 ///
 /// This imports existing providers from ~/.config/opencode/opencode.json
-/// into the CC Switch database. Each provider found will be added to the
+/// into the Qiniu Switch database. Each provider found will be added to the
 /// database with is_current set to false.
 pub fn import_opencode_providers_from_live(state: &AppState) -> Result<usize, AppError> {
     use crate::opencode_config;
@@ -2222,7 +2251,7 @@ pub fn import_opencode_providers_from_live(state: &AppState) -> Result<usize, Ap
 /// Import all providers from OpenClaw live config to database
 ///
 /// This imports existing providers from ~/.openclaw/openclaw.json
-/// into the CC Switch database. Each provider found will be added to the
+/// into the Qiniu Switch database. Each provider found will be added to the
 /// database with is_current set to false.
 pub fn import_openclaw_providers_from_live(state: &AppState) -> Result<usize, AppError> {
     use crate::openclaw_config;
@@ -2310,7 +2339,7 @@ pub fn import_openclaw_providers_from_live(state: &AppState) -> Result<usize, Ap
 /// Import all providers from Hermes live config to database
 ///
 /// This imports existing providers from ~/.hermes/config.yaml
-/// into the CC Switch database. Each provider found will be added to the
+/// into the Qiniu Switch database. Each provider found will be added to the
 /// database with is_current set to false.
 pub fn import_hermes_providers_from_live(state: &AppState) -> Result<usize, AppError> {
     use crate::hermes_config;

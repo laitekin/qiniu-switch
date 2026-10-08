@@ -342,7 +342,7 @@ export function useProviderActions(
             if (provider.meta?.claudeDesktopMode === "proxy") {
               messageKey = "notifications.claudeDesktopProxyRestartRequired";
               defaultMessage =
-                "切换成功，请保持 CC Switch 运行，并重启 Claude Desktop 后生效";
+                "切换成功，请保持 Qiniu Switch 运行，并重启 Claude Desktop 后生效";
             } else {
               messageKey = "notifications.claudeDesktopRestartRequired";
               defaultMessage = "切换成功，重启 Claude Desktop 后生效";
@@ -354,6 +354,9 @@ export function useProviderActions(
           ) {
             messageKey = "notifications.addToConfigSuccess";
             defaultMessage = "已添加到配置";
+          } else if (activeApp === "workbuddy") {
+            messageKey = "notifications.workbuddyRestartRequired";
+            defaultMessage = "已写入配置，请重启 WorkBuddy 后生效";
           }
           toast.success(t(messageKey, { defaultValue: defaultMessage }), {
             closeButton: true,

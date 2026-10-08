@@ -1,0 +1,1725 @@
+<!doctype html>
+<!-- Local mock. Layout reference: https://developer.qiniu.com/aitokenapi/12884/how-to-get-api-key
+     Import pattern: Sub2API frontend/src/utils/ccswitchImport.ts. No live account data is embedded. -->
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>API Key · 七牛云控制台（Mock）</title>
+    <style>
+      :root {
+        --blue: #36a3d5;
+        --ink: #30343b;
+        --muted: #89929b;
+        --line: #e8ebee;
+        --bg: #f5f6f8;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: var(--bg);
+        font:
+          13px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "PingFang SC",
+          sans-serif;
+      }
+      button,
+      input,
+      a {
+        font: inherit;
+      }
+      button,
+      a {
+        -webkit-tap-highlight-color: transparent;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+      }
+      a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      svg {
+        width: 16px;
+        height: 16px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex-shrink: 0;
+        vertical-align: middle;
+      }
+      button:focus-visible,
+      a:focus-visible {
+        outline: 2px solid var(--blue);
+        outline-offset: 3px;
+      }
+      header {
+        height: 56px;
+        background: white;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 22px;
+        gap: 20px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: #168bd0;
+        font-size: 21px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .brand img {
+        width: 37px;
+        height: 37px;
+      }
+      .header-left,
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 25px;
+      }
+      .console-label {
+        padding-left: 24px;
+        border-left: 1px solid var(--line);
+        font-size: 14px;
+        color: #555f6a;
+      }
+      .header-right {
+        color: #67717b;
+        gap: 22px;
+      }
+      .avatar {
+        width: 29px;
+        height: 29px;
+        border-radius: 50%;
+        background: #e6f5fc;
+        display: grid;
+        place-items: center;
+        color: #329bd0;
+      }
+      .mock-label {
+        font-size: 11px;
+        padding: 1px 7px;
+        border: 1px solid #a8d8ed;
+        background: #effaff;
+        color: #3998bd;
+        border-radius: 3px;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 184px minmax(0, 1fr);
+        min-height: calc(100vh - 56px);
+      }
+      aside {
+        background: white;
+        border-right: 1px solid var(--line);
+        padding: 18px 0;
+      }
+      .side-heading {
+        margin: 0 18px 12px;
+        padding: 0 0 15px;
+        font-weight: 600;
+        border-bottom: 1px solid var(--line);
+        font-size: 14px;
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 19px;
+        color: #535a62;
+        border-left: 3px solid transparent;
+        text-align: left;
+        width: 100%;
+        background: none;
+        border-top: 0;
+        border-bottom: 0;
+        border-right: 0;
+      }
+      .nav-item.active {
+        background: #edf7fc;
+        border-left-color: var(--blue);
+        color: #2e9dcc;
+      }
+      .beta {
+        background: #f5ad58;
+        color: white;
+        font-size: 10px;
+        padding: 0 4px;
+        border-radius: 3px;
+      }
+      .side-foot {
+        margin: 28px 20px;
+        color: #a2a9b1;
+        font-size: 11px;
+      }
+      main {
+        padding: 21px 22px 36px;
+        min-width: 0;
+      }
+      .page-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 500;
+      }
+      .promos {
+        display: flex;
+        gap: 12px;
+        color: #3998ce;
+        font-size: 12px;
+      }
+      .promo {
+        border: 1px solid #c5e5f6;
+        background: linear-gradient(100deg, #f4fbff, #d9f1ff);
+        padding: 5px 15px;
+        border-radius: 20px;
+      }
+      .content {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 256px;
+        gap: 18px;
+        align-items: start;
+      }
+      .panel {
+        background: white;
+        border: 1px solid #edf0f2;
+        box-shadow: 0 1px 3px #152c4610;
+      }
+      .table-panel {
+        padding: 19px 18px 22px;
+        min-height: 570px;
+      }
+      .notice {
+        background: #fff8ed;
+        color: #c38935;
+        padding: 9px 12px;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        font-size: 12px;
+      }
+      .notice svg {
+        margin-top: 2px;
+        width: 14px;
+      }
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 20px 0 18px;
+        flex-wrap: wrap;
+      }
+      .tools {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        background: white;
+        border: 1px solid #d9dde2;
+        color: #59636d;
+        border-radius: 2px;
+        padding: 5px 12px;
+        min-height: 31px;
+        white-space: nowrap;
+      }
+      .btn:hover {
+        border-color: var(--blue);
+        color: var(--blue);
+      }
+      .btn.primary {
+        background: var(--blue);
+        color: white;
+        border-color: var(--blue);
+      }
+      .btn.primary:hover {
+        background: #2795c8;
+      }
+      .search {
+        position: relative;
+      }
+      .search input {
+        width: 196px;
+        height: 31px;
+        padding: 4px 32px 4px 10px;
+        border: 1px solid #d9dde2;
+        outline: none;
+        border-radius: 2px;
+      }
+      .search input:focus {
+        border-color: var(--blue);
+      }
+      input::placeholder {
+        color: #b0b6bc;
+      }
+      .search svg {
+        position: absolute;
+        right: 9px;
+        top: 8px;
+        color: #a8afb6;
+      }
+      .table-scroll {
+        overflow-x: auto;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        white-space: nowrap;
+        font-size: 12px;
+      }
+      th {
+        background: #f5f6f7;
+        font-weight: 500;
+        color: #59636c;
+        text-align: left;
+        padding: 14px 12px;
+      }
+      td {
+        padding: 17px 12px;
+        border-bottom: 1px solid var(--line);
+      }
+      th:last-child,
+      td:last-child {
+        position: sticky;
+        right: 0;
+        background: white;
+        box-shadow: -6px 0 10px #152c4608;
+      }
+      th:last-child {
+        background: #f5f6f7;
+      }
+      .key-name {
+        font-weight: 500;
+      }
+      .disabled-tag {
+        display: inline-block;
+        color: #9ba1a9;
+        font-size: 10px;
+        margin-left: 6px;
+        background: #f1f2f4;
+        padding: 0 4px;
+      }
+      .key {
+        font:
+          12px ui-monospace,
+          SFMono-Regular,
+          Consolas,
+          monospace;
+      }
+      .icon-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        background: none;
+        color: #919aa3;
+        padding: 4px;
+        margin-left: 3px;
+      }
+      .icon-button:hover {
+        color: var(--blue);
+      }
+      .icon-button svg {
+        width: 13px;
+        height: 13px;
+      }
+      .actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .link-button {
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--blue);
+        white-space: nowrap;
+      }
+      .import-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: #2499cf;
+        border: 1px solid #bfe3f3;
+        background: #f2fbff;
+        border-radius: 3px;
+        padding: 4px 7px;
+        white-space: nowrap;
+      }
+      .import-button:hover {
+        background: #e8f7ff;
+        text-decoration: none;
+      }
+      .import-button img {
+        width: 19px;
+        height: 19px;
+      }
+      .import-button[aria-disabled="true"] {
+        color: #a2a9b0;
+        background: #f7f8fa;
+        border-color: #e2e5e8;
+        cursor: not-allowed;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .tiny {
+        font-size: 11px;
+      }
+      .pagination {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+        margin-top: 18px;
+        font-size: 12px;
+        color: #8c959e;
+      }
+      .page {
+        min-width: 28px;
+        height: 28px;
+        padding: 0 7px;
+        border: 1px solid #dddfe4;
+        background: white;
+        color: #aab1b8;
+      }
+      .page.current {
+        background: var(--blue);
+        color: white;
+        border-color: var(--blue);
+      }
+      .page-size {
+        border: 1px solid #dde1e5;
+        padding: 3px 10px;
+      }
+      .rail {
+        display: grid;
+        gap: 15px;
+      }
+      .rail .panel {
+        padding: 19px 18px;
+      }
+      h2 {
+        margin: 0 0 16px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .endpoint-title {
+        font-size: 11px;
+        color: #9ca3aa;
+        margin: 13px 0 5px;
+      }
+      .endpoint {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+      }
+      .api-icon {
+        display: inline-grid;
+        place-items: center;
+        width: 19px;
+        height: 19px;
+        border-radius: 50%;
+        background: #70b9a0;
+        color: white;
+        font-size: 11px;
+      }
+      .api-icon.anthropic {
+        background: #cc9269;
+      }
+      .endpoint code {
+        font:
+          10px/1.4 ui-monospace,
+          monospace;
+        white-space: nowrap;
+      }
+      .rail-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+      }
+      .rail ul {
+        padding: 0;
+        list-style: none;
+        margin: 0;
+        color: #616a74;
+        font-size: 12px;
+      }
+      .rail li {
+        margin: 11px 0;
+      }
+      .rail ul li::before {
+        content: "·";
+        color: #aab0b6;
+        margin-right: 8px;
+      }
+      .rail li a {
+        color: inherit;
+      }
+      .switch-card {
+        border-top: 2px solid var(--blue);
+      }
+      .switch-heading {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .switch-heading img {
+        width: 29px;
+        height: 29px;
+      }
+      .steps {
+        margin: 12px 0 0;
+        padding-left: 19px;
+        font-size: 12px;
+        color: #6c7782;
+      }
+      .steps li {
+        margin: 8px 0;
+      }
+      .footnote {
+        margin-top: 20px;
+        color: #9ca4ac;
+        font-size: 11px;
+      }
+      dialog {
+        width: min(460px, calc(100vw - 32px));
+        border: 1px solid #e5e9ed;
+        border-radius: 5px;
+        padding: 0;
+        color: var(--ink);
+        box-shadow: 0 18px 60px #12243430;
+      }
+      dialog::backdrop {
+        background: #15233466;
+      }
+      .dialog-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 17px 22px;
+        border-bottom: 1px solid var(--line);
+      }
+      .dialog-head h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 500;
+      }
+      .dialog-body {
+        padding: 20px 22px;
+      }
+      .dialog-body label {
+        display: block;
+        margin: 0 0 6px;
+      }
+      .dialog-body input,
+      .dialog-body textarea {
+        width: 100%;
+        border: 1px solid #d9dfe5;
+        padding: 9px 10px;
+        font: inherit;
+        outline: none;
+        margin-bottom: 15px;
+      }
+      .dialog-body input:focus,
+      .dialog-body textarea:focus {
+        border-color: var(--blue);
+      }
+      .dialog-body textarea {
+        font:
+          12px/1.7 ui-monospace,
+          monospace;
+        overflow-wrap: anywhere;
+        resize: vertical;
+      }
+      .dialog-body p {
+        margin: 0 0 14px;
+        color: #7d8792;
+        font-size: 12px;
+      }
+      .dialog-footer {
+        padding: 13px 22px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+      #toast {
+        position: fixed;
+        top: 73px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 10px 18px;
+        background: #fff;
+        border: 1px solid #dbe9f0;
+        border-radius: 4px;
+        box-shadow: 0 4px 20px #12334a18;
+        z-index: 10;
+        max-width: 90vw;
+      }
+      #toast:empty {
+        display: none;
+      }
+      .empty {
+        text-align: center;
+        color: #9ca4ad;
+        padding: 55px;
+      }
+      @media (min-width: 1500px) {
+        .content {
+          grid-template-columns: minmax(0, 1fr) 290px;
+        }
+        td,
+        th {
+          padding-left: 17px;
+          padding-right: 17px;
+        }
+      }
+      @media (max-width: 1150px) {
+        .content {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .rail {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .table-panel {
+          min-height: 400px;
+        }
+        .promos {
+          display: none;
+        }
+      }
+      @media (max-width: 720px) {
+        header {
+          padding: 0 14px;
+        }
+        .header-right > :not(.avatar),
+        .console-label {
+          display: none;
+        }
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        aside {
+          display: none;
+        }
+        main {
+          padding: 16px 12px;
+        }
+        .rail {
+          grid-template-columns: 1fr;
+        }
+        .table-panel {
+          padding: 14px 12px;
+        }
+        .tools {
+          flex-wrap: wrap;
+        }
+      }
+
+      :root {
+        --blue: #26abe2;
+        --bg: #f5f5f5;
+        --ink: #333;
+      }
+      header {
+        height: 52px;
+        padding: 0 20px 0 0;
+        box-shadow: 0 2px 7px #00000009;
+        border: 0;
+      }
+      .header-left {
+        gap: 28px;
+      }
+      .hamburger {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        align-items: center;
+        justify-content: center;
+        width: 52px;
+        height: 52px;
+        background: var(--blue);
+        border: 0;
+      }
+      .hamburger span {
+        width: 20px;
+        height: 1px;
+        background: white;
+      }
+      .console-title {
+        color: var(--blue);
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .header-right {
+        font-size: 12px;
+        gap: 26px;
+        color: #333;
+      }
+      .header-right a {
+        color: inherit;
+      }
+      .global-search {
+        border-radius: 18px;
+        color: #bbb;
+        background: #f7f7f7;
+        width: 280px;
+        padding: 5px 12px;
+      }
+      .global-search span {
+        float: right;
+      }
+      .new-user {
+        color: #ff8a00;
+      }
+      .message-count {
+        font-size: 9px;
+        background: #ed5d5d;
+        border-radius: 2px;
+        color: white;
+        padding: 0 2px;
+      }
+      .avatar {
+        color: white;
+        background: #43b9e8;
+      }
+      .layout {
+        grid-template-columns: 200px minmax(0, 1fr);
+        min-height: calc(100vh - 52px);
+      }
+      aside {
+        padding: 13px 0;
+      }
+      .side-heading {
+        margin: 0 20px;
+        padding-bottom: 12px;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .nav-group {
+        margin: 16px 20px 7px;
+        color: #999;
+        font-size: 12px;
+      }
+      .nav-group:first-child {
+        margin-top: 6px;
+      }
+      .nav-item {
+        padding: 10px 20px;
+        gap: 9px;
+        height: 40px;
+        font-size: 12px;
+        color: #333;
+      }
+      .nav-item svg {
+        width: 15px;
+        height: 15px;
+      }
+      .nav-item.active {
+        background: #e3f5fc;
+      }
+      .nav-item:has(use[href="#gift"]) svg {
+        color: #ed2b37;
+      }
+      .side-foot {
+        margin-top: 28px;
+        font-size: 10px;
+        color: #b5bac0;
+      }
+      main {
+        padding: 20px;
+      }
+      .page-title {
+        height: 28px;
+        margin: 4px 0 16px;
+      }
+      h1 {
+        font-size: 16px;
+      }
+      .promos {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #333;
+      }
+      .promo {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        border: 1px solid #8edaff;
+        background: #c5eeff;
+        font-size: 12px;
+        padding: 4px 12px;
+      }
+      .promo b {
+        color: #1890ff;
+        font-size: 16px;
+        font-weight: 500;
+      }
+      .present {
+        font-size: 24px;
+        line-height: 24px;
+      }
+      .promo em {
+        position: absolute;
+        top: -12px;
+        left: 28px;
+        background: #ff754b;
+        color: white;
+        font: 9px sans-serif;
+        padding: 1px 4px;
+        transform: rotate(-9deg);
+      }
+      .skills-pill {
+        color: #c1c6ce;
+        border-radius: 20px;
+        background: #111;
+        padding: 5px 13px;
+        font: 12px/20px monospace;
+      }
+      .skills-pill i {
+        color: #24ea70;
+      }
+      .content {
+        grid-template-columns: minmax(0, 1fr) 280px;
+        gap: 20px;
+      }
+      .content,
+      .panel,
+      .table-scroll {
+        min-width: 0;
+        max-width: 100%;
+      }
+      .table-panel {
+        overflow: hidden;
+      }
+      .table-panel {
+        padding: 20px;
+        min-height: calc(100vh - 140px);
+      }
+      .panel {
+        border: 0;
+        box-shadow: 0 2px 4px #00000008;
+      }
+      .notice {
+        padding: 10px 16px;
+        font-size: 13px;
+        color: #ff8300;
+        background: #fff3e5;
+        min-height: 40px;
+      }
+      .toolbar {
+        flex-direction: row-reverse;
+        margin: 20px 0;
+      }
+      .search input {
+        width: 240px;
+        height: 32px;
+      }
+      .tools {
+        gap: 16px;
+      }
+      .btn {
+        min-height: 32px;
+        padding: 5px 15px;
+      }
+      .table-scroll {
+        min-height: 166px;
+      }
+      th {
+        height: 57px;
+        padding: 15px 20px;
+        font-size: 13px;
+        color: #333;
+        background: #f5f5f5;
+      }
+      td {
+        height: 55px;
+        padding: 14px 20px;
+        font-size: 13px;
+      }
+      .key-name {
+        font-weight: 400;
+      }
+      .key {
+        font:
+          13px system-ui,
+          sans-serif;
+      }
+      .tag {
+        color: #29a3d2;
+        background: #e7f6fd;
+        border-radius: 2px;
+        font-size: 12px;
+        padding: 2px 5px;
+      }
+      .actions {
+        gap: 12px;
+      }
+      .import-button {
+        font-size: 12px;
+        padding: 3px 6px;
+      }
+      .import-button img {
+        width: 16px;
+        height: 16px;
+      }
+      .page,
+      .page-size {
+        height: 32px;
+        min-width: 32px;
+      }
+      .pagination {
+        margin-top: 16px;
+      }
+      #count {
+        display: none;
+      }
+      .rail {
+        gap: 15px;
+      }
+      .rail .panel {
+        padding: 20px;
+      }
+      .rail > .panel:nth-child(2) {
+        min-height: calc(100vh - 345px);
+      }
+      .rail h2 {
+        margin-bottom: 16px;
+        font-size: 13px;
+      }
+      .endpoint-title {
+        font-size: 12px;
+      }
+      .endpoint {
+        font-size: 13px;
+        gap: 6px;
+      }
+      .endpoint code {
+        font:
+          13px/1.6 system-ui,
+          sans-serif;
+      }
+      .rail li {
+        font-size: 12px;
+        margin: 12px 0;
+      }
+      .footnote {
+        font-size: 11px;
+        color: #aab0b5;
+        margin-top: 24px;
+      }
+      .assistant-fab {
+        position: fixed;
+        bottom: 20px;
+        right: 12px;
+        z-index: 5;
+        border: 0;
+        background: #187dff;
+        color: white;
+        border-radius: 28px;
+        padding: 5px 8px 10px;
+        line-height: 20px;
+      }
+      .assistant-fab span {
+        display: block;
+        border-radius: 50%;
+        background: white;
+        font-size: 27px;
+        line-height: 36px;
+        margin-bottom: 5px;
+      }
+      #more-menu {
+        border: 1px solid #e5e8eb;
+        box-shadow: 0 5px 18px #0002;
+        padding: 5px;
+        min-width: 160px;
+        margin: 0;
+        border-radius: 3px;
+      }
+      #more-menu button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        border: 0;
+        background: white;
+        padding: 8px 12px;
+        color: #555;
+      }
+      #more-menu button:hover {
+        background: #eaf7fd;
+      }
+      @media (max-width: 1550px) {
+        .promos {
+          gap: 8px;
+        }
+        .promo b {
+          font-size: 13px;
+        }
+        .promo {
+          padding: 3px 8px;
+        }
+        .skills-pill {
+          display: none;
+        }
+        th,
+        td {
+          padding-left: 12px;
+          padding-right: 12px;
+        }
+        .header-right {
+          gap: 18px;
+        }
+      }
+      @media (max-width: 1200px) {
+        .content {
+          grid-template-columns: minmax(0, 1fr) 250px;
+          gap: 14px;
+        }
+        .promos .promo:nth-child(2) {
+          display: none;
+        }
+        .global-search {
+          display: none;
+        }
+        .rail .panel {
+          padding: 16px;
+        }
+        .endpoint code {
+          font-size: 11px;
+        }
+        .table-panel {
+          padding: 16px;
+        }
+      }
+      @media (max-width: 800px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        aside {
+          display: none;
+        }
+        .content {
+          grid-template-columns: 1fr;
+        }
+        .rail {
+          grid-template-columns: 1fr;
+        }
+        .rail > .panel:nth-child(2),
+        .table-panel {
+          min-height: 0;
+        }
+        .promos {
+          display: none;
+        }
+        .header-right {
+          display: none;
+        }
+        .toolbar {
+          gap: 12px;
+        }
+        .search input {
+          width: 180px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <svg style="display: none" aria-hidden="true">
+      <defs>
+        <symbol id="grid" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="6" height="6" />
+          <rect x="15" y="3" width="6" height="6" />
+          <rect x="3" y="15" width="6" height="6" />
+          <rect x="15" y="15" width="6" height="6" />
+        </symbol>
+        <symbol id="copy" viewBox="0 0 24 24">
+          <rect x="8" y="8" width="12" height="13" rx="1" />
+          <path d="M16 8V3H3v13h5" />
+        </symbol>
+        <symbol id="refresh" viewBox="0 0 24 24">
+          <path d="M20 7a9 9 0 1 0 1 9M20 3v5h-5" />
+        </symbol>
+        <symbol id="search" viewBox="0 0 24 24">
+          <circle cx="10" cy="10" r="7" />
+          <path d="m15 15 6 6" />
+        </symbol>
+        <symbol id="plus" viewBox="0 0 24 24">
+          <path d="M12 4v16M4 12h16" />
+        </symbol>
+        <symbol id="shield" viewBox="0 0 24 24">
+          <path d="m12 2 8 3v7c0 5-8 10-8 10S4 17 4 12V5Z" />
+          <circle cx="12" cy="9" r="2" />
+          <path d="M12 11v5" />
+        </symbol>
+        <symbol id="chart" viewBox="0 0 24 24">
+          <path d="M12 3a9 9 0 1 0 9 9h-9Z" />
+          <path d="M15 2v7h7a9 9 0 0 0-7-7Z" />
+        </symbol>
+        <symbol id="doc" viewBox="0 0 24 24">
+          <rect x="5" y="3" width="14" height="18" rx="1" />
+          <path d="M9 8h6M9 12h6M9 16h4" />
+        </symbol>
+        <symbol id="sliders" viewBox="0 0 24 24">
+          <path d="M3 6h18M3 12h18M3 18h18" />
+          <circle cx="8" cy="6" r="2" fill="white" />
+          <circle cx="16" cy="12" r="2" fill="white" />
+          <circle cx="9" cy="18" r="2" fill="white" />
+        </symbol>
+        <symbol id="chat" viewBox="0 0 24 24">
+          <path d="M21 11a9 9 0 0 1-9 9H3l2-4a9 9 0 1 1 16-5Z" />
+          <path d="M8 8h8M8 12h5" />
+        </symbol>
+        <symbol id="info" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 11v6M12 7h.01" />
+        </symbol>
+        <symbol id="arrow" viewBox="0 0 24 24">
+          <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
+        </symbol>
+        <symbol id="tag" viewBox="0 0 24 24">
+          <path d="m3 3 9 1 9 9-8 8-9-9Z" />
+          <circle cx="8" cy="8" r="1" />
+        </symbol>
+        <symbol id="crown" viewBox="0 0 24 24">
+          <path d="m3 7 5 4 4-7 4 7 5-4-3 13H6Z" />
+        </symbol>
+        <symbol id="history" viewBox="0 0 24 24">
+          <rect x="4" y="3" width="13" height="17" rx="2" />
+          <circle cx="17" cy="16" r="5" />
+          <path d="M17 13v3h3M8 8h5" />
+        </symbol>
+        <symbol id="external" viewBox="0 0 24 24">
+          <path d="M10 5H4v15h15v-6M13 3h8v8M11 13 21 3" />
+        </symbol>
+        <symbol id="gift" viewBox="0 0 24 24">
+          <path
+            d="M4 10h16v11H4ZM3 6h18v4H3ZM12 6v15M12 6C4 6 6 0 9 2l3 4c8 0 6-6 3-4Z"
+          />
+        </symbol>
+      </defs>
+    </svg>
+    <header>
+      <div class="header-left">
+        <button
+          class="hamburger"
+          aria-label="展开产品菜单"
+          data-placeholder="产品菜单"
+        >
+          <span></span><span></span><span></span></button
+        ><strong class="console-title">控制台</strong>
+      </div>
+      <div class="header-right">
+        <div class="global-search">
+          ⌕ 搜索控制台 / 文档 <span>全部产品⌄</span>
+        </div>
+        <span class="new-user">🎁 新推官</span
+        ><span>消息 <sup class="message-count">12</sup></span
+        ><a
+          href="https://developer.qiniu.com/aitokenapi"
+          target="_blank"
+          rel="noreferrer"
+          >文档</a
+        ><span>工单</span><span>费用</span><span>云商城</span
+        ><span class="avatar" title="本地 Mock">●</span>
+      </div>
+    </header>
+    <div class="layout">
+      <aside>
+        <div class="side-heading">AI 大模型平台</div>
+        <nav aria-label="产品导航">
+          <div class="nav-group">模型服务</div>
+          <button class="nav-item" data-placeholder="模型广场">
+            <svg><use href="#grid" /></svg>模型广场</button
+          ><button class="nav-item" data-placeholder="在线对话">
+            <svg><use href="#chat" /></svg>在线对话</button
+          ><button class="nav-item" data-placeholder="Agent Bus">
+            <svg><use href="#grid" /></svg>Agent Bus
+          </button>
+          <div class="nav-group">接入管理</div>
+          <button class="nav-item active" aria-current="page">
+            <svg><use href="#shield" /></svg>API Key</button
+          ><button class="nav-item" data-placeholder="自定义模型 ID">
+            <svg><use href="#tag" /></svg>自定义模型 ID
+          </button>
+          <div class="nav-group">用量与计费</div>
+          <button class="nav-item" data-placeholder="我的订阅">
+            <svg><use href="#crown" /></svg>我的订阅</button
+          ><button class="nav-item" data-placeholder="用量统计">
+            <svg><use href="#chart" /></svg>用量统计</button
+          ><button class="nav-item" data-placeholder="计费预估">
+            <svg><use href="#doc" /></svg>计费预估</button
+          ><button class="nav-item" data-placeholder="请求日志">
+            <svg><use href="#history" /></svg>请求日志</button
+          ><button class="nav-item" data-placeholder="我的资源包">
+            <svg><use href="#external" /></svg>我的资源包
+          </button>
+          <div class="nav-group">其他</div>
+          <button class="nav-item" data-placeholder="批量推理">
+            <svg><use href="#external" /></svg>批量推理</button
+          ><button class="nav-item" data-placeholder="有奖邀请">
+            <svg><use href="#gift" /></svg>有奖邀请
+          </button>
+        </nav>
+        <div class="side-foot">本地 Mock · 非官方控制台</div>
+      </aside>
+      <main>
+        <div class="page-title">
+          <h1>API Key</h1>
+          <div class="promos">
+            <span class="promo"
+              ><em>Hot!</em><span class="present">🎁</span>邀好友，一起瓜分
+              <b>百亿 Tokens！</b></span
+            ><span class="promo"
+              ><em>Hot!</em
+              ><span class="present">🎁</span>完成企业认证，立刻领取
+              <b>1200 万 Tokens</b> 体验资源包!</span
+            ><span class="skills-pill"><i>&gt;</i> SKILLS MaaS_</span>
+          </div>
+        </div>
+        <div class="content">
+          <section class="panel table-panel" aria-label="API Key 管理">
+            <div class="notice">
+              <svg><use href="#info" /></svg
+              ><span
+                >创建第一个 KEY 时，即激活当前账号的 300 万免费 Token
+                额度及其他活动资源包 Token 额度。请参考
+                <a
+                  href="https://www.qiniu.com/ai"
+                  target="_blank"
+                  rel="noreferrer"
+                  >活动规则</a
+                >
+                和
+                <a
+                  href="https://developer.qiniu.com/aitokenapi"
+                  target="_blank"
+                  rel="noreferrer"
+                  >Token 用量查询</a
+                ></span
+              >
+            </div>
+            <div class="toolbar">
+              <div class="tools">
+                <button class="btn primary" id="create">
+                  <svg><use href="#plus" /></svg>创建 API Key</button
+                ><button class="btn" id="refresh">
+                  <svg><use href="#refresh" /></svg>刷新
+                </button>
+              </div>
+              <div class="tools">
+                <label class="search"
+                  ><input
+                    id="search-input"
+                    placeholder="输入名称搜索"
+                    aria-label="输入名称搜索" /><svg>
+                    <use href="#search" /></svg></label
+                ><button class="btn" id="column-toggle">
+                  <svg><use href="#sliders" /></svg>列选项
+                </button>
+              </div>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>名称</th>
+                    <th>Key</th>
+                    <th>标签 ⓘ <span class="muted">☰</span></th>
+                    <th class="usage-column">近八天用量 ⓘ</th>
+                    <th>日配额 ⓘ</th>
+                    <th>月配额 ⓘ</th>
+                    <th class="usage-column">总配额 ⓘ</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="key-rows"></tbody>
+              </table>
+            </div>
+            <div class="pagination">
+              <span id="count"></span
+              ><button class="page" disabled aria-label="上一页">‹</button
+              ><button class="page current" aria-label="第 1 页">1</button
+              ><button class="page" disabled aria-label="下一页">›</button
+              ><span class="page-size">10 条/页⌄</span>
+            </div>
+            <p class="footnote" id="credential-status">正在加载本地测试 Key…</p>
+          </section>
+          <div class="rail">
+            <section class="panel">
+              <h2>API 接入端点</h2>
+              <div class="endpoint-title">OpenAI BaseURL：</div>
+              <div class="endpoint">
+                <span class="api-icon">✳</span
+                ><code>https://api.qnaigc.com/v1</code
+                ><button
+                  class="icon-button"
+                  data-copy="https://api.qnaigc.com/v1"
+                  aria-label="复制 OpenAI 接入端点"
+                >
+                  <svg><use href="#copy" /></svg>
+                </button>
+              </div>
+              <div class="endpoint-title">Anthropic BaseURL：</div>
+              <div class="endpoint">
+                <span class="api-icon anthropic">A</span
+                ><code>https://api.qnaigc.com</code
+                ><button
+                  class="icon-button"
+                  data-copy="https://api.qnaigc.com"
+                  aria-label="复制 Anthropic 接入端点"
+                >
+                  <svg><use href="#copy" /></svg>
+                </button>
+              </div>
+            </section>
+            <section class="panel">
+              <div class="rail-head">
+                <h2>使用教程</h2>
+                <a
+                  class="tiny"
+                  href="https://developer.qiniu.com/aitokenapi"
+                  target="_blank"
+                  rel="noreferrer"
+                  >查看全部 ›</a
+                >
+              </div>
+              <ul>
+                <li>实时推理 API 接入说明</li>
+                <li>批量推理 API 接入说明</li>
+                <li>图片生成 API 接入说明（kling 系列）</li>
+                <li>视频生成 API 接入说明（kling 系列）</li>
+                <li>大模型 Token 用量查询</li>
+                <li>Anthropic API 兼容和 Claude Code 配置</li>
+                <li>通过 Router 配置 Claude Code 编程助手</li>
+                <li>AI 编程工具配置大全（AI Coding）</li>
+              </ul>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+    <button
+      class="assistant-fab"
+      data-placeholder="智能助手"
+      aria-label="智能助手"
+    >
+      <span>🤖</span>智能<br />助手
+    </button>
+    <div id="more-menu" popover>
+      <button data-more="edit">修改名称 / Key</button
+      ><button data-more="link">查看导入链接</button>
+    </div>
+    <dialog id="quota-dialog" aria-labelledby="quota-title">
+      <form id="quota-form">
+        <div class="dialog-head">
+          <h2 id="quota-title">设置限额</h2>
+          <button
+            type="button"
+            class="icon-button"
+            data-close="quota-dialog"
+            aria-label="关闭限额"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="dialog-body">
+          <p>仅修改本地演示配额，不调用七牛管理接口。</p>
+          <label for="daily-limit">日限额</label
+          ><input
+            id="daily-limit"
+            type="number"
+            min="0"
+            placeholder="无限"
+          /><label for="monthly-limit">月限额</label
+          ><input
+            id="monthly-limit"
+            type="number"
+            min="0"
+            placeholder="无限"
+          /><label for="total-limit">总限额</label
+          ><input id="total-limit" type="number" min="0" placeholder="无限" />
+        </div>
+        <div class="dialog-footer">
+          <button class="btn" type="button" data-close="quota-dialog">
+            取消</button
+          ><button class="btn primary">确定</button>
+        </div>
+      </form>
+    </dialog>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <dialog id="editor" aria-labelledby="editor-title">
+      <form id="editor-form">
+        <div class="dialog-head">
+          <h2 id="editor-title">编辑 API Key</h2>
+          <button
+            class="icon-button"
+            type="button"
+            data-close="editor"
+            aria-label="关闭"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="dialog-body">
+          <p>本地 Mock，不会创建或修改七牛云账号中的密钥。</p>
+          <label for="edit-name">名称或备注信息</label
+          ><input
+            id="edit-name"
+            maxlength="20"
+            required
+            placeholder="例如：开发环境"
+          /><label for="edit-key">模型 API Key（可选）</label
+          ><input
+            id="edit-key"
+            type="password"
+            autocomplete="off"
+            placeholder="留空使用演示 Key"
+          />
+          <p>填写有效 Key 可测试真实模型获取，不会写入本地存储。</p>
+        </div>
+        <div class="dialog-footer">
+          <button class="btn" type="button" data-close="editor">取消</button
+          ><button class="btn primary" type="submit">确定</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="link-dialog" aria-labelledby="link-title">
+      <div class="dialog-head">
+        <h2 id="link-title">导入链接</h2>
+        <button
+          class="icon-button"
+          data-close="link-dialog"
+          aria-label="关闭导入链接"
+        >
+          ✕
+        </button>
+      </div>
+      <div class="dialog-body">
+        <p>链接包含该行的 API Key，请勿公开分享。</p>
+        <textarea
+          id="link-value"
+          rows="6"
+          readonly
+          aria-label="导入链接内容"
+        ></textarea>
+      </div>
+      <div class="dialog-footer">
+        <button class="btn" data-close="link-dialog">关闭</button
+        ><button class="btn primary" id="copy-link">复制链接</button>
+      </div>
+    </dialog>
+    <script>
+      const rows = [
+        {
+          id: "demo-1",
+          name: "Default",
+          key: "",
+          enabled: true,
+          usage: "37K",
+          tag: "",
+        },
+        {
+          id: "demo-2",
+          name: "Default",
+          key: "sk-demo-secondary-key-6ffc6",
+          enabled: true,
+          usage: "--",
+          tag: "测试",
+        },
+      ];
+      let editingId = null,
+        actionRowId = null,
+        toastTimer,
+        hideUsage = false;
+      const $ = (id) => document.getElementById(id);
+      const escapeHtml = (value) =>
+        String(value).replace(
+          /[&<>"']/g,
+          (char) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[char],
+        );
+      const icon = (name) =>
+        `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
+      function buildImportLink(row) {
+        return (
+          "qiniuswitch://v1/import?" +
+          new URLSearchParams({
+            resource: "provider",
+            app: "claude",
+            name: "七牛云 · " + row.name,
+            homepage: "https://www.qiniu.com",
+            endpoint: "https://api.qnaigc.com",
+            apiKey: row.key,
+            icon: "qiniu",
+            configFormat: "json",
+            enabled: "false",
+          })
+        );
+      }
+      function notify(message) {
+        $("toast").textContent = message;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          $("toast").textContent = "";
+        }, 4800);
+      }
+      async function copy(text) {
+        try {
+          await navigator.clipboard.writeText(text);
+          notify("已复制");
+        } catch {
+          $("link-value").value = text;
+          $("link-dialog").showModal();
+          $("link-value").select();
+          notify("请按 Ctrl+C / ⌘C 复制");
+        }
+      }
+      function render() {
+        const filtered = rows.filter((row) =>
+          row.name
+            .toLowerCase()
+            .includes($("search-input").value.trim().toLowerCase()),
+        );
+        $("key-rows").innerHTML = filtered.length
+          ? filtered
+              .map(
+                (row) => `<tr data-id="${row.id}">
+        <td class="key-name">${escapeHtml(row.name)}${row.enabled ? "" : '<span class="disabled-tag">已禁用</span>'}</td>
+        <td><span class="key">${row.key ? escapeHtml(row.key.slice(0, 5)) + "******" + escapeHtml(row.key.slice(-5)) : "加载中…"}</span><button class="icon-button" data-action="copy" aria-label="复制 ${escapeHtml(row.name)} 的 Key">${icon("copy")}</button></td>
+        <td>${row.tag ? `<span class="tag">${escapeHtml(row.tag)}</span>` : '<span class="muted">--</span>'}</td><td class="usage-column">${row.usage}</td><td>${row.daily ?? "无限"}</td><td>${row.monthly ?? "无限"}</td><td class="usage-column">${row.total ?? "无限"}</td>
+        <td><div class="actions"><a class="import-button" data-action="import" ${row.enabled && row.key ? 'href="#"' : 'aria-disabled="true" tabindex="-1"'}><img src="src/assets/brand/qiniu-tray.svg" alt=""/>导入 Qiniu Switch</a><button class="link-button" data-action="toggle">${row.enabled ? "禁用" : "启用"}</button><button class="link-button" data-action="quota">限额</button><button class="link-button" data-action="more">更多⌄</button></div></td>
+      </tr>`,
+              )
+              .join("")
+          : '<tr><td class="empty" colspan="8">没有匹配的 API Key</td></tr>';
+        $("count").textContent = `共 ${filtered.length} 条`;
+        document.querySelectorAll(".usage-column").forEach((element) => {
+          element.hidden = hideUsage;
+        });
+      }
+      function openEditor(row) {
+        editingId = row?.id ?? null;
+        $("editor-title").textContent = row ? "编辑 API Key" : "创建 API Key";
+        $("edit-name").value = row?.name ?? "";
+        $("edit-key").value = "";
+        $("edit-key").placeholder = row
+          ? "留空保留当前 Key"
+          : "留空生成演示 Key";
+        $("editor").showModal();
+      }
+      $("key-rows").addEventListener("click", (event) => {
+        const target = event.target.closest("[data-action]");
+        if (!target) return;
+        const row = rows.find(
+          (row) => row.id === target.closest("tr").dataset.id,
+        );
+        if (!row) return;
+        switch (target.dataset.action) {
+          case "import":
+            event.preventDefault();
+            if (!row.enabled || !row.key) {
+              event.preventDefault();
+              return;
+            }
+            notify("已请求打开 Qiniu Switch，请在桌面端选择客户端和模型。");
+            window.location.href = buildImportLink(row);
+            break;
+          case "quota":
+            actionRowId = row.id;
+            $("daily-limit").value = row.daily ?? "";
+            $("monthly-limit").value = row.monthly ?? "";
+            $("total-limit").value = row.total ?? "";
+            $("quota-dialog").showModal();
+            break;
+          case "more": {
+            actionRowId = row.id;
+            const box = target.getBoundingClientRect();
+            $("more-menu").style.left =
+              Math.max(12, Math.min(window.innerWidth - 180, box.right - 160)) +
+              "px";
+            $("more-menu").style.top = box.bottom + 5 + "px";
+            $("more-menu").showPopover();
+            break;
+          }
+          case "copy":
+            void copy(row.key);
+            break;
+          case "edit":
+            openEditor(row);
+            break;
+          case "toggle":
+            row.enabled = !row.enabled;
+            render();
+            notify(row.enabled ? "演示 Key 已启用" : "演示 Key 已禁用");
+            break;
+          case "link":
+            $("link-value").value = buildImportLink(row);
+            $("link-dialog").showModal();
+            break;
+        }
+      });
+      $("editor-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = $("edit-name").value.trim(),
+          key = $("edit-key").value.trim();
+        if (!name) {
+          $("edit-name").focus();
+          return;
+        }
+        if (key && !key.startsWith("sk-")) {
+          $("edit-key").setCustomValidity("请输入 sk- 开头的模型 API Key");
+          $("edit-key").reportValidity();
+          return;
+        }
+        if (editingId) {
+          const row = rows.find((row) => row.id === editingId);
+          row.name = name;
+          if (key) row.key = key;
+        } else {
+          const id = crypto.randomUUID();
+          rows.push({
+            id,
+            name,
+            key: key || "sk-demo-" + id,
+            enabled: true,
+            usage: "—",
+          });
+        }
+        $("edit-key").value = "";
+        $("editor").close();
+        render();
+        notify("已保存到当前演示页面");
+      });
+      $("edit-key").addEventListener("input", () =>
+        $("edit-key").setCustomValidity(""),
+      );
+      $("editor").addEventListener("close", () => {
+        $("edit-key").value = "";
+        $("edit-key").setCustomValidity("");
+      });
+      $("link-dialog").addEventListener("close", () => {
+        $("link-value").value = "";
+      });
+      $("create").addEventListener("click", () => openEditor());
+      $("refresh").addEventListener("click", () => {
+        render();
+        notify("演示列表已刷新");
+      });
+      $("search-input").addEventListener("input", render);
+      $("column-toggle").addEventListener("click", () => {
+        hideUsage = !hideUsage;
+        render();
+        $("column-toggle").setAttribute("aria-pressed", String(hideUsage));
+      });
+      $("copy-link").addEventListener(
+        "click",
+        () => void copy($("link-value").value),
+      );
+      document
+        .querySelectorAll("[data-copy]")
+        .forEach((button) =>
+          button.addEventListener(
+            "click",
+            () => void copy(button.dataset.copy),
+          ),
+        );
+      document
+        .querySelectorAll("[data-close]")
+        .forEach((button) =>
+          button.addEventListener("click", () =>
+            $(button.dataset.close).close(),
+          ),
+        );
+      document
+        .querySelectorAll("[data-placeholder]")
+        .forEach((button) =>
+          button.addEventListener("click", () =>
+            notify(
+              `${button.dataset.placeholder}为页面展示，当前原型聚焦 API Key 导入。`,
+            ),
+          ),
+        );
+      $("more-menu").addEventListener("click", (event) => {
+        const target = event.target.closest("[data-more]");
+        if (!target) return;
+        const row = rows.find((row) => row.id === actionRowId);
+        $("more-menu").hidePopover();
+        if (target.dataset.more === "edit") openEditor(row);
+        else {
+          $("link-value").value = buildImportLink(row);
+          $("link-dialog").showModal();
+        }
+      });
+      $("quota-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const row = rows.find((row) => row.id === actionRowId);
+        for (const field of ["daily", "monthly", "total"])
+          row[field] = $(field + "-limit").value || undefined;
+        $("quota-dialog").close();
+        render();
+        notify("本地展示限额已更新");
+      });
+      fetch(".qiniu-mock.local.json", { cache: "no-store" })
+        .then((response) => {
+          if (!response.ok) throw new Error();
+          return response.json();
+        })
+        .then((config) => {
+          if (
+            typeof config.apiKey !== "string" ||
+            !config.apiKey.startsWith("sk-")
+          )
+            throw new Error();
+          rows[0].key = config.apiKey;
+          $("credential-status").textContent =
+            "本地 Mock · 首行已载入测试 Key，显示值已脱敏；其余页面数据为截图展示数据。";
+          render();
+        })
+        .catch(() => {
+          $("credential-status").textContent =
+            "本地 Key 未加载，可从「更多 → 修改名称 / Key」填写。";
+        });
+      render();
+    </script>
+  </body>
+</html>

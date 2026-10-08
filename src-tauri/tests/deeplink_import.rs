@@ -1,10 +1,46 @@
 use std::sync::Arc;
 
-use cc_switch_lib::{import_provider_from_deeplink, parse_deeplink_url, AppState, Database};
+use qiniu_switch_lib::{import_provider_from_deeplink, parse_deeplink_url, AppState, Database};
 
 #[path = "support.rs"]
 mod support;
 use support::{ensure_test_home, reset_test_fs, test_mutex};
+
+#[test]
+fn deeplink_import_respects_extended_client_targets() {
+    let _guard = test_mutex().lock().unwrap();
+    reset_test_fs();
+    let home = ensure_test_home();
+    let db = Arc::new(Database::memory().unwrap());
+    let state = AppState::new(db.clone());
+    for app in [
+        "claude-desktop",
+        "gemini",
+        "workbuddy",
+        "mcode",
+        "pi",
+        "grokbuild",
+        "opencode",
+        "openclaw",
+        "hermes",
+    ] {
+        let model = if app == "claude-desktop" {
+            "claude-sonnet-5"
+        } else if app == "gemini" {
+            "gemini-3.6-flash"
+        } else {
+            "gpt-6-astra"
+        };
+        let request = parse_deeplink_url(&format!("qiniuswitch://v1/import?resource=provider&app={app}&name=QiniuTarget&endpoint=https%3A%2F%2Fapi.qnaigc.com&apiKey=sk-demo&model={model}&enabled=false")).unwrap();
+        let id = import_provider_from_deeplink(&state, request).unwrap();
+        assert!(db.get_provider_by_id(&id, app).unwrap().is_some());
+        assert!(db.get_provider_by_id(&id, "claude").unwrap().is_none());
+    }
+    assert!(
+        !home.join(".workbuddy/models.json").exists(),
+        "import without enable must not write WorkBuddy config"
+    );
+}
 
 #[test]
 fn deeplink_import_claude_provider_persists_to_db() {
@@ -12,7 +48,7 @@ fn deeplink_import_claude_provider_persists_to_db() {
     reset_test_fs();
     let _home = ensure_test_home();
 
-    let url = "ccswitch://v1/import?resource=provider&app=claude&name=DeepLink%20Claude&homepage=https%3A%2F%2Fexample.com&endpoint=https%3A%2F%2Fapi.example.com%2Fv1&apiKey=sk-test-claude-key&model=claude-sonnet-4&icon=claude";
+    let url = "qiniuswitch://v1/import?resource=provider&app=claude&name=DeepLink%20Claude&homepage=https%3A%2F%2Fexample.com&endpoint=https%3A%2F%2Fapi.example.com%2Fv1&apiKey=sk-test-claude-key&model=claude-sonnet-4&icon=claude";
     let request = parse_deeplink_url(url).expect("parse deeplink url");
 
     let db = Arc::new(Database::memory().expect("create memory db"));
@@ -48,7 +84,7 @@ fn deeplink_import_codex_provider_builds_auth_and_config() {
     reset_test_fs();
     let _home = ensure_test_home();
 
-    let url = "ccswitch://v1/import?resource=provider&app=codex&name=DeepLink%20Codex&homepage=https%3A%2F%2Fopenai.example&endpoint=https%3A%2F%2Fapi.openai.example%2Fv1&apiKey=sk-test-codex-key&model=gpt-4o&icon=openai";
+    let url = "qiniuswitch://v1/import?resource=provider&app=codex&name=DeepLink%20Codex&homepage=https%3A%2F%2Fopenai.example&endpoint=https%3A%2F%2Fapi.openai.example%2Fv1&apiKey=sk-test-codex-key&model=gpt-4o&icon=openai";
     let request = parse_deeplink_url(url).expect("parse deeplink url");
 
     let db = Arc::new(Database::memory().expect("create memory db"));

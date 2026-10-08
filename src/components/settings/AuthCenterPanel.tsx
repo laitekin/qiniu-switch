@@ -8,6 +8,7 @@ import { CodexOAuthSection } from "@/components/providers/forms/CodexOAuthSectio
 import type { ManagedAuthProvider } from "@/lib/api";
 import { XaiOAuthSection } from "@/components/providers/forms/XaiOAuthSection";
 import { ProviderIcon } from "@/components/ProviderIcon";
+import { QiniuAuthSection } from "./QiniuAuthSection";
 
 interface AuthCenterPanelProps {
   authScrollTarget?: ManagedAuthProvider | null;
@@ -52,14 +53,13 @@ export function AuthCenterPanel({ authScrollTarget }: AuthCenterPanelProps) {
               <ShieldCheck className="h-5 w-5 text-primary" />
               <h3 className="text-base font-semibold">
                 {t("settings.authCenter.title", {
-                  defaultValue: "OAuth 认证中心",
+                  defaultValue: "认证中心",
                 })}
               </h3>
             </div>
             <p className="text-sm text-muted-foreground">
               {t("settings.authCenter.description", {
-                defaultValue:
-                  "在 Claude Code 中使用您的其他订阅，请注意合规风险。",
+                defaultValue: "管理七牛 AK/SK 连接及其他服务的 OAuth 账号。",
               })}
             </p>
           </div>
@@ -68,6 +68,8 @@ export function AuthCenterPanel({ authScrollTarget }: AuthCenterPanelProps) {
           </Badge>
         </div>
       </section>
+
+      <QiniuAuthSection />
 
       <section
         ref={copilotSectionRef}

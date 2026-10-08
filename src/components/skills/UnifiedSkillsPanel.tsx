@@ -34,7 +34,7 @@ import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { settingsApi, skillsApi } from "@/lib/api";
 import { toast } from "sonner";
-import { SKILLS_APP_IDS } from "@/config/appConfig";
+import { SKILLS_APP_IDS, type SkillsAppId } from "@/config/appConfig";
 import { AppCountBar } from "@/components/common/AppCountBar";
 import { AppToggleGroup } from "@/components/common/AppToggleGroup";
 import { ListItemRow } from "@/components/common/ListItemRow";
@@ -267,6 +267,7 @@ const UnifiedSkillsPanel = React.forwardRef<
       : null;
 
   const handleToggleApp = async (id: string, app: AppId, enabled: boolean) => {
+    if (!SKILLS_APP_IDS.includes(app as SkillsAppId)) return;
     if (!beginWrite()) return;
 
     try {
@@ -280,9 +281,14 @@ const UnifiedSkillsPanel = React.forwardRef<
 
   const handleToggleAll = async (app: AppId, enabled: boolean) => {
     if (!skills || !beginWrite()) return;
+    if (!SKILLS_APP_IDS.includes(app as SkillsAppId)) {
+      endWrite();
+      return;
+    }
+    const skillApp = app as SkillsAppId;
 
     const ids = skills
-      .filter((skill) => Boolean(skill.apps[app]) !== enabled)
+      .filter((skill) => Boolean(skill.apps[skillApp]) !== enabled)
       .map((skill) => skill.id);
     if (ids.length === 0) {
       endWrite();
