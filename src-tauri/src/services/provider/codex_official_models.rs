@@ -633,8 +633,8 @@ mod tests {
     impl Scope {
         fn new() -> Self {
             let dir = tempfile::TempDir::new().unwrap();
-            let saved = std::env::var_os("CC_SWITCH_TEST_HOME");
-            std::env::set_var("CC_SWITCH_TEST_HOME", dir.path());
+            let saved = std::env::var_os("QINIU_SWITCH_TEST_HOME");
+            std::env::set_var("QINIU_SWITCH_TEST_HOME", dir.path());
             Self { _dir: dir, saved }
         }
     }
@@ -643,8 +643,8 @@ mod tests {
         fn drop(&mut self) {
             reset_test_env();
             match self.saved.take() {
-                Some(value) => std::env::set_var("CC_SWITCH_TEST_HOME", value),
-                None => std::env::remove_var("CC_SWITCH_TEST_HOME"),
+                Some(value) => std::env::set_var("QINIU_SWITCH_TEST_HOME", value),
+                None => std::env::remove_var("QINIU_SWITCH_TEST_HOME"),
             }
         }
     }

@@ -13,6 +13,7 @@ GEMINI.md
 /.claude
 /.codex
 /.gemini
+/.qiniu-switch
 /.cc-switch
 /.idea
 /.vscode
@@ -20,7 +21,7 @@ vitest-report.json
 nul
 
 # Flatpak build artifacts
-flatpak/cc-switch.deb
+flatpak/qiniu-switch.deb
 flatpak-build/
 flatpak-repo/
 .worktrees/
@@ -29,3 +30,4 @@ copilot-api
 .history
 CODEBUDDY.md
 mainWindow.js
+/.qiniu-mock.local.json

@@ -219,6 +219,7 @@ impl McpService {
             }
             AppType::Mcode => mcp::mcode::sync(&server.id, Some(&server.server))?,
             AppType::Pi => mcp::pi::sync(&server.id, Some(&server.server))?,
+            AppType::WorkBuddy | AppType::Antigravity => {}
         }
         Ok(())
     }
@@ -260,6 +261,7 @@ impl McpService {
             }
             AppType::Mcode => mcp::mcode::sync(id, None)?,
             AppType::Pi => mcp::pi::sync(id, None)?,
+            AppType::WorkBuddy | AppType::Antigravity => {}
         }
         Ok(())
     }
@@ -302,7 +304,15 @@ impl McpService {
     /// 由 CC Switch 管理 MCP 的应用（Claude Desktop、OpenClaw 不支持）
     pub fn live_sync_apps() -> Vec<AppType> {
         AppType::all()
-            .filter(|app| !matches!(app, AppType::OpenClaw | AppType::ClaudeDesktop))
+            .filter(|app| {
+                !matches!(
+                    app,
+                    AppType::OpenClaw
+                        | AppType::ClaudeDesktop
+                        | AppType::WorkBuddy
+                        | AppType::Antigravity
+                )
+            })
             .collect()
     }
 

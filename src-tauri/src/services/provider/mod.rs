@@ -181,7 +181,7 @@ mod tests {
             #[cfg(windows)]
             let original_local_app_data = env::var("LOCALAPPDATA").ok();
             let original_userprofile = env::var("USERPROFILE").ok();
-            let original_test_home = env::var("CC_SWITCH_TEST_HOME").ok();
+            let original_test_home = env::var("QINIU_SWITCH_TEST_HOME").ok();
             #[cfg(target_os = "linux")]
             let original_xdg_config_home = env::var_os("XDG_CONFIG_HOME");
 
@@ -189,7 +189,7 @@ mod tests {
             #[cfg(windows)]
             env::set_var("LOCALAPPDATA", dir.path().join("AppData").join("Local"));
             env::set_var("USERPROFILE", dir.path());
-            env::set_var("CC_SWITCH_TEST_HOME", dir.path());
+            env::set_var("QINIU_SWITCH_TEST_HOME", dir.path());
             // Claude Desktop Linux paths follow XDG_CONFIG_HOME; pin them under the temp home.
             #[cfg(target_os = "linux")]
             env::remove_var("XDG_CONFIG_HOME");
@@ -228,8 +228,8 @@ mod tests {
             }
 
             match &self.original_test_home {
-                Some(value) => env::set_var("CC_SWITCH_TEST_HOME", value),
-                None => env::remove_var("CC_SWITCH_TEST_HOME"),
+                Some(value) => env::set_var("QINIU_SWITCH_TEST_HOME", value),
+                None => env::remove_var("QINIU_SWITCH_TEST_HOME"),
             }
 
             #[cfg(target_os = "linux")]
@@ -278,9 +278,9 @@ mod tests {
     fn with_test_home<T>(test: impl FnOnce(&AppState, &Path) -> T) -> T {
         let _guard = test_guard();
         let temp = tempfile::tempdir().expect("tempdir");
-        let old_test_home = std::env::var_os("CC_SWITCH_TEST_HOME");
+        let old_test_home = std::env::var_os("QINIU_SWITCH_TEST_HOME");
         let old_home = std::env::var_os("HOME");
-        std::env::set_var("CC_SWITCH_TEST_HOME", temp.path());
+        std::env::set_var("QINIU_SWITCH_TEST_HOME", temp.path());
         std::env::set_var("HOME", temp.path());
 
         let db = Arc::new(Database::memory().expect("in-memory database"));
@@ -288,8 +288,8 @@ mod tests {
         let result = test(&state, temp.path());
 
         match old_test_home {
-            Some(value) => std::env::set_var("CC_SWITCH_TEST_HOME", value),
-            None => std::env::remove_var("CC_SWITCH_TEST_HOME"),
+            Some(value) => std::env::set_var("QINIU_SWITCH_TEST_HOME", value),
+            None => std::env::remove_var("QINIU_SWITCH_TEST_HOME"),
         }
         match old_home {
             Some(value) => std::env::set_var("HOME", value),
@@ -2255,7 +2255,7 @@ requires_openai_auth = true
         let profile: Value = read_json_file(&profile_path).expect("read desktop profile");
         assert_eq!(
             profile["inferenceGatewayBaseUrl"],
-            json!("http://127.0.0.1:15721/claude-desktop"),
+            json!("http://127.0.0.1:15722/claude-desktop"),
             "desktop profile should stay pointed at the local gateway during takeover"
         );
         assert_eq!(profile["inferenceGatewayAuthScheme"], json!("bearer"));
@@ -5100,6 +5100,26 @@ impl ProviderService {
             }
             return Ok(saved);
         }
+        if app_type == AppType::WorkBuddy {
+            let native = crate::workbuddy_config::get_providers()?;
+            let mut saved = state.db.get_all_providers("workbuddy")?;
+            for (id, config) in &native {
+                if !saved.contains_key(id) {
+                    saved.insert(
+                        id.clone(),
+                        Provider::with_id(id.clone(), "WorkBuddy".into(), config.clone(), None),
+                    );
+                }
+            }
+            for (id, provider) in &mut saved {
+                if let Some(config) = native.get(id) {
+                    provider.settings_config = config.clone();
+                }
+                Self::set_provider_live_config_managed(provider, native.contains_key(id));
+                state.db.save_provider("workbuddy", provider)?;
+            }
+            return Ok(saved);
+        }
         state.db.get_all_providers(app_type.as_str())
     }
 
@@ -5143,6 +5163,28 @@ impl ProviderService {
                 match previous {
                     Some(previous) => state.db.save_provider("mcode", &previous)?,
                     None => state.db.delete_provider("mcode", &provider.id)?,
+                }
+                return Err(error);
+            }
+        }
+        Ok(true)
+    }
+
+    fn save_workbuddy_provider(
+        state: &AppState,
+        provider: &Provider,
+        write_live: bool,
+    ) -> Result<bool, AppError> {
+        let previous = state.db.get_provider_by_id(&provider.id, "workbuddy")?;
+        state.db.save_provider("workbuddy", provider)?;
+        if write_live {
+            if let Err(error) = crate::workbuddy_config::set_provider(
+                &provider.id,
+                provider.settings_config.clone(),
+            ) {
+                match previous {
+                    Some(previous) => state.db.save_provider("workbuddy", &previous)?,
+                    None => state.db.delete_provider("workbuddy", &provider.id)?,
                 }
                 return Err(error);
             }
@@ -5195,6 +5237,23 @@ impl ProviderService {
                 )));
             }
             return Self::save_mcode_provider(state, &provider, add_to_live, true);
+        }
+        if app_type == AppType::WorkBuddy {
+            let _guard = futures::executor::block_on(
+                state.proxy_service.lock_switch_for_app(app_type.as_str()),
+            );
+            if state
+                .db
+                .get_provider_by_id(&provider.id, "workbuddy")?
+                .is_some()
+                || crate::workbuddy_config::get_providers()?.contains_key(&provider.id)
+            {
+                return Err(AppError::InvalidInput(format!(
+                    "WorkBuddy provider '{}' already exists",
+                    provider.id
+                )));
+            }
+            return Self::save_workbuddy_provider(state, &provider, add_to_live);
         }
 
         // 还没有当前供应商时这一家会被写进 live：和进入代理、切换互斥（同 `update`）。
@@ -5826,6 +5885,9 @@ impl ProviderService {
             if app_type == AppType::Mcode {
                 return Self::save_mcode_provider(state, &provider, live_config_managed, false);
             }
+            if app_type == AppType::WorkBuddy {
+                return Self::save_workbuddy_provider(state, &provider, live_config_managed);
+            }
 
             // Save to database after live-config presence is resolved so parse errors
             // do not report failure after already mutating DB state.
@@ -5995,6 +6057,7 @@ impl ProviderService {
                     AppType::OpenClaw => remove_openclaw_provider_from_live(id)?,
                     AppType::Hermes => remove_hermes_provider_from_live(id)?,
                     AppType::Mcode => crate::mcode_config::remove_provider(id)?,
+                    AppType::WorkBuddy => crate::workbuddy_config::remove_provider(id)?,
                     _ => {}
                 }
             }
@@ -6071,6 +6134,7 @@ impl ProviderService {
                 remove_hermes_provider_from_live(id)?;
             }
             AppType::Mcode => crate::mcode_config::remove_provider(id)?,
+            AppType::WorkBuddy => crate::workbuddy_config::remove_provider(id)?,
             _ => {
                 return Err(AppError::Message(format!(
                     "App {} does not support remove from live config",
@@ -6295,6 +6359,7 @@ impl ProviderService {
                     AppType::OpenClaw => remove_openclaw_provider_from_live(&provider.id),
                     AppType::Hermes => remove_hermes_provider_from_live(&provider.id),
                     AppType::Mcode => crate::mcode_config::remove_provider(&provider.id),
+                    AppType::WorkBuddy => crate::workbuddy_config::remove_provider(&provider.id),
                     _ => Ok(()),
                 };
 
@@ -6540,7 +6605,9 @@ impl ProviderService {
             AppType::OpenCode => Self::extract_opencode_common_config(&provider.settings_config),
             AppType::OpenClaw => Self::extract_openclaw_common_config(&provider.settings_config),
             AppType::Hermes => Ok(String::new()), // Hermes doesn't use common config snippets
-            AppType::Pi | AppType::Mcode => Ok(String::new()),
+            AppType::Pi | AppType::Mcode | AppType::WorkBuddy | AppType::Antigravity => {
+                Ok(String::new())
+            }
         }
     }
 
@@ -6558,7 +6625,9 @@ impl ProviderService {
             AppType::OpenCode => Self::extract_opencode_common_config(settings_config),
             AppType::OpenClaw => Self::extract_openclaw_common_config(settings_config),
             AppType::Hermes => Ok(String::new()), // Hermes doesn't use common config snippets
-            AppType::Pi | AppType::Mcode => Ok(String::new()),
+            AppType::Pi | AppType::Mcode | AppType::WorkBuddy | AppType::Antigravity => {
+                Ok(String::new())
+            }
         }
     }
 
@@ -7322,6 +7391,12 @@ impl ProviderService {
             AppType::Mcode => {
                 crate::mcode_config::validate_provider(&provider.id, &provider.settings_config)?
             }
+            AppType::WorkBuddy => {
+                crate::workbuddy_config::validate_provider(&provider.id, &provider.settings_config)?
+            }
+            AppType::Antigravity => {
+                crate::antigravity_config::validate_provider(&provider.settings_config)?
+            }
             AppType::Pi => {
                 crate::pi_config::validate_provider_node(&provider.id, &provider.settings_config)?;
             }
@@ -7469,7 +7544,7 @@ impl ProviderService {
 
                 Ok((api_key, base_url))
             }
-            AppType::Gemini => {
+            AppType::Gemini | AppType::Antigravity => {
                 use crate::gemini_config::json_to_env;
 
                 let env_map = json_to_env(&provider.settings_config)?;
@@ -7489,7 +7564,7 @@ impl ProviderService {
 
                 Ok((api_key, base_url))
             }
-            AppType::OpenCode => {
+            AppType::OpenCode | AppType::WorkBuddy => {
                 // OpenCode uses options.apiKey and options.baseURL
                 let options = provider
                     .settings_config

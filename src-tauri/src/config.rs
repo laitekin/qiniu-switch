@@ -17,7 +17,7 @@ use crate::error::AppError;
 ///
 /// ## 测试隔离
 ///
-/// 为了让 Windows CI/本地测试能稳定隔离真实用户数据，可通过 `CC_SWITCH_TEST_HOME`
+/// 为了让 Windows CI/本地测试能稳定隔离真实用户数据，可通过 `QINIU_SWITCH_TEST_HOME`
 /// 显式覆盖 home dir（仅用于测试/调试场景）。
 pub fn get_home_dir() -> PathBuf {
     if let Some(home) = test_home_override() {
@@ -68,7 +68,7 @@ pub(crate) fn sqlite_unsupported_in_temp_dir() -> bool {
     unsupported
 }
 
-/// `CC_SWITCH_TEST_HOME` 的覆盖值（测试/调试用的 home 覆盖）。
+/// `QINIU_SWITCH_TEST_HOME` 的覆盖值（测试/调试用的 home 覆盖）。
 ///
 /// 返回 `Some` 即表示显式覆盖生效——此时任何基于“库里有没有 db”的启发式回退
 /// 都不该再介入，否则测试会被引导到真实用户数据上。
@@ -76,7 +76,7 @@ pub(crate) fn sqlite_unsupported_in_temp_dir() -> bool {
 /// 用 `var_os` 而非 `var`：非 Unicode 的取值只应让路径变 lossy，而不该让
 /// “覆盖是否存在”的判断失效、进而退回真实用户目录。
 fn test_home_override() -> Option<PathBuf> {
-    let raw = std::env::var_os("CC_SWITCH_TEST_HOME")?;
+    let raw = std::env::var_os("QINIU_SWITCH_TEST_HOME")?;
     // to_string_lossy 的结果必须先绑住，否则 trim 借的是一个已释放的临时值。
     let lossy = raw.to_string_lossy();
     let trimmed = lossy.trim();
@@ -309,50 +309,14 @@ pub fn get_claude_settings_path() -> PathBuf {
     settings
 }
 
-/// 获取应用配置目录路径 (~/.cc-switch)
+/// 获取应用配置目录路径 (~/.qiniu-switch)
 pub fn get_app_config_dir() -> PathBuf {
     if let Some(custom) = crate::app_store::get_app_config_dir_override() {
         return custom;
     }
 
-    let default_dir = get_home_dir().join(".cc-switch");
-
-    // 兼容 v3.10.3：当用户环境存在 `HOME` 且与真实用户目录不同，
-    // v3.10.3 可能在 `HOME/.cc-switch/` 下创建/使用了数据库。
-    // 这里仅在“默认位置没有数据库”时回退到旧位置，避免再次出现“供应商消失”问题，
-    // 同时也避免新安装因为 `HOME` 被设置而写入非预期路径。
-    //
-    // `CC_SWITCH_TEST_HOME` 是测试用的显式 home 覆盖，必须在这里短路：测试的临时
-    // 目录本来就不带 cc-switch.db，若不先返回，下面的 HOME 回退会把测试指向真实
-    // 用户库（Windows 上 runner 的 HOME 下常常确实有该 db），既污染用户数据，又让
-    // 隔离测试读到别人写的状态而失败。
-    #[cfg(windows)]
-    if test_home_override().is_some() {
-        return default_dir;
-    }
-
-    #[cfg(windows)]
-    {
-        let default_db = default_dir.join("cc-switch.db");
-        if !default_db.exists() {
-            if let Ok(home_env) = std::env::var("HOME") {
-                let trimmed = home_env.trim();
-                if !trimmed.is_empty() {
-                    let legacy_dir = PathBuf::from(trimmed).join(".cc-switch");
-                    if legacy_dir.join("cc-switch.db").exists() {
-                        log::info!(
-                            "Detected v3.10.3 legacy database at {}, using it instead of {}",
-                            legacy_dir.display(),
-                            default_dir.display()
-                        );
-                        return legacy_dir;
-                    }
-                }
-            }
-        }
-    }
-
-    default_dir
+    // 独立于原版 CC Switch，绝不回退到它的数据库目录。
+    get_home_dir().join(".qiniu-switch")
 }
 
 /// 获取应用配置文件路径
@@ -683,7 +647,7 @@ pub(crate) fn commit_staged(tmp: &Path, path: &Path) -> Result<(), AppError> {
 mod tests {
     use super::*;
 
-    /// 共享的环境变量互斥锁：改 `HOME` / `CC_SWITCH_TEST_HOME` 这类进程级
+    /// 共享的环境变量互斥锁：改 `HOME` / `QINIU_SWITCH_TEST_HOME` 这类进程级
     /// 状态的测试都必须经它（配合 `#[serial_test::serial]`）。锁必须放在
     /// 函数里经 `OnceLock` 取用——写成某个测试函数体内的 `static` 只对那一个
     /// 测试可见，等于没有互斥。
@@ -997,7 +961,7 @@ mod tests {
         );
     }
 
-    /// 回归：`CC_SWITCH_TEST_HOME` 必须盖过 v3.10.3 的 `HOME` 兼容回退。
+    /// 回归：`QINIU_SWITCH_TEST_HOME` 必须盖过 v3.10.3 的 `HOME` 兼容回退。
     ///
     /// Windows 上回退只看"默认位置有没有 cc-switch.db"，而测试临时目录里通常没有，
     /// 于是会被引向 `HOME/.cc-switch`——runner 的 HOME 下往往真有一份 db，测试就此
@@ -1019,23 +983,23 @@ mod tests {
 
         let test_home = tempfile::tempdir().expect("tempdir");
         let saved_home = std::env::var_os("HOME");
-        let saved_test_home = std::env::var_os("CC_SWITCH_TEST_HOME");
+        let saved_test_home = std::env::var_os("QINIU_SWITCH_TEST_HOME");
 
         std::env::set_var("HOME", legacy_home.path());
-        std::env::set_var("CC_SWITCH_TEST_HOME", test_home.path());
+        std::env::set_var("QINIU_SWITCH_TEST_HOME", test_home.path());
 
         let dir = get_app_config_dir();
 
         match saved_test_home {
-            Some(value) => std::env::set_var("CC_SWITCH_TEST_HOME", value),
-            None => std::env::remove_var("CC_SWITCH_TEST_HOME"),
+            Some(value) => std::env::set_var("QINIU_SWITCH_TEST_HOME", value),
+            None => std::env::remove_var("QINIU_SWITCH_TEST_HOME"),
         }
         match saved_home {
             Some(value) => std::env::set_var("HOME", value),
             None => std::env::remove_var("HOME"),
         }
 
-        let expected = test_home.path().join(".cc-switch");
+        let expected = test_home.path().join(".qiniu-switch");
         assert_eq!(
             dir, expected,
             "测试 home 优先：不得回退到 HOME 下的旧库目录"

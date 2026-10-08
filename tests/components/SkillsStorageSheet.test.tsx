@@ -6,7 +6,7 @@ import { SkillsStorageSheet } from "@/components/skills/SkillsStorageSheet";
 
 const m = vi.hoisted(() => ({
   settings: {
-    skillStorageLocation: "cc_switch",
+    skillStorageLocation: "qiniu_switch",
     skillSyncMethod: "auto",
   } as Record<string, string | undefined>,
   installed: [] as { id: string }[],
@@ -38,7 +38,7 @@ vi.mock("@/hooks/useSettings", () => ({
 
 vi.mock("@/hooks/useSkills", () => ({
   useInstalledSkills: () => ({ data: m.installed }),
-  useCcSwitchSkillsDir: () => ({ data: "/Users/jason/.cc-switch/skills" }),
+  useCcSwitchSkillsDir: () => ({ data: "/Users/jason/.qiniu-switch/skills" }),
   useResyncSkillsToApps: () => ({ mutateAsync: m.resync, isPending: false }),
 }));
 
@@ -59,7 +59,7 @@ const moveButton = () =>
 
 describe("SkillsStorageSheet", () => {
   beforeEach(() => {
-    m.settings = { skillStorageLocation: "cc_switch", skillSyncMethod: "auto" };
+    m.settings = { skillStorageLocation: "qiniu_switch", skillSyncMethod: "auto" };
     m.installed = [];
     m.autoSaveSettings.mockResolvedValue(undefined);
   });
@@ -83,7 +83,7 @@ describe("SkillsStorageSheet", () => {
   );
 
   it("treats a missing sync method as automatic, like the backend default", () => {
-    m.settings = { skillStorageLocation: "cc_switch" };
+    m.settings = { skillStorageLocation: "qiniu_switch" };
     renderDialog();
 
     expect(radio("skills.storageSheet.syncAuto")).toBeChecked();
@@ -104,7 +104,7 @@ describe("SkillsStorageSheet", () => {
     m.openDir.mockResolvedValue(undefined);
     renderDialog();
 
-    expect(screen.getByText("~/.cc-switch/skills")).toBeInTheDocument();
+    expect(screen.getByText("~/.qiniu-switch/skills")).toBeInTheDocument();
     await userEvent.click(
       screen.getByRole("button", {
         name: "skills.storageSheet.openFolderAria",

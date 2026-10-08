@@ -16,6 +16,8 @@ export type AppType =
 
 /** Skill 应用启用状态 */
 export interface SkillApps {
+  workbuddy?: boolean;
+  antigravity?: boolean;
   claude: boolean;
   "claude-desktop"?: boolean;
   codex: boolean;
@@ -263,7 +265,7 @@ export const skillsApi = {
 
   /** 迁移 Skill 存储位置 */
   async migrateStorage(
-    target: "cc_switch" | "unified",
+    target: "qiniu_switch" | "unified",
   ): Promise<MigrationResult> {
     return await invoke("migrate_skill_storage", { target });
   },

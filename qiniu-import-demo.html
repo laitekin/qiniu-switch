@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>七牛云 · 一键导入</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 48px 20px;
+        background: #f4f7fb;
+        color: #172b4d;
+        font:
+          15px/1.6 system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 600px;
+        margin: auto;
+        padding: 32px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+      }
+      .brand {
+        color: #0874ed;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+      h1 {
+        margin: 14px 0 6px;
+        font-size: 28px;
+      }
+      p {
+        color: #64748b;
+        margin: 0 0 24px;
+      }
+      label {
+        display: block;
+        margin: 16px 0 6px;
+        font-weight: 500;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        min-width: 0;
+        padding: 11px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+        font: inherit;
+        color: inherit;
+        background: white;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: 2px solid #94c8ff;
+        outline-offset: 2px;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 24px;
+      }
+      button,
+      .primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 11px 18px;
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+        background: white;
+        font: inherit;
+        cursor: pointer;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      .primary {
+        background: #0874ed;
+        border-color: #0874ed;
+        color: white;
+        flex: 1;
+      }
+      small {
+        display: block;
+        margin-top: 14px;
+        color: #64748b;
+      }
+      details {
+        margin-top: 24px;
+      }
+      summary {
+        cursor: pointer;
+        color: #64748b;
+      }
+      textarea {
+        margin-top: 12px;
+        resize: vertical;
+        font:
+          12px/1.6 ui-monospace,
+          monospace;
+        overflow-wrap: anywhere;
+      }
+      #status {
+        margin: 16px 0 0;
+        font-size: 13px;
+      }
+      @media (max-width: 480px) {
+        body {
+          padding: 20px 12px;
+        }
+        main {
+          padding: 24px 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="brand">Qiniu Switch</div>
+      <h1>七牛云，一键导入</h1>
+      <p>点击按钮，在桌面应用中确认添加供应商。</p>
+      <form id="config" autocomplete="off">
+        <label for="app">导入到</label>
+        <select id="app" required>
+          <option value="" selected disabled>请选择客户端</option>
+          <option value="claude">Claude Code</option>
+          <option value="claude-desktop">Claude Desktop</option>
+          <option value="codex">Codex</option>
+          <option value="gemini">Gemini CLI</option>
+          <option value="opencode">OpenCode</option>
+          <option value="workbuddy">WorkBuddy</option>
+          <option value="grokbuild">Grok Build</option>
+          <option value="openclaw">OpenClaw</option>
+          <option value="hermes">Hermes</option>
+          <option value="pi">Pi</option>
+          <option value="mcode">MiniMax Code</option>
+        </select>
+        <label for="name">供应商名称</label>
+        <input id="name" value="七牛云 · 网页导入演示" required />
+        <label for="endpoint">Base URL</label>
+        <input
+          id="endpoint"
+          type="url"
+          placeholder="选择客户端后自动填写"
+          required
+        />
+        <label for="key">模型 API Key</label>
+        <input
+          id="key"
+          type="password"
+          placeholder="填写模型 API Key（sk-…）"
+          autocomplete="off"
+          required
+        />
+        <div class="actions">
+          <a id="import" class="primary" href="#">导入 Qiniu Switch</a>
+          <button id="copy" type="button">复制链接</button>
+        </div>
+        <small>桌面端会使用此 Key 获取模型列表，选择模型后再导入。</small>
+      </form>
+      <details>
+        <summary>查看导入链接</summary>
+        <textarea id="link" rows="5" readonly aria-label="导入链接"></textarea>
+        <small>链接包含模型 Key；不要公开分享真实密钥。不需要 AK/SK。</small>
+      </details>
+      <p id="status" role="status" aria-live="polite"></p>
+    </main>
+    <script>
+      const form = document.getElementById("config");
+      const app = document.getElementById("app");
+      const endpoint = document.getElementById("endpoint");
+      const importLink = document.getElementById("import");
+      const preview = document.getElementById("link");
+      const status = document.getElementById("status");
+      const endpoints = {
+        claude: "https://api.qnaigc.com",
+        "claude-desktop": "https://api.qnaigc.com",
+        codex: "https://api.qnaigc.com/bypass/openai/v1",
+        gemini: "https://api.qnaigc.com/bypass/vertex",
+        opencode: "https://api.qnaigc.com/v1",
+        workbuddy: "https://api.qnaigc.com/v1",
+        grokbuild: "https://api.qnaigc.com/bypass/openai/v1",
+        openclaw: "https://api.qnaigc.com/v1",
+        hermes: "https://api.qnaigc.com/v1",
+        pi: "https://api.qnaigc.com/v1",
+        mcode: "https://api.qnaigc.com/v1",
+      };
+      function updateLink() {
+        if (!app.value) {
+          importLink.removeAttribute("href");
+          preview.value = "";
+          return "";
+        }
+        const params = new URLSearchParams({
+          resource: "provider",
+          app: app.value,
+          name: document.getElementById("name").value.trim(),
+          homepage: "https://www.qiniu.com",
+          endpoint: endpoint.value.trim(),
+          apiKey: document.getElementById("key").value.trim(),
+          icon: "qiniu",
+          configFormat: "json",
+          enabled: "false",
+        });
+        const url = "qiniuswitch://v1/import?" + params.toString();
+        importLink.href = url;
+        preview.value = url;
+        status.textContent = "";
+        return url;
+      }
+      app.addEventListener("change", () => {
+        endpoint.value = endpoints[app.value];
+        updateLink();
+      });
+      form.addEventListener("input", updateLink);
+      form.addEventListener("submit", (event) => event.preventDefault());
+      importLink.addEventListener("click", (event) => {
+        if (!form.reportValidity()) {
+          event.preventDefault();
+          return;
+        }
+        updateLink();
+        status.textContent =
+          "已请求打开应用，请在 Qiniu Switch 中确认。未唤起时，请先安装或打开桌面应用。";
+      });
+      document.getElementById("copy").addEventListener("click", async () => {
+        if (!form.reportValidity()) return;
+        const url = updateLink();
+        try {
+          await navigator.clipboard.writeText(url);
+          status.textContent = "已复制导入链接。";
+        } catch {
+          document.querySelector("details").open = true;
+          preview.focus();
+          preview.select();
+          status.textContent = "请按 Ctrl+C / ⌘C 复制链接。";
+        }
+      });
+      updateLink();
+    </script>
+  </body>
+</html>

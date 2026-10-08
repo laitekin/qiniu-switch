@@ -33,6 +33,7 @@ import { useProviderHealth } from "@/lib/query/failover";
 import { useUsageQuery } from "@/lib/query/queries";
 import { resolveProviderIcon } from "@/utils/providerIcon";
 import { isAdditiveAppId, isProxyAppId } from "@/config/appConfig";
+import { needsQiniuApiKey } from "@/config/qiniuDefaultProvider";
 import { ProviderCardActions } from "./ProviderCardActions";
 import type { CardChip, CardPresentation, CardTone } from "./presentation";
 
@@ -382,6 +383,17 @@ export function ProviderCard({
             {presentation.chips.map((chip) => (
               <CardChipBadge key={chip.key} chip={chip} />
             ))}
+            {needsQiniuApiKey(provider) && (
+              <button
+                type="button"
+                onClick={() => onEdit(provider)}
+                className="shrink-0 whitespace-nowrap rounded-control bg-action px-2 py-1 text-caption font-medium text-action-fg hover:opacity-90"
+              >
+                {t("provider.configureApiKey", {
+                  defaultValue: "配置 API Key",
+                })}
+              </button>
+            )}
             {presentation.showHealth && health && (
               <HealthChip
                 consecutiveFailures={health.consecutive_failures}

@@ -25,8 +25,15 @@ const COPILOT_UNIT_PREMIUM: &str = "requests";
 pub fn get_providers(
     state: State<'_, AppState>,
     app: String,
+    default_provider: Option<Provider>,
 ) -> Result<IndexMap<String, Provider>, String> {
     let app_type = AppType::from_str(&app).map_err(|e| e.to_string())?;
+    if let Some(provider) = default_provider {
+        state
+            .db
+            .ensure_qiniu_default(&app, &provider)
+            .map_err(|e| e.to_string())?;
+    }
     ProviderService::list(state.inner(), app_type).map_err(|e| e.to_string())
 }
 

@@ -27,7 +27,7 @@ pub struct Provider {
     /// 备注信息
     #[serde(skip_serializing_if = "Option::is_none")]
     pub notes: Option<String>,
-    /// 供应商元数据（不写入 live 配置，仅存于 ~/.cc-switch/config.json）
+    /// 供应商元数据（不写入 live 配置，仅存于 ~/.qiniu-switch/config.json）
     #[serde(skip_serializing_if = "Option::is_none")]
     pub meta: Option<ProviderMeta>,
     /// 图标名称（如 "openai", "anthropic"）
@@ -44,6 +44,25 @@ pub struct Provider {
 }
 
 impl Provider {
+    pub fn needs_qiniu_api_key(&self) -> bool {
+        self.id == "qiniu-default"
+            && ![
+                "/env/ANTHROPIC_AUTH_TOKEN",
+                "/env/ANTHROPIC_API_KEY",
+                "/env/GEMINI_API_KEY",
+                "/auth/OPENAI_API_KEY",
+                "/options/apiKey",
+                "/apiKey",
+            ]
+            .iter()
+            .any(|path| {
+                self.settings_config
+                    .pointer(path)
+                    .and_then(Value::as_str)
+                    .is_some_and(|key| !key.trim().is_empty())
+            })
+    }
+
     /// 从现有ID创建供应商
     pub fn with_id(
         id: String,
@@ -189,7 +208,7 @@ impl Provider {
                 (base_url, api_key)
             }
             // Gemini uses Google-specific env keys (with a legacy GOOGLE_API_KEY fallback).
-            AppType::Gemini => {
+            AppType::Gemini | AppType::Antigravity => {
                 let env = settings.get("env");
                 let base_url = str_at(env.and_then(|e| e.get("GOOGLE_GEMINI_BASE_URL")));
                 let api_key = first_non_empty(env, &["GEMINI_API_KEY", "GOOGLE_API_KEY"]);
@@ -228,7 +247,7 @@ impl Provider {
                 str_at(settings.get("apiKey")),
             ),
             // OpenCode (OMO) nests credentials under `options` (the SDK options object).
-            AppType::OpenCode | AppType::Mcode => {
+            AppType::OpenCode | AppType::Mcode | AppType::WorkBuddy => {
                 let options = settings.get("options");
                 (
                     str_at(options.and_then(|o| o.get("baseURL"))),
@@ -393,7 +412,7 @@ pub enum ClaudeDesktopMode {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct ClaudeDesktopModelRoute {
-    /// 真实上游模型名，只保存在 CC Switch 内部，不写入 Claude Desktop profile。
+    /// 真实上游模型名，只保存在 Qiniu Switch 内部，不写入 Claude Desktop profile。
     pub model: String,
     /// Claude Desktop 模型菜单显示名；写入 profile 的 `labelOverride`。
     #[serde(rename = "labelOverride", skip_serializing_if = "Option::is_none")]

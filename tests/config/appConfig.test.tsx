@@ -9,7 +9,14 @@ describe("appConfig provider lifecycle", () => {
     },
   );
 
-  it.each(["claude", "claude-desktop", "codex", "gemini", "grokbuild"])(
+  it.each([
+    "claude",
+    "claude-desktop",
+    "codex",
+    "gemini",
+    "grokbuild",
+    "antigravity",
+  ])(
     "does not classify %s as additive",
     (appId) => {
       expect(isAdditiveAppId(appId)).toBe(false);

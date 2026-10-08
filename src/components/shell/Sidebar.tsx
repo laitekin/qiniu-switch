@@ -16,6 +16,7 @@ import {
   KeyRound,
   Layers,
   LayoutGrid,
+  Sparkles,
   Route,
   Server,
   Settings,
@@ -34,7 +35,7 @@ import { fmtUsd } from "@/components/usage/format";
 import { HoverTip } from "@/components/ui/hover-tip";
 import { DRAG_REGION_ATTR, DRAG_REGION_STYLE, isMac } from "@/lib/platform";
 import { cn } from "@/lib/utils";
-import ccswitchLogo from "@/assets/icons/logo.svg";
+import ccswitchLogo from "@/assets/brand/qiniu-app.svg";
 import { APP_DISPLAY_NAME, AppGlyph } from "./AppGlyph";
 
 const NO_DRAG = { WebkitAppRegion: "no-drag" } as React.CSSProperties;
@@ -141,7 +142,7 @@ function SidebarTopBar({
             className="pointer-events-none h-5 w-5 shrink-0"
           />
           <span className="pointer-events-none me-auto min-w-0 truncate text-strong font-semibold text-fg-1">
-            CC Switch
+            Qiniu Switch
           </span>
           {toggleButton}
         </div>
@@ -186,7 +187,7 @@ function SidebarTopBar({
             className="h-[22px] w-[22px] shrink-0"
           />
           <span className="truncate text-strong font-semibold text-fg-1">
-            CC Switch
+            Qiniu Switch
           </span>
         </span>
       )}
@@ -224,6 +225,11 @@ function MainDirectory({
     trailing?: string;
     alert?: string;
   }[] = [
+    {
+      page: "marketplace",
+      label: t("marketplace.title", { defaultValue: "模型广场" }),
+      icon: Sparkles,
+    },
     { page: "mcp", label: "MCP", icon: Server },
     { page: "skills", label: "Skills", icon: SkillsIcon },
     { page: "prompts", label: t("nav.prompts"), icon: BookOpen },
@@ -679,7 +685,7 @@ function SettingsDirectory({
       </div>
       {!collapsed && version && (
         <div className="shrink-0 px-4 pb-4 text-caption text-fg-3">
-          CC Switch v{version}
+          Qiniu Switch v{version}
         </div>
       )}
     </>

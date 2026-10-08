@@ -15,6 +15,7 @@ export type AppPage =
   | "hermesMemory";
 
 export type GlobalPage =
+  | "marketplace"
   | "usage"
   | "auth"
   | "mcp"
@@ -51,6 +52,7 @@ const APP_PAGES: AppPage[] = [
 ];
 
 const GLOBAL_PAGES: GlobalPage[] = [
+  "marketplace",
   "usage",
   "auth",
   "mcp",
@@ -61,8 +63,8 @@ const GLOBAL_PAGES: GlobalPage[] = [
   "apps",
 ];
 
-export const VIEW_STORAGE_KEY = "cc-switch-last-view";
-export const APP_STORAGE_KEY = "cc-switch-last-app";
+export const VIEW_STORAGE_KEY = "qiniu-switch-last-view";
+export const APP_STORAGE_KEY = "qiniu-switch-last-app";
 
 /** 旧版视图名 → 新视图（OpenClaw 的三个配置页合成了一个）。 */
 const LEGACY_VIEWS: Record<string, View> = {

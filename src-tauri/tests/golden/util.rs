@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use serde_json::Value;
 
-use cc_switch_lib::{AppState, AppType, McpApps, McpServer, Provider, ProviderMeta};
+use qiniu_switch_lib::{AppState, AppType, McpApps, McpServer, Provider, ProviderMeta};
 
 use crate::support::ensure_test_home;
 

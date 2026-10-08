@@ -42,10 +42,12 @@ concurrency:
 
 jobs:
   sync-to-r2:
+    # Upstream release mirroring is disabled for this independent application.
+    if: false
     name: Sync release to R2
     runs-on: ubuntu-22.04
     env:
-      R2_BUCKET: cc-switch-releases
+      R2_BUCKET: qiniu-switch-releases
       R2_PUBLIC_BASE_URL: https://dl.ccswitch.io
       KEEP_VERSIONS: "5"
       AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
@@ -68,7 +70,7 @@ jobs:
           fi
           if [ -n "$R2_ACCOUNT_ID" ] && [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
             echo "configured=true" >> "$GITHUB_OUTPUT"
-          elif [ "$GITHUB_REPOSITORY" = "farion1231/cc-switch" ]; then
+          elif [ "$GITHUB_REPOSITORY" = "farion1231/qiniu-switch" ]; then
             # A silently stale mirror strands updater users on old versions
             # (the R2 endpoint wins as long as its manifest parses), so the
             # official repo must never skip this sync.

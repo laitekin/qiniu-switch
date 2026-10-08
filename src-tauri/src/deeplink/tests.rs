@@ -2,6 +2,18 @@
 
 use super::mcp::parse_mcp_apps;
 use super::parser::parse_deeplink_url;
+
+#[test]
+fn independent_brand_rejects_original_protocol() {
+    assert!(
+        parse_deeplink_url("ccswitch://v1/import?resource=provider&app=claude&name=Original")
+            .is_err()
+    );
+    assert!(
+        parse_deeplink_url("qiniuswitch://v1/import?resource=provider&app=claude&name=Qiniu")
+            .is_ok()
+    );
+}
 use super::prompt::import_prompt_from_deeplink;
 use super::provider::parse_and_merge_config;
 use super::utils::{infer_homepage_from_endpoint, validate_url};
@@ -23,11 +35,11 @@ impl TestHomeGuard {
         let dir = tempfile::tempdir().expect("create isolated test home");
         let original_home = env::var_os("HOME");
         let original_userprofile = env::var_os("USERPROFILE");
-        let original_test_home = env::var_os("CC_SWITCH_TEST_HOME");
+        let original_test_home = env::var_os("QINIU_SWITCH_TEST_HOME");
 
         env::set_var("HOME", dir.path());
         env::set_var("USERPROFILE", dir.path());
-        env::set_var("CC_SWITCH_TEST_HOME", dir.path());
+        env::set_var("QINIU_SWITCH_TEST_HOME", dir.path());
 
         Self {
             _dir: dir,
@@ -41,8 +53,8 @@ impl TestHomeGuard {
 impl Drop for TestHomeGuard {
     fn drop(&mut self) {
         match &self.original_test_home {
-            Some(value) => env::set_var("CC_SWITCH_TEST_HOME", value),
-            None => env::remove_var("CC_SWITCH_TEST_HOME"),
+            Some(value) => env::set_var("QINIU_SWITCH_TEST_HOME", value),
+            None => env::remove_var("QINIU_SWITCH_TEST_HOME"),
         }
         match &self.original_userprofile {
             Some(value) => env::set_var("USERPROFILE", value),
@@ -61,7 +73,7 @@ impl Drop for TestHomeGuard {
 
 #[test]
 fn test_parse_valid_claude_deeplink() {
-    let url = "ccswitch://v1/import?resource=provider&app=claude&name=Test%20Provider&homepage=https%3A%2F%2Fexample.com&endpoint=https%3A%2F%2Fapi.example.com&apiKey=sk-test-123&icon=claude";
+    let url = "qiniuswitch://v1/import?resource=provider&app=claude&name=Test%20Provider&homepage=https%3A%2F%2Fexample.com&endpoint=https%3A%2F%2Fapi.example.com&apiKey=sk-test-123&icon=claude";
 
     let request = parse_deeplink_url(url).unwrap();
 
@@ -80,7 +92,7 @@ fn test_parse_valid_claude_deeplink() {
 
 #[test]
 fn test_parse_deeplink_with_notes() {
-    let url = "ccswitch://v1/import?resource=provider&app=codex&name=Codex&homepage=https%3A%2F%2Fcodex.com&endpoint=https%3A%2F%2Fapi.codex.com&apiKey=key123&notes=Test%20notes";
+    let url = "qiniuswitch://v1/import?resource=provider&app=codex&name=Codex&homepage=https%3A%2F%2Fcodex.com&endpoint=https%3A%2F%2Fapi.codex.com&apiKey=key123&notes=Test%20notes";
 
     let request = parse_deeplink_url(url).unwrap();
 
@@ -88,16 +100,54 @@ fn test_parse_deeplink_with_notes() {
 }
 
 #[test]
-fn pi_provider_deeplink_is_not_a_second_add_provider_entry() {
-    let url = "ccswitch://v1/import?resource=provider&app=pi&name=Pi";
-    assert!(parse_deeplink_url(url).is_err());
+fn pi_provider_deeplink_is_supported() {
+    let url = "qiniuswitch://v1/import?resource=provider&app=pi&name=Pi";
+    assert_eq!(parse_deeplink_url(url).unwrap().app.as_deref(), Some("pi"));
+}
+
+#[test]
+fn antigravity_provider_deeplink_is_supported() {
+    use super::provider::build_provider_from_request;
+
+    let url = "qiniuswitch://v1/import?resource=provider&app=antigravity&name=Gemini%20Relay&endpoint=https%3A%2F%2Fapi.example.com&apiKey=test-key&model=gemini-3.6-flash&enabled=false";
+    let request = parse_deeplink_url(url).unwrap();
+    assert_eq!(request.app.as_deref(), Some("antigravity"));
+
+    let provider = build_provider_from_request(&AppType::Antigravity, &request).unwrap();
+    assert_eq!(
+        provider.settings_config["settings"]["modelProvider"],
+        "gemini"
+    );
+    assert_eq!(
+        provider.settings_config["env"]["GEMINI_API_KEY"],
+        "test-key"
+    );
+    assert_eq!(
+        provider.settings_config["env"]["GOOGLE_GEMINI_BASE_URL"],
+        "https://api.example.com"
+    );
+    assert_eq!(
+        provider.settings_config["env"]["GEMINI_MODEL"],
+        "gemini-3.6-flash"
+    );
+}
+
+#[test]
+fn antigravity_provider_deeplink_requires_api_key() {
+    use super::provider::build_provider_from_request;
+
+    let request = parse_deeplink_url(
+        "qiniuswitch://v1/import?resource=provider&app=antigravity&name=Missing%20Key",
+    )
+    .unwrap();
+    assert!(build_provider_from_request(&AppType::Antigravity, &request).is_err());
 }
 
 #[test]
 fn test_parse_grokbuild_provider() {
     use super::provider::build_provider_from_request;
 
-    let url = "ccswitch://v1/import?resource=provider&app=grokbuild&name=Grok%20Relay&endpoint=https%3A%2F%2Fapi.example.com%2Fv1&apiKey=secret&model=grok-4.5";
+    let url = "qiniuswitch://v1/import?resource=provider&app=grokbuild&name=Grok%20Relay&endpoint=https%3A%2F%2Fapi.example.com%2Fv1&apiKey=secret&model=grok-4.5";
 
     let request = parse_deeplink_url(url).unwrap();
 
@@ -137,7 +187,7 @@ fn test_parse_invalid_scheme() {
 
 #[test]
 fn test_parse_unsupported_version() {
-    let url = "ccswitch://v2/import?resource=provider&app=claude&name=Test";
+    let url = "qiniuswitch://v2/import?resource=provider&app=claude&name=Test";
 
     let result = parse_deeplink_url(url);
     assert!(result.is_err());
@@ -150,7 +200,7 @@ fn test_parse_unsupported_version() {
 #[test]
 fn test_parse_missing_required_field() {
     // Name is still required even in v3.8+ (only homepage/endpoint/apiKey are optional)
-    let url = "ccswitch://v1/import?resource=provider&app=claude";
+    let url = "qiniuswitch://v1/import?resource=provider&app=claude";
 
     let result = parse_deeplink_url(url);
     assert!(result.is_err());
@@ -827,7 +877,7 @@ fn test_build_claude_provider_without_config_unchanged() {
 #[serial_test::serial]
 fn test_import_prompt_allows_space_in_base64_content() {
     let _test_home = TestHomeGuard::new();
-    let url = "ccswitch://v1/import?resource=prompt&app=codex&name=PromptPlus&content=Pj4+";
+    let url = "qiniuswitch://v1/import?resource=prompt&app=codex&name=PromptPlus&content=Pj4+";
     let request = parse_deeplink_url(url).unwrap();
 
     // URL decoded content may have "+" become space
@@ -875,7 +925,7 @@ fn test_parse_prompt_deeplink() {
     let content = "Hello World";
     let content_b64 = BASE64_STANDARD.encode(content);
     let url = format!(
-        "ccswitch://v1/import?resource=prompt&app=claude&name=test&content={}&description=desc&enabled=true",
+        "qiniuswitch://v1/import?resource=prompt&app=claude&name=test&content={}&description=desc&enabled=true",
         content_b64
     );
 
@@ -892,7 +942,7 @@ fn test_parse_prompt_deeplink() {
 fn test_parse_grokbuild_prompt_deeplink() {
     let content_b64 = BASE64_STANDARD.encode("Grok instructions");
     let url = format!(
-        "ccswitch://v1/import?resource=prompt&app=grokbuild&name=test&content={content_b64}"
+        "qiniuswitch://v1/import?resource=prompt&app=grokbuild&name=test&content={content_b64}"
     );
 
     let request = parse_deeplink_url(&url).expect("parse Grok Build prompt deeplink");
@@ -905,7 +955,7 @@ fn test_parse_mcp_deeplink() {
     let config = r#"{"mcpServers":{"test":{"command":"echo"}}}"#;
     let config_b64 = BASE64_STANDARD.encode(config);
     let url = format!(
-        "ccswitch://v1/import?resource=mcp&apps=claude,codex&config={}&enabled=true",
+        "qiniuswitch://v1/import?resource=mcp&apps=claude,codex&config={}&enabled=true",
         config_b64
     );
 
@@ -921,7 +971,7 @@ fn test_parse_grokbuild_mcp_deeplink() {
     let config = r#"{"mcpServers":{"test":{"command":"echo"}}}"#;
     let config_b64 = BASE64_STANDARD.encode(config);
     let url = format!(
-        "ccswitch://v1/import?resource=mcp&apps=grokbuild&config={config_b64}&enabled=true"
+        "qiniuswitch://v1/import?resource=mcp&apps=grokbuild&config={config_b64}&enabled=true"
     );
 
     let request = parse_deeplink_url(&url).expect("parse Grok Build MCP deeplink");
@@ -931,7 +981,7 @@ fn test_parse_grokbuild_mcp_deeplink() {
 
 #[test]
 fn test_parse_skill_deeplink() {
-    let url = "ccswitch://v1/import?resource=skill&repo=owner/repo&directory=skills&branch=dev";
+    let url = "qiniuswitch://v1/import?resource=skill&repo=owner/repo&directory=skills&branch=dev";
     let request = parse_deeplink_url(url).unwrap();
 
     assert_eq!(request.resource, "skill");
@@ -946,7 +996,7 @@ fn test_parse_skill_deeplink() {
 
 #[test]
 fn test_parse_multiple_endpoints_comma_separated() {
-    let url = "ccswitch://v1/import?resource=provider&app=claude&name=Test&endpoint=https%3A%2F%2Fapi1.example.com,https%3A%2F%2Fapi2.example.com,https%3A%2F%2Fapi3.example.com&apiKey=sk-test";
+    let url = "qiniuswitch://v1/import?resource=provider&app=claude&name=Test&endpoint=https%3A%2F%2Fapi1.example.com,https%3A%2F%2Fapi2.example.com,https%3A%2F%2Fapi3.example.com&apiKey=sk-test";
 
     let request = parse_deeplink_url(url).unwrap();
 
@@ -961,7 +1011,7 @@ fn test_parse_multiple_endpoints_comma_separated() {
 #[test]
 fn test_parse_single_endpoint_backward_compatible() {
     // Old format with single endpoint should still work
-    let url = "ccswitch://v1/import?resource=provider&app=claude&name=Test&endpoint=https%3A%2F%2Fapi.example.com&apiKey=sk-test";
+    let url = "qiniuswitch://v1/import?resource=provider&app=claude&name=Test&endpoint=https%3A%2F%2Fapi.example.com&apiKey=sk-test";
 
     let request = parse_deeplink_url(url).unwrap();
 
@@ -973,7 +1023,7 @@ fn test_parse_single_endpoint_backward_compatible() {
 
 #[test]
 fn test_parse_endpoints_with_spaces_trimmed() {
-    let url = "ccswitch://v1/import?resource=provider&app=claude&name=Test&endpoint=https%3A%2F%2Fapi1.example.com%20,%20https%3A%2F%2Fapi2.example.com&apiKey=sk-test";
+    let url = "qiniuswitch://v1/import?resource=provider&app=claude&name=Test&endpoint=https%3A%2F%2Fapi1.example.com%20,%20https%3A%2F%2Fapi2.example.com&apiKey=sk-test";
 
     let request = parse_deeplink_url(url).unwrap();
 

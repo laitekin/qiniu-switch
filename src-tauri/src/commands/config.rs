@@ -143,6 +143,24 @@ pub async fn get_config_status(
                 path: file.parent().unwrap().to_string_lossy().into_owned(),
             })
         }
+        AppType::WorkBuddy => {
+            let file = crate::workbuddy_config::config_path();
+            Ok(ConfigStatus {
+                exists: file.exists(),
+                path: crate::workbuddy_config::config_dir()
+                    .to_string_lossy()
+                    .into_owned(),
+            })
+        }
+        AppType::Antigravity => {
+            let file = crate::antigravity_config::settings_path();
+            Ok(ConfigStatus {
+                exists: file.exists(),
+                path: crate::antigravity_config::config_dir()
+                    .to_string_lossy()
+                    .into_owned(),
+            })
+        }
         AppType::Pi => {
             let config_path = crate::pi_config::get_pi_models_path().map_err(|e| e.to_string())?;
             let path = crate::pi_config::get_pi_agent_dir()
@@ -180,6 +198,8 @@ pub async fn get_config_dir(app: String) -> Result<String, String> {
             .parent()
             .unwrap()
             .to_path_buf(),
+        AppType::WorkBuddy => crate::workbuddy_config::config_dir(),
+        AppType::Antigravity => crate::antigravity_config::config_dir(),
     };
 
     Ok(dir.to_string_lossy().to_string())
@@ -203,6 +223,8 @@ pub async fn open_config_folder(handle: AppHandle, app: String) -> Result<bool, 
             .parent()
             .unwrap()
             .to_path_buf(),
+        AppType::WorkBuddy => crate::workbuddy_config::config_dir(),
+        AppType::Antigravity => crate::antigravity_config::config_dir(),
     };
 
     if !config_dir.exists() {

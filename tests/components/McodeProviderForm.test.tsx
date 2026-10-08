@@ -129,7 +129,7 @@ describe("McodeProviderForm", () => {
     expect(saved.options.apiKey).toBe("test-key");
     expect(saved).not.toHaveProperty("npm");
     expect(saved.models).toHaveProperty("MiniMax-M3");
-    expect(submit.mock.calls[0][0].providerKey).toBe("cc-switch-mini-max");
+    expect(submit.mock.calls[0][0].providerKey).toBe("qiniu-switch-mini-max");
   });
 
   it("requires a well-formed, unused provider key for new providers", async () => {
@@ -151,7 +151,7 @@ describe("McodeProviderForm", () => {
     });
     const key = screen.getByLabelText(/opencode\.providerKey/);
     const save = screen.getByRole("button", { name: "Save" });
-    expect(key).toHaveValue("cc-switch-mini-max");
+    expect(key).toHaveValue("qiniu-switch-mini-max");
     expect(save).toBeEnabled();
 
     fireEvent.change(key, { target: { value: "" } });

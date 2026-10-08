@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import type { AppId } from "@/lib/api/types";
 import { listen } from "@tauri-apps/api/event";
 import { DeepLinkImportRequest, deeplinkApi } from "@/lib/api/deeplink";
 import { parseDeepLinkConfigPreview } from "@/utils/deepLinkConfigPreview";
@@ -18,6 +19,21 @@ import { PromptConfirmation } from "./deeplink/PromptConfirmation";
 import { McpConfirmation } from "./deeplink/McpConfirmation";
 import { SkillConfirmation } from "./deeplink/SkillConfirmation";
 import { ProviderIcon } from "./ProviderIcon";
+import { ImportModelPicker } from "./deeplink/ImportModelPicker";
+import { APP_ICON_MAP, getAppLabel } from "@/config/appConfig";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  QINIU_IMPORT_TARGETS,
+  canChooseQiniuImportTarget,
+  changeQiniuImportTarget,
+  type QiniuImportTarget,
+} from "@/utils/qiniuImportTarget";
 import {
   classifyEndpoint,
   classifyEnvKey,
@@ -32,12 +48,17 @@ interface DeeplinkError {
   error: string;
 }
 
-export function DeepLinkImportDialog() {
+export function DeepLinkImportDialog({
+  onProviderImported,
+}: { onProviderImported?: (app: AppId) => void } = {}) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [request, setRequest] = useState<DeepLinkImportRequest | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [modelConfirmed, setModelConfirmed] = useState(false);
+  const [importRevision, setImportRevision] = useState(0);
+  const needsFetchedModel = !!request && canChooseQiniuImportTarget(request);
 
   // 容错判断：MCP 导入结果可能缺少 type 字段
   const isMcpImportResult = (
@@ -58,32 +79,43 @@ export function DeepLinkImportDialog() {
   };
 
   useEffect(() => {
+    let disposed = false;
+    const receive = async (payload: DeepLinkImportRequest) => {
+      let next = payload;
+      if (payload.config || payload.configUrl) {
+        try {
+          next = await deeplinkApi.mergeDeeplinkConfig(payload);
+        } catch (error) {
+          if (disposed) return;
+          toast.error(t("deeplink.configMergeError"), {
+            description: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+      if (!disposed) {
+        setModelConfirmed(false);
+        setImportRevision((value) => value + 1);
+        setRequest(next);
+        setIsOpen(true);
+      }
+    };
+    const receivePending = async () => {
+      if (disposed) return;
+      try {
+        const pending = await deeplinkApi.takePending();
+        if (pending) await receive(pending);
+      } catch (error) {
+        console.error("Failed to receive pending deep link", error);
+      }
+    };
+    // Install the live listener before draining cold-start requests.
+    const unlistenPending = listen("deeplink-pending", receivePending);
+    void unlistenPending.then(receivePending).catch(console.error);
+
     // Listen for deep link import events
     const unlistenImport = listen<DeepLinkImportRequest>(
       "deeplink-import",
-      async (event) => {
-        // If config is present, merge it to get the complete configuration
-        if (event.payload.config || event.payload.configUrl) {
-          try {
-            const mergedRequest = await deeplinkApi.mergeDeeplinkConfig(
-              event.payload,
-            );
-            setRequest(mergedRequest);
-          } catch (error) {
-            console.error("Failed to merge config:", error);
-            toast.error(t("deeplink.configMergeError"), {
-              description:
-                error instanceof Error ? error.message : String(error),
-            });
-            // Fall back to original request
-            setRequest(event.payload);
-          }
-        } else {
-          setRequest(event.payload);
-        }
-
-        setIsOpen(true);
-      },
+      (event) => receive(event.payload),
     );
 
     // Listen for deep link error events
@@ -95,6 +127,8 @@ export function DeepLinkImportDialog() {
     });
 
     return () => {
+      disposed = true;
+      unlistenPending.then((fn) => fn()).catch(console.error);
       unlistenImport.then((fn) => fn());
       unlistenError.then((fn) => fn());
     };
@@ -102,6 +136,7 @@ export function DeepLinkImportDialog() {
 
   const handleImport = async () => {
     if (!request) return;
+    if (needsFetchedModel && !modelConfirmed) return;
 
     setIsImporting(true);
 
@@ -199,6 +234,12 @@ export function DeepLinkImportDialog() {
         });
       }
 
+      if (
+        (request.resource === "provider" || !request.resource) &&
+        request.app
+      ) {
+        onProviderImported?.(request.app);
+      }
       // Close dialog after all refreshes complete
       setIsOpen(false);
     } catch (error) {
@@ -324,12 +365,55 @@ export function DeepLinkImportDialog() {
 
                   {/* App Type */}
                   <div className="grid grid-cols-3 items-center gap-4">
-                    <div className="font-medium text-sm text-fg-2">
-                      {t("deeplink.app")}
-                    </div>
-                    <div className="col-span-2 text-sm font-medium capitalize">
-                      {request.app}
-                    </div>
+                    <label
+                      htmlFor="import-target-app"
+                      className="font-medium text-sm text-fg-2"
+                    >
+                      {t("deeplink.targetApp")}
+                    </label>
+                    {canChooseQiniuImportTarget(request) ? (
+                      <Select
+                        value={request.app}
+                        disabled={isImporting}
+                        onValueChange={(value) => {
+                          setModelConfirmed(false);
+                          setRequest(
+                            changeQiniuImportTarget(
+                              request,
+                              value as QiniuImportTarget,
+                            ),
+                          );
+                        }}
+                      >
+                        <SelectTrigger
+                          id="import-target-app"
+                          className="col-span-2 min-w-0"
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="z-[120]">
+                          {QINIU_IMPORT_TARGETS.map((app) => (
+                            <SelectItem key={app} value={app}>
+                              <span className="inline-flex items-center gap-2">
+                                <span
+                                  aria-hidden="true"
+                                  className="inline-flex h-4 w-4 items-center justify-center"
+                                >
+                                  {APP_ICON_MAP[app].icon}
+                                </span>
+                                {app === "claude"
+                                  ? "Claude Code"
+                                  : getAppLabel(app)}
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="col-span-2 text-sm font-medium">
+                        {getAppLabel(request.app ?? "")}
+                      </div>
+                    )}
                   </div>
 
                   {/* Provider Name */}
@@ -403,7 +487,22 @@ export function DeepLinkImportDialog() {
                   </div>
 
                   {/* Model Fields - 根据应用类型显示不同的模型字段 */}
-                  {request.app === "claude" ? (
+                  {needsFetchedModel ? (
+                    <ImportModelPicker
+                      key={`${importRevision}:${request.app}`}
+                      app={request.app}
+                      baseUrl={request.endpoint!}
+                      apiKey={request.apiKey ?? ""}
+                      value={request.model}
+                      disabled={isImporting}
+                      onValidChange={setModelConfirmed}
+                      onChange={(model) =>
+                        setRequest((previous) =>
+                          previous ? { ...previous, model } : previous,
+                        )
+                      }
+                    />
+                  ) : request.app === "claude" ? (
                     <>
                       {/* Claude 四种模型字段 */}
                       {request.haikuModel && (
@@ -765,7 +864,10 @@ export function DeepLinkImportDialog() {
               >
                 {t("common.cancel")}
               </Button>
-              <Button onClick={handleImport} disabled={isImporting}>
+              <Button
+                onClick={handleImport}
+                disabled={isImporting || (needsFetchedModel && !modelConfirmed)}
+              >
                 {isImporting ? t("deeplink.importing") : t("deeplink.import")}
               </Button>
             </DialogFooter>

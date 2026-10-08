@@ -75,7 +75,10 @@ const SOURCE_LABEL: Record<string, string> = {
   pip: "pip",
 };
 
-type Row = { kind: "tool"; tool: ToolName } | { kind: "desktop" };
+type Row =
+  | { kind: "tool"; tool: ToolName }
+  | { kind: "desktop" }
+  | { kind: "manual"; app: "workbuddy" | "antigravity" };
 
 const ROWS: Row[] = [
   { kind: "tool", tool: "claude" },
@@ -83,6 +86,8 @@ const ROWS: Row[] = [
   ...TOOL_NAMES.filter((tool) => tool !== "claude").map(
     (tool): Row => ({ kind: "tool", tool }),
   ),
+  { kind: "manual", app: "workbuddy" },
+  { kind: "manual", app: "antigravity" },
 ];
 
 function formatCheckedAt(timestamp: number, locale: string): string {
@@ -292,6 +297,20 @@ export function AppsPage() {
                     </span>
                   }
                   visibility={visibilitySwitch("claude-desktop")}
+                />
+              ) : row.kind === "manual" ? (
+                <AppRow
+                  key={row.app}
+                  app={row.app}
+                  name={APP_DISPLAY_NAME[row.app]}
+                  version={
+                    <span className="text-caption text-fg-2">
+                      {t("appsPage.manualConfiguration", {
+                        defaultValue: "手动配置",
+                      })}
+                    </span>
+                  }
+                  visibility={visibilitySwitch(row.app)}
                 />
               ) : (
                 <ToolRow

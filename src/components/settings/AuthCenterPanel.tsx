@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { CopilotAuthSection } from "@/components/providers/forms/CopilotAuthSection";
 import { CodexOAuthSection } from "@/components/providers/forms/CodexOAuthSection";
 import { XaiOAuthSection } from "@/components/providers/forms/XaiOAuthSection";
+import { QiniuAuthSection } from "@/components/settings/QiniuAuthSection";
 import type { ManagedAuthProvider } from "@/lib/api";
 
 interface AuthCenterPanelProps {
@@ -58,6 +59,7 @@ export function AuthCenterPanel({
           {t("settings.authCenter.description")}
         </p>
       )}
+      <QiniuAuthSection />
       <div ref={copilotSectionRef} className="scroll-mt-4">
         <CopilotAuthSection />
       </div>

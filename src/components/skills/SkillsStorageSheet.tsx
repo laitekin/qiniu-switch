@@ -29,7 +29,7 @@ interface SkillsStorageSheetProps {
 
 const appName = (app: string) => APP_DISPLAY_NAME[app as AppId] ?? app;
 
-const DEFAULT_CC_SWITCH_DIR = "~/.cc-switch/skills";
+const DEFAULT_CC_SWITCH_DIR = "~/.qiniu-switch/skills";
 const UNIFIED_DIR = "~/.agents/skills";
 
 /** 和后端 SyncMethod（auto / symlink / copy）一一对应。 */
@@ -67,7 +67,7 @@ export function SkillsStorageSheet({
   const resyncMutation = useResyncSkillsToApps();
 
   const location: SkillStorageLocation =
-    settings?.skillStorageLocation ?? "cc_switch";
+    settings?.skillStorageLocation ?? "qiniu_switch";
   const syncMethod: SkillSyncMethod = settings?.skillSyncMethod ?? "auto";
   const installedCount = installedSkills?.length ?? 0;
   const ccSwitchDir = ccSwitchDirRaw
@@ -210,10 +210,10 @@ export function SkillsStorageSheet({
                     type="radio"
                     name="skills-storage-location"
                     className={RADIO_CLASS}
-                    checked={pendingLocation === "cc_switch"}
+                    checked={pendingLocation === "qiniu_switch"}
                     disabled={isMigrating}
                     aria-describedby="skills-storage-cc-path"
-                    onChange={() => setPendingLocation("cc_switch")}
+                    onChange={() => setPendingLocation("qiniu_switch")}
                   />
                   {t("skills.storageSheet.locationCcSwitch")}
                 </label>

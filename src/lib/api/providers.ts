@@ -6,6 +6,7 @@ import type {
   UniversalProvidersMap,
 } from "@/types";
 import type { AppId } from "./types";
+import { getQiniuDefaultProvider } from "@/config/qiniuDefaultProvider";
 
 export interface ProviderSortUpdate {
   id: string;
@@ -71,7 +72,10 @@ export interface ClaudeDesktopDefaultRoute {
 
 export const providersApi = {
   async getAll(appId: AppId): Promise<Record<string, Provider>> {
-    return await invoke("get_providers", { app: appId });
+    return await invoke("get_providers", {
+      app: appId,
+      defaultProvider: getQiniuDefaultProvider(appId),
+    });
   },
 
   async getCurrent(appId: AppId): Promise<string> {

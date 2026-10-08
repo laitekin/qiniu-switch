@@ -49,7 +49,7 @@ use std::time::SystemTime;
 use serde_json::{json, Value};
 use toml::Table;
 
-use cc_switch_lib::{
+use qiniu_switch_lib::{
     get_codex_auth_path, get_codex_config_path, update_settings, AppError, AppSettings, AppState,
     AppType, Provider, ProviderMeta, ProviderService,
 };
@@ -817,7 +817,7 @@ async fn check_proxy_exit_keeps_login(current: &str, after_login: Option<&str>) 
         switch(&state, "relay").expect("switch to relay");
     }
     use_ephemeral_proxy_port(&state).await;
-    cc_switch_lib::mode::controller::enter(&state, &AppType::Codex, false)
+    qiniu_switch_lib::mode::controller::enter(&state, &AppType::Codex, false)
         .await
         .expect("enter proxy");
     if current == "codex-official" {
@@ -841,7 +841,7 @@ async fn check_proxy_exit_keeps_login(current: &str, after_login: Option<&str>) 
         Some(login) => std::fs::write(get_codex_auth_path(), login).expect("codex login"),
     }
 
-    cc_switch_lib::mode::controller::exit(&state, &AppType::Codex)
+    qiniu_switch_lib::mode::controller::exit(&state, &AppType::Codex)
         .await
         .expect("exit proxy");
 

@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const RELEASES_URL = "https://github.com/farion1231/cc-switch/releases";
+import { APP_UPDATES_ENABLED } from "@/config/branding";
+const RELEASES_URL = "https://www.qiniu.com";
 
 interface DatabaseUpgradeProps {
   payload: {
@@ -59,6 +60,10 @@ export function DatabaseUpgrade({ payload }: DatabaseUpgradeProps) {
 
   // 启动时检查可用更新，决定 upgradable / incompatible
   useEffect(() => {
+    if (!APP_UPDATES_ENABLED) {
+      setPhase("incompatible");
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -149,7 +154,7 @@ export function DatabaseUpgrade({ payload }: DatabaseUpgradeProps) {
             <p className="text-sm text-fg-2">
               {t(
                 "dbUpgrade.description",
-                "当前数据库由更新版本的 CC Switch 创建，需要升级应用后才能继续使用。升级不会删除你的数据。",
+                "当前数据库由更新版本的 Qiniu Switch 创建，需要升级应用后才能继续使用。升级不会删除你的数据。",
               )}
             </p>
             {dbVersion != null && supportedVersion != null && (
@@ -195,15 +200,19 @@ export function DatabaseUpgrade({ payload }: DatabaseUpgradeProps) {
         {phase === "incompatible" && (
           <div className="space-y-2 rounded-lg border border-transparent bg-danger-soft p-3 text-sm text-danger-text">
             <p className="font-medium">
-              {t("dbUpgrade.incompatibleTitle", "升级也无法解决")}
+              {APP_UPDATES_ENABLED
+                ? t("dbUpgrade.incompatibleTitle", "升级也无法解决")
+                : t("settings.updatesDisabled")}
             </p>
             <p className="leading-relaxed">
-              {t("dbUpgrade.incompatibleDescription", {
-                db: dbVersion,
-                supported: supportedVersion,
-                defaultValue:
-                  "你已是最新版本，但数据库版本（v{{db}}）仍高于本应用支持的版本（v{{supported}}）。该数据库可能由第三方客户端或更高版本创建，升级当前官方应用也无法兼容。",
-              })}
+              {APP_UPDATES_ENABLED
+                ? t("dbUpgrade.incompatibleDescription", {
+                    db: dbVersion,
+                    supported: supportedVersion,
+                    defaultValue:
+                      "你已是最新版本，但数据库版本（v{{db}}）仍高于本应用支持的版本（v{{supported}}）。该数据库可能由第三方客户端或更高版本创建，升级当前官方应用也无法兼容。",
+                  })
+                : t("dbUpgrade.description")}
             </p>
           </div>
         )}
@@ -261,18 +270,19 @@ export function DatabaseUpgrade({ payload }: DatabaseUpgradeProps) {
             </Button>
           )}
 
-          {(phase === "incompatible" || phase === "error") && (
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() =>
-                void invoke("open_external", { url: RELEASES_URL })
-              }
-            >
-              <ExternalLink className="h-4 w-4" />
-              {t("dbUpgrade.openReleases", "打开发布页")}
-            </Button>
-          )}
+          {APP_UPDATES_ENABLED &&
+            (phase === "incompatible" || phase === "error") && (
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() =>
+                  void invoke("open_external", { url: RELEASES_URL })
+                }
+              >
+                <ExternalLink className="h-4 w-4" />
+                {t("dbUpgrade.openReleases", "打开发布页")}
+              </Button>
+            )}
 
           <Button
             variant="outline"

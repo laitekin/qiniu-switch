@@ -10,6 +10,16 @@ import { useTranslation } from "react-i18next";
 import { toast } from "@/lib/toast";
 import { invoke } from "@tauri-apps/api/core";
 import { useQueryClient } from "@tanstack/react-query";
+import type { FetchedModel } from "@/lib/api/model-fetch";
+import { qiniuMarketApi, type QiniuMarketModel } from "@/lib/api/qiniuMarket";
+import { ModelMarketplace } from "@/components/marketplace/ModelMarketplace";
+import {
+  MarketConnection,
+  type MarketConnectionStatus,
+} from "@/components/marketplace/MarketConnection";
+import { MarketChatDialog } from "@/components/marketplace/MarketChatDialog";
+import { MarketConfigureDialog } from "@/components/marketplace/MarketConfigureDialog";
+import { WorkBuddyMemoryPanel } from "@/components/workbuddy/WorkBuddyMemoryPanel";
 import { ExternalLink, KeyRound, MoreHorizontal, Plus } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { Provider, VisibleApps } from "@/types";
@@ -164,6 +174,19 @@ function App() {
     PROMPT_APP_IDS.includes(sharedFeatureApp) ? sharedFeatureApp : "claude",
   );
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [workbuddyMemoryOpen, setWorkbuddyMemoryOpen] = useState(false);
+  const [marketApiKey, setMarketApiKey] = useState("");
+  const [marketModels, setMarketModels] = useState<FetchedModel[]>([]);
+  const [marketConnectionStatus, setMarketConnectionStatus] =
+    useState<MarketConnectionStatus>("idle");
+  const [marketAction, setMarketAction] = useState<{
+    kind: "configure" | "chat";
+    model: QiniuMarketModel;
+    modelId: string;
+    initialApp: AppId;
+  } | null>(null);
+  const marketActionSequence = useRef(0);
+  const [marketActionLoading, setMarketActionLoading] = useState(false);
   // 供应商页顶部正在看的那格（直连 / 路由 / 聚合），由 SwitchModePanel 报上来。打开新增、
   // 编辑时记下当时那格，表单按它选布局：在聚合那格打开就是聚合的简化表单。
   const [providerModeView, setProviderModeView] = useState<{
@@ -574,7 +597,12 @@ function App() {
   useEffect(() => {
     const checkEnvOnSwitch = async () => {
       try {
-        if (activeApp === "mcode") return;
+        if (
+          activeApp === "mcode" ||
+          activeApp === "workbuddy" ||
+          activeApp === "antigravity"
+        )
+          return;
         const conflicts = await checkEnvConflicts(activeApp);
 
         if (conflicts.length > 0) {
@@ -1154,6 +1182,8 @@ function App() {
         <>
           {currentView === "providers" &&
             activeApp !== "mcode" &&
+            activeApp !== "workbuddy" &&
+            activeApp !== "antigravity" &&
             (settingsData?.showProfileSwitcher ?? false) && (
               <ProfileSwitcher activeApp={activeApp} />
             )}
@@ -1165,6 +1195,15 @@ function App() {
             >
               {t("appPage.webUi")}
               <ExternalLink className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          {activeApp === "workbuddy" && currentView === "providers" && (
+            <Button
+              variant="quiet"
+              size="regular"
+              onClick={() => setWorkbuddyMemoryOpen(true)}
+            >
+              {t("appPage.memory", { defaultValue: "记忆" })}
             </Button>
           )}
           {currentView === "providers" && (
@@ -1297,7 +1336,8 @@ function App() {
               activeApp === "openclaw" ||
               activeApp === "hermes" ||
               activeApp === "pi" ||
-              activeApp === "mcode"
+              activeApp === "mcode" ||
+              activeApp === "workbuddy"
                 ? (provider) => setConfirmAction({ provider, action: "remove" })
                 : undefined
             }
@@ -1389,8 +1429,120 @@ function App() {
 
   // ─── 全局页 ─────────────────────────────────────────────────────────────
 
+  const handleMarketAction = async (
+    kind: "configure" | "chat",
+    model: QiniuMarketModel,
+  ) => {
+    if (marketConnectionStatus !== "ready") {
+      toast.error(
+        t("marketplace.connectFirst", {
+          defaultValue: "请先连接七牛模型 API Key",
+        }),
+      );
+      document
+        .getElementById("market-connection")
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    const current = ++marketActionSequence.current;
+    setMarketActionLoading(true);
+    try {
+      const details = await queryClient.fetchQuery({
+        queryKey: ["qiniu", "model-market-detail", model.id],
+        queryFn: () => qiniuMarketApi.detail(model.id),
+        staleTime: 60_000,
+      });
+      if (current !== marketActionSequence.current) return;
+      if (
+        !details.available ||
+        details.retired ||
+        (kind === "chat" && !details.supportsChat)
+      ) {
+        throw new Error("unsupported");
+      }
+      const available = new Set(marketModels.map((item) => item.id));
+      const modelId = [details.id, ...details.apiIds, ...model.apiIds].find(
+        (id) => available.has(id),
+      );
+      if (!modelId) {
+        toast.error(
+          t("marketplace.modelNotReturned", {
+            defaultValue: "当前 Key 的模型列表未返回此模型",
+          }),
+        );
+        return;
+      }
+      setMarketAction({ kind, model: details, modelId, initialApp: activeApp });
+    } catch {
+      if (current !== marketActionSequence.current) return;
+      toast.error(
+        t("marketplace.actionUnavailable", {
+          defaultValue: "暂时无法使用此模型，请刷新模型详情后重试",
+        }),
+      );
+    } finally {
+      if (current === marketActionSequence.current)
+        setMarketActionLoading(false);
+    }
+  };
+
+  const handleMarketConfigured = async (app: AppId, providerId: string) => {
+    setMarketAction(null);
+    await queryClient.invalidateQueries({
+      queryKey: providersQueryOptions(app).queryKey,
+    });
+    if (app === "pi") await invalidatePiProviderCaches(queryClient);
+    selectApp(app);
+    window.setTimeout(() => {
+      const card = Array.from(
+        document.querySelectorAll<HTMLElement>("[data-provider-id]"),
+      ).find((element) => element.dataset.providerId === providerId);
+      card?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 250);
+  };
+
   const renderGlobalPage = () => {
     switch (currentView) {
+      case "marketplace":
+        return (
+          <div
+            id="main-content"
+            className="min-h-0 flex-1 overflow-y-auto scroll-stable"
+          >
+            <ModelMarketplace
+              onConfigure={(model) =>
+                void handleMarketAction("configure", model)
+              }
+              onChat={(model) => void handleMarketAction("chat", model)}
+              connection={
+                <div id="market-connection">
+                  <MarketConnection
+                    apiKey={marketApiKey}
+                    initialModels={marketModels}
+                    initialStatus={marketConnectionStatus}
+                    onApiKeyChange={(key) => {
+                      marketActionSequence.current += 1;
+                      setMarketActionLoading(false);
+                      setMarketApiKey(key);
+                      setMarketModels([]);
+                      setMarketConnectionStatus("idle");
+                      setMarketAction(null);
+                    }}
+                    onModelsChange={setMarketModels}
+                    onStatusChange={setMarketConnectionStatus}
+                  />
+                  {marketActionLoading && (
+                    <p role="status" className="mt-2 text-xs text-fg-2">
+                      {t("marketplace.checkingModel", {
+                        defaultValue: "正在核对模型信息…",
+                      })}
+                    </p>
+                  )}
+                </div>
+              }
+            />
+          </div>
+        );
       case "usage":
         return (
           <UsagePage
@@ -1642,7 +1794,32 @@ function App() {
         onCancel={() => setLaunchDashboardOpen(false)}
       />
 
-      <DeepLinkImportDialog />
+      <DeepLinkImportDialog onProviderImported={(app) => selectApp(app)} />
+      {workbuddyMemoryOpen && (
+        <WorkBuddyMemoryPanel onClose={() => setWorkbuddyMemoryOpen(false)} />
+      )}
+      <MarketChatDialog
+        open={marketAction?.kind === "chat"}
+        onOpenChange={(open) => {
+          if (!open) setMarketAction(null);
+        }}
+        apiKey={marketConnectionStatus === "ready" ? marketApiKey : ""}
+        modelId={marketAction?.modelId ?? ""}
+        modelName={marketAction?.model.name}
+      />
+      <MarketConfigureDialog
+        open={marketAction?.kind === "configure"}
+        onOpenChange={(open) => {
+          if (!open) setMarketAction(null);
+        }}
+        model={marketAction?.model ?? null}
+        apiKey={marketApiKey}
+        modelId={marketAction?.modelId ?? ""}
+        initialApp={marketAction?.initialApp ?? activeApp}
+        onConfigured={(app, providerId) =>
+          void handleMarketConfigured(app, providerId)
+        }
+      />
       <FirstRunNoticeDialog />
       <NewLayoutDialog />
       <WhatsNewNotice />

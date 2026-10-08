@@ -1,6 +1,6 @@
 //! Provider import from deep link
 //!
-//! Handles importing provider configurations via ccswitch:// URLs.
+//! Handles importing provider configurations via qiniuswitch:// URLs.
 
 use super::utils::{decode_base64_param, infer_homepage_from_endpoint};
 use super::DeepLinkImportRequest;
@@ -110,7 +110,12 @@ pub fn import_provider_from_deeplink(
     let provider_id = provider.id.clone();
 
     // Use ProviderService to add the provider
-    ProviderService::add(state, app_type.clone(), provider, true)?;
+    ProviderService::add(
+        state,
+        app_type.clone(),
+        provider,
+        !matches!(app_type, AppType::WorkBuddy | AppType::Mcode | AppType::Pi),
+    )?;
 
     // Add extra endpoints as custom endpoints (skip first one as it's the primary)
     for ep in all_endpoints.iter().skip(1) {
@@ -148,19 +153,37 @@ pub(crate) fn build_provider_from_request(
         AppType::Claude | AppType::ClaudeDesktop => build_claude_settings(request),
         AppType::Codex => build_codex_settings(request),
         AppType::Gemini => build_gemini_settings(request),
+        AppType::Antigravity => build_antigravity_settings(request)?,
         AppType::GrokBuild => build_grokbuild_settings(request),
         AppType::OpenCode => build_opencode_settings(request),
         AppType::OpenClaw => build_additive_app_settings(request),
         AppType::Hermes => build_hermes_settings(request),
-        AppType::Mcode => {
-            return Err(AppError::InvalidInput(
-                "Add MCode providers from the MCode page".into(),
-            ))
+        AppType::Mcode | AppType::WorkBuddy => {
+            if request
+                .model
+                .as_ref()
+                .is_none_or(|model| model.trim().is_empty())
+            {
+                return Err(AppError::InvalidInput(
+                    "Client import requires a model".into(),
+                ));
+            }
+            let config = build_opencode_settings(request);
+            json!({
+                "name": request.name, "vendor": request.name,
+                "kind": "custom", "enabled": true, "api": "openai-completions",
+                "options": config["options"], "models": config["models"]
+            })
         }
         AppType::Pi => {
-            return Err(AppError::InvalidInput(
-                "Pi providers must be added from the Pi provider page".to_string(),
-            ));
+            if request
+                .model
+                .as_ref()
+                .is_none_or(|model| model.trim().is_empty())
+            {
+                return Err(AppError::InvalidInput("Pi import requires a model".into()));
+            }
+            build_additive_app_settings(request)
         }
     };
 
@@ -239,6 +262,44 @@ fn usage_base_url_override(request: &DeepLinkImportRequest) -> Option<String> {
     } else {
         Some(usage_base_url)
     }
+}
+
+fn build_antigravity_settings(
+    request: &DeepLinkImportRequest,
+) -> Result<serde_json::Value, AppError> {
+    let api_key = request.api_key.as_deref().unwrap_or_default().trim();
+    if api_key.is_empty() {
+        return Err(AppError::InvalidInput(
+            "Antigravity import requires an API key".into(),
+        ));
+    }
+
+    let mut env = serde_json::Map::new();
+    env.insert("GEMINI_API_KEY".into(), json!(api_key));
+    if let Some(endpoint) = request
+        .endpoint
+        .as_deref()
+        .and_then(|value| value.split(',').next())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    {
+        env.insert("GOOGLE_GEMINI_BASE_URL".into(), json!(endpoint));
+    }
+    if let Some(model) = request
+        .model
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    {
+        env.insert("GEMINI_MODEL".into(), json!(model));
+    }
+
+    let settings = json!({
+        "settings": { "modelProvider": "gemini" },
+        "env": env
+    });
+    crate::antigravity_config::validate_provider(&settings)?;
+    Ok(settings)
 }
 
 /// Build provider meta with usage script configuration
@@ -651,9 +712,9 @@ pub fn parse_and_merge_config(
     }
 
     match request.app.as_deref().unwrap_or("") {
-        "claude" => merge_claude_config(&mut merged, &config_value)?,
+        "claude" | "claude-desktop" => merge_claude_config(&mut merged, &config_value)?,
         "codex" => merge_codex_config(&mut merged, &config_value)?,
-        "gemini" => merge_gemini_config(&mut merged, &config_value)?,
+        "gemini" | "antigravity" => merge_gemini_config(&mut merged, &config_value)?,
         "grokbuild" => merge_grokbuild_config(&mut merged, &config_value)?,
         // Additive mode apps use JSON config directly; pass through as-is
         "openclaw" | "opencode" | "hermes" => {
@@ -986,8 +1047,8 @@ mod tests {
     #[test]
     #[serial_test::serial]
     fn grokbuild_deeplink_never_carries_env_key_or_resolved_secret() {
-        let original = std::env::var_os("CC_SWITCH_DEEPLINK_ENV_PROBE");
-        std::env::set_var("CC_SWITCH_DEEPLINK_ENV_PROBE", "secret-must-not-leak");
+        let original = std::env::var_os("QINIU_SWITCH_DEEPLINK_ENV_PROBE");
+        std::env::set_var("QINIU_SWITCH_DEEPLINK_ENV_PROBE", "secret-must-not-leak");
 
         let mut request = DeepLinkImportRequest {
             resource: "provider".to_string(),
@@ -1001,7 +1062,7 @@ mod tests {
                 "[model.\"grok-env\"]\nmodel = \"grok-4.5\"\n",
                 "base_url = \"https://attacker.example/v1\"\nname = \"Attacker\"\n",
                 "api_key = \"sk-declared-by-link\"\n",
-                "env_key = \"CC_SWITCH_DEEPLINK_ENV_PROBE\"\n",
+                "env_key = \"QINIU_SWITCH_DEEPLINK_ENV_PROBE\"\n",
                 "api_backend = \"responses\"\ncontext_window = 500000\n",
             )
         });
@@ -1024,8 +1085,8 @@ mod tests {
         );
 
         match original {
-            Some(value) => std::env::set_var("CC_SWITCH_DEEPLINK_ENV_PROBE", value),
-            None => std::env::remove_var("CC_SWITCH_DEEPLINK_ENV_PROBE"),
+            Some(value) => std::env::set_var("QINIU_SWITCH_DEEPLINK_ENV_PROBE", value),
+            None => std::env::remove_var("QINIU_SWITCH_DEEPLINK_ENV_PROBE"),
         }
     }
 
@@ -1045,14 +1106,14 @@ mod tests {
         // 拒绝——测试就退化成只覆盖"没有 key 时报错"，对"不得解析环境变量"这条
         // 真正的安全属性零覆盖。设上之后，一旦有人恢复回退解析，api_key 会变成
         // 非空、拒绝不再触发，这条断言立刻变红。
-        let original = std::env::var_os("CC_SWITCH_DEEPLINK_ENV_PROBE");
-        std::env::set_var("CC_SWITCH_DEEPLINK_ENV_PROBE", "secret-must-not-leak");
+        let original = std::env::var_os("QINIU_SWITCH_DEEPLINK_ENV_PROBE");
+        std::env::set_var("QINIU_SWITCH_DEEPLINK_ENV_PROBE", "secret-must-not-leak");
 
         let config_toml = concat!(
             "[models]\ndefault = \"grok-env\"\n\n",
             "[model.\"grok-env\"]\nmodel = \"grok-4.5\"\n",
             "base_url = \"https://attacker.example/v1\"\nname = \"Attacker\"\n",
-            "env_key = \"CC_SWITCH_DEEPLINK_ENV_PROBE\"\n",
+            "env_key = \"QINIU_SWITCH_DEEPLINK_ENV_PROBE\"\n",
             "api_backend = \"responses\"\ncontext_window = 500000\n",
         );
         let request = DeepLinkImportRequest {
@@ -1067,8 +1128,8 @@ mod tests {
         let result = parse_and_merge_config(&request);
 
         match original {
-            Some(value) => std::env::set_var("CC_SWITCH_DEEPLINK_ENV_PROBE", value),
-            None => std::env::remove_var("CC_SWITCH_DEEPLINK_ENV_PROBE"),
+            Some(value) => std::env::set_var("QINIU_SWITCH_DEEPLINK_ENV_PROBE", value),
+            None => std::env::remove_var("QINIU_SWITCH_DEEPLINK_ENV_PROBE"),
         }
 
         let err = result.expect_err(
