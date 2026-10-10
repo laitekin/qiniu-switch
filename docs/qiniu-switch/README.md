@@ -10,4 +10,4 @@
 | 了解本项目相对上游的改动      | [变更说明](CHANGELOG.md)                   |
 | 处理 v20/v19 数据库错误等问题 | [故障排查](故障排查.md)                    |
 
-`docs/PRODUCT_REQUIREMENTS.md` 是早期需求稿，保留作历史背景；上述文档以当前代码为准。`qiniu-import-demo.html`、`qiniu-console-mock.html`、`qiniu-switch-prototype.html` 是本地演示页面，不能作为七牛正式控制台接入证明。
+上述文档以当前代码为准。`qiniu-import-demo.html`、`qiniu-console-mock.html`、`qiniu-switch-prototype.html` 是本地演示页面，不能作为七牛正式控制台接入证明。
