@@ -1,5 +1,7 @@
 # CC Switch User Manual / 用户手册 / ユーザーマニュアル
 
+> 上游通用功能参考，页面名称、截图和安装地址可能与 Qiniu Switch 不同。当前 Qiniu Switch 功能请先阅读 [项目首页](../../README.md) 和 [七牛文档](../qiniu-switch/README.md)。
+
 > Claude Code / Claude Desktop / Codex / Gemini CLI / OpenCode / OpenClaw / Hermes
 
 ## Language / 语言 / 言語

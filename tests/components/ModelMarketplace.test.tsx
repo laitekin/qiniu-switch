@@ -132,6 +132,27 @@ describe("Qiniu model marketplace", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps retired models visible separately without counting them as available", async () => {
+    vi.mocked(qiniuMarketApi.list).mockResolvedValue({
+      models: [
+        textModel,
+        {
+          ...textModel,
+          id: "retired-model",
+          name: "Retired Model",
+          retired: true,
+          available: false,
+        },
+      ],
+    });
+    show();
+    await screen.findByRole("article", { name: "Text Alpha" });
+    expect(
+      screen.getByRole("heading", { name: /marketplace.explore/ }),
+    ).toHaveTextContent("1");
+    expect(screen.getByText(/marketplace.retired/)).toHaveTextContent("1");
+  });
+
   it("fetches official details on demand and uses enriched metadata for chat", async () => {
     const { onChat } = show();
     const card = await screen.findByRole("article", { name: "Text Alpha" });

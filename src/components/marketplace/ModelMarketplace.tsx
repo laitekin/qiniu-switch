@@ -33,7 +33,9 @@ import { MarketVendorSelect } from "./MarketVendorSelect";
 interface ModelMarketplaceProps {
   onConfigure: (model: QiniuMarketModel) => void;
   onChat: (model: QiniuMarketModel) => void;
-  connection?: ReactNode;
+  connection?:
+    | ReactNode
+    | ((models: QiniuMarketModel[], ready: boolean) => ReactNode);
 }
 
 function canConfigureModel(model: QiniuMarketModel) {
@@ -314,13 +316,17 @@ export function ModelMarketplace({
     );
   }, [models, query, vendor, capability]);
   const hasFilters = !!(query.trim() || vendor || capability);
+  const available = filtered.filter(
+    (model) => model.available && !model.retired,
+  );
   const arrivals = hasFilters
     ? []
-    : filtered.filter((model) => model.isNew && !model.retired).slice(0, 2);
-  const remaining = filtered.filter(
-    (model) => !model.retired && !arrivals.includes(model),
-  );
+    : available.filter((model) => model.isNew).slice(0, 2);
+  const remaining = available.filter((model) => !arrivals.includes(model));
   const retired = filtered.filter((model) => model.retired);
+  const unavailable = filtered.filter(
+    (model) => !model.available && !model.retired,
+  );
 
   const renderCard = (model: QiniuMarketModel, featured = false) => (
     <ModelCard
@@ -368,7 +374,9 @@ export function ModelMarketplace({
             {t("marketplace.refresh", { defaultValue: "刷新模型" })}
           </Button>
         </div>
-        {connection}
+        {typeof connection === "function"
+          ? connection(models, catalog.isSuccess)
+          : connection}
         <div className="space-y-3">
           <div className="flex flex-wrap gap-3">
             <div className="relative min-w-[220px] flex-1">
@@ -474,7 +482,7 @@ export function ModelMarketplace({
               <h2 className="font-medium">
                 {t("marketplace.explore", { defaultValue: "探索模型" })}{" "}
                 <span className="ml-2 font-normal text-muted-foreground">
-                  {filtered.length}
+                  {available.length}
                 </span>
               </h2>
               {hasFilters && (
@@ -491,7 +499,7 @@ export function ModelMarketplace({
                 </Button>
               )}
             </div>
-            {filtered.length === 0 && !catalog.isError ? (
+            {available.length === 0 && !catalog.isError ? (
               <p
                 role="status"
                 className="py-16 text-center text-sm text-muted-foreground"
@@ -511,6 +519,19 @@ export function ModelMarketplace({
                 </summary>
                 <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {retired.map((model) => renderCard(model))}
+                </div>
+              </details>
+            )}
+            {unavailable.length > 0 && (
+              <details className="rounded-xl border border-border-default bg-background p-4">
+                <summary className="cursor-pointer text-sm text-muted-foreground">
+                  {t("marketplace.unavailable", {
+                    defaultValue: "暂不可用模型",
+                  })}{" "}
+                  · {unavailable.length}
+                </summary>
+                <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {unavailable.map((model) => renderCard(model))}
                 </div>
               </details>
             )}

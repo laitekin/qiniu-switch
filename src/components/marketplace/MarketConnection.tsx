@@ -4,22 +4,48 @@ import { KeyRound, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchModelsForConfig, type FetchedModel } from "@/lib/api/model-fetch";
+import type { QiniuMarketModel } from "@/lib/api/qiniuMarket";
 
 export type MarketConnectionStatus = "idle" | "loading" | "ready" | "error";
+
+const EMPTY_FETCHED_MODELS: FetchedModel[] = [];
+const EMPTY_CATALOG_MODELS: QiniuMarketModel[] = [];
 
 interface Props {
   apiKey: string;
   initialModels?: FetchedModel[];
   initialStatus?: MarketConnectionStatus;
+  catalogModels?: QiniuMarketModel[];
+  catalogReady?: boolean;
   onApiKeyChange: (key: string) => void;
   onModelsChange: (models: FetchedModel[]) => void;
   onStatusChange?: (status: MarketConnectionStatus) => void;
 }
 
+function excludeUnavailableModels(
+  models: FetchedModel[],
+  catalog: QiniuMarketModel[],
+): FetchedModel[] {
+  const unavailableIds = new Set(
+    catalog
+      .filter((model) => model.retired || !model.available)
+      .flatMap((model) => [model.id, ...model.apiIds]),
+  );
+  return Array.from(
+    new Map(
+      models
+        .filter((model) => model.id.trim() && !unavailableIds.has(model.id))
+        .map((model) => [model.id, model]),
+    ).values(),
+  );
+}
+
 export function MarketConnection({
   apiKey,
-  initialModels = [],
+  initialModels = EMPTY_FETCHED_MODELS,
   initialStatus,
+  catalogModels = EMPTY_CATALOG_MODELS,
+  catalogReady = true,
   onApiKeyChange,
   onModelsChange,
   onStatusChange,
@@ -31,7 +57,9 @@ export function MarketConnection({
       ? "idle"
       : (initialStatus ?? (initialModels.length ? "ready" : "idle")),
   );
-  const [count, setCount] = useState(initialModels.length);
+  const [count, setCount] = useState(
+    () => excludeUnavailableModels(initialModels, catalogModels).length,
+  );
   const sequence = useRef(0);
   const previousKey = useRef(apiKey);
   const callbacks = useRef({ onModelsChange, onStatusChange });
@@ -51,8 +79,12 @@ export function MarketConnection({
     };
   }, [apiKey]);
 
+  useEffect(() => {
+    setCount(excludeUnavailableModels(initialModels, catalogModels).length);
+  }, [initialModels, catalogModels]);
+
   const connect = async () => {
-    if (!apiKey.trim() || status === "loading") return;
+    if (!apiKey.trim() || !catalogReady || status === "loading") return;
     const current = ++sequence.current;
     setStatus("loading");
     callbacks.current.onStatusChange?.("loading");
@@ -65,13 +97,7 @@ export function MarketConnection({
         "https://api.qnaigc.com/v1/models",
       );
       if (current !== sequence.current) return;
-      const models = Array.from(
-        new Map(
-          result
-            .filter((model) => model.id.trim())
-            .map((model) => [model.id, model]),
-        ).values(),
-      );
+      const models = excludeUnavailableModels(result, catalogModels);
       setCount(models.length);
       setStatus("ready");
       callbacks.current.onModelsChange(models);
@@ -108,7 +134,7 @@ export function MarketConnection({
           type="button"
           size="sm"
           onClick={() => void connect()}
-          disabled={!apiKey.trim() || status === "loading"}
+          disabled={!apiKey.trim() || !catalogReady || status === "loading"}
         >
           {status === "loading" && (
             <Loader2

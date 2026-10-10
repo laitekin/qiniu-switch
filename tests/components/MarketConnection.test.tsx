@@ -3,10 +3,42 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { MarketConnection } from "@/components/marketplace/MarketConnection";
 import { fetchModelsForConfig, type FetchedModel } from "@/lib/api/model-fetch";
+import type { QiniuMarketModel } from "@/lib/api/qiniuMarket";
 
 vi.mock("@/lib/api/model-fetch", () => ({ fetchModelsForConfig: vi.fn() }));
 
 describe("Marketplace connection", () => {
+  it("excludes retired catalog IDs and aliases from the usable model count", async () => {
+    const onModelsChange = vi.fn();
+    const catalogModels = [
+      {
+        id: "retired-catalog-id",
+        apiIds: ["retired-catalog-id", "retired-api-alias"],
+        retired: true,
+        available: false,
+      },
+    ] as QiniuMarketModel[];
+    vi.mocked(fetchModelsForConfig).mockResolvedValueOnce([
+      { id: "active-model", ownedBy: null },
+      { id: "retired-api-alias", ownedBy: null },
+    ]);
+    render(
+      <MarketConnection
+        apiKey="sk-test"
+        catalogModels={catalogModels}
+        onApiKeyChange={vi.fn()}
+        onModelsChange={onModelsChange}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "连接" }));
+    await waitFor(() =>
+      expect(onModelsChange).toHaveBeenLastCalledWith([
+        { id: "active-model", ownedBy: null },
+      ]),
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("1 个可用模型");
+  });
+
   it("requests the exact Qiniu catalog only after connecting and returns only discovered models", async () => {
     const onModelsChange = vi.fn();
     const onStatusChange = vi.fn();
