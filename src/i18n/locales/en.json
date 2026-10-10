@@ -1078,7 +1078,8 @@
     "pi": "Pi",
     "mcode": "MiniMax Code",
     "workbuddy": "WorkBuddy",
-    "antigravity": "Antigravity"
+    "antigravity": "Antigravity",
+    "dsh": "DeepSeek Harness Desktop"
   },
   "mcode": {
     "empty": {
@@ -5135,6 +5136,9 @@
     "integration": "Integration guide",
     "mediaHint": "This model does not support in-app chat or client configuration yet",
     "officialDetails": "Qiniu model details"
+  },
+  "dsh": {
+    "configHint": "Harness stores models in ~/.dsh/settings.yaml and API keys separately in ~/.dsh/.credentials.yaml."
   },
   "antigravity": {
     "envHint": "Antigravity CLI reads the API key and custom endpoint from its process environment; Qiniu Switch does not modify shell profiles."

@@ -1079,7 +1079,8 @@
     "pi": "Pi",
     "mcode": "MiniMax Code",
     "workbuddy": "WorkBuddy",
-    "antigravity": "反重力"
+    "antigravity": "反重力",
+    "dsh": "DeepSeek Harness Desktop"
   },
   "mcode": {
     "empty": {
@@ -5136,6 +5137,9 @@
     "integration": "接入說明",
     "mediaHint": "此模型暫不支援應用程式內對話和用戶端設定",
     "officialDetails": "七牛官網詳情"
+  },
+  "dsh": {
+    "configHint": "模型設定寫入 ~/.dsh/settings.yaml；API Key 另存於 ~/.dsh/.credentials.yaml。"
   },
   "antigravity": {
     "envHint": "Antigravity CLI 從程序環境讀取 API Key 與自訂端點；Qiniu Switch 不會修改 shell 設定檔。"

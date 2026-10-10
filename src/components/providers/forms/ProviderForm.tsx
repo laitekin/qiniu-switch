@@ -97,6 +97,7 @@ import { GeminiFormFields } from "./GeminiFormFields";
 import { McodeProviderForm } from "./McodeProviderForm";
 import { PiProviderForm } from "./PiProviderForm";
 import { AntigravityProviderForm } from "./AntigravityProviderForm";
+import { DshProviderForm } from "./DshProviderForm";
 import { OmoFormFields } from "./OmoFormFields";
 import { parseOmoOtherFieldsObject } from "@/types/omo";
 import type { AppMode } from "@/types/proxy";
@@ -321,6 +322,9 @@ export interface ProviderFormProps {
 }
 
 export function ProviderForm(props: ProviderFormProps) {
+  if (props.appId === "dsh") {
+    return <DshProviderForm {...props} />;
+  }
   if (props.appId === "mcode" || props.appId === "workbuddy") {
     return <McodeProviderForm {...props} />;
   }

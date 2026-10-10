@@ -5472,6 +5472,15 @@ impl ProviderService {
     ///
     /// 对于累加模式应用（OpenCode, OpenClaw），不存在"当前供应商"概念，直接返回空字符串。
     pub fn current(state: &AppState, app_type: AppType) -> Result<String, AppError> {
+        if app_type == AppType::Dsh {
+            let current = crate::dsh_config::current_route()?;
+            let providers = state.db.get_all_providers(app_type.as_str())?;
+            return Ok(providers
+                .keys()
+                .find(|id| Some(crate::dsh_config::route_id(id)) == current)
+                .cloned()
+                .unwrap_or_default());
+        }
         // Additive mode apps have no "current" provider concept
         if app_type.is_additive_mode() {
             return Ok(String::new());
@@ -6426,6 +6435,7 @@ impl ProviderService {
                     AppType::Hermes => remove_hermes_provider_from_live(id)?,
                     AppType::Mcode => crate::mcode_config::remove_provider(id)?,
                     AppType::WorkBuddy => crate::workbuddy_config::remove_provider(id)?,
+                    AppType::Dsh => crate::dsh_config::remove_provider(id)?,
                     _ => {}
                 }
             }
@@ -6503,6 +6513,7 @@ impl ProviderService {
             }
             AppType::Mcode => crate::mcode_config::remove_provider(id)?,
             AppType::WorkBuddy => crate::workbuddy_config::remove_provider(id)?,
+            AppType::Dsh => crate::dsh_config::remove_provider(id)?,
             _ => {
                 return Err(AppError::Message(format!(
                     "App {} does not support remove from live config",
@@ -6710,6 +6721,9 @@ impl ProviderService {
                     .push(format!("hermes_model_defaults_failed:{}", provider.id));
             }
         }
+        if matches!(app_type, AppType::Dsh) {
+            crate::dsh_config::apply_default(&provider.id, &provider.settings_config)?;
+        }
 
         // For additive-mode providers that were DB-only (live_config_managed == Some(false)),
         // flip the flag to true now that the provider has been successfully written to the live
@@ -6728,6 +6742,7 @@ impl ProviderService {
                     AppType::Hermes => remove_hermes_provider_from_live(&provider.id),
                     AppType::Mcode => crate::mcode_config::remove_provider(&provider.id),
                     AppType::WorkBuddy => crate::workbuddy_config::remove_provider(&provider.id),
+                    AppType::Dsh => crate::dsh_config::remove_provider(&provider.id),
                     _ => Ok(()),
                 };
 
@@ -6973,9 +6988,11 @@ impl ProviderService {
             AppType::OpenCode => Self::extract_opencode_common_config(&provider.settings_config),
             AppType::OpenClaw => Self::extract_openclaw_common_config(&provider.settings_config),
             AppType::Hermes => Ok(String::new()), // Hermes doesn't use common config snippets
-            AppType::Pi | AppType::Mcode | AppType::WorkBuddy | AppType::Antigravity => {
-                Ok(String::new())
-            }
+            AppType::Pi
+            | AppType::Mcode
+            | AppType::WorkBuddy
+            | AppType::Antigravity
+            | AppType::Dsh => Ok(String::new()),
         }
     }
 
@@ -6993,9 +7010,11 @@ impl ProviderService {
             AppType::OpenCode => Self::extract_opencode_common_config(settings_config),
             AppType::OpenClaw => Self::extract_openclaw_common_config(settings_config),
             AppType::Hermes => Ok(String::new()), // Hermes doesn't use common config snippets
-            AppType::Pi | AppType::Mcode | AppType::WorkBuddy | AppType::Antigravity => {
-                Ok(String::new())
-            }
+            AppType::Pi
+            | AppType::Mcode
+            | AppType::WorkBuddy
+            | AppType::Antigravity
+            | AppType::Dsh => Ok(String::new()),
         }
     }
 
@@ -7765,6 +7784,7 @@ impl ProviderService {
             AppType::Antigravity => {
                 crate::antigravity_config::validate_provider(&provider.settings_config)?
             }
+            AppType::Dsh => crate::dsh_config::validate_provider(&provider.settings_config)?,
             AppType::Pi => {
                 crate::pi_config::validate_provider_node(&provider.id, &provider.settings_config)?;
             }
@@ -7932,7 +7952,7 @@ impl ProviderService {
 
                 Ok((api_key, base_url))
             }
-            AppType::OpenCode | AppType::WorkBuddy => {
+            AppType::OpenCode | AppType::WorkBuddy | AppType::Dsh => {
                 // OpenCode uses options.apiKey and options.baseURL
                 let options = provider
                     .settings_config

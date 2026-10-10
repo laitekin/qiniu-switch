@@ -1,5 +1,11 @@
 # Qiniu Switch 变更说明
 
+## Qiniu Switch v4.0.7（2026-10-10）
+
+- 新增 DeepSeek Harness Desktop 客户端入口、模型广场配置和供应商切换；使用官方 `settings.yaml` 与独立凭据文件，不覆盖已有 Harness 供应商。
+- 修复模型广场顶部标题区域无法拖动桌面窗口的问题。
+- 继续以 CC Switch v4.0.6 为上游基线，自动更新仍未启用。
+
 ## 基于上游 v4.0.6（2026-10-10）
 
 - 接入上游 v4.0.5、v4.0.6 的 UI、供应商搜索、Skills 更新与修复；数据库 schema 仍为 v20。上游细节见 [官方 v4.0.6 发布说明](https://github.com/farion1231/cc-switch/releases/tag/v4.0.6)。
@@ -12,7 +18,7 @@
 1. 七牛公开模型目录、详情、价格、厂商图标、搜索筛选、试用及兼容客户端配置。
 2. 七牛模型 API Key 的 `/v1/models` 发现与导入模型选择。
 3. 七牛管理 AK/SK 会话、只读管理查询与响应脱敏。
-4. 七牛预置供应商、网页深链接导入、WorkBuddy/Antigravity 适配与 WorkBuddy 记忆编辑。
+4. 七牛预置供应商、网页深链接导入、WorkBuddy/Antigravity/DeepSeek Harness Desktop 适配与 WorkBuddy 记忆编辑。
 5. 独立的应用名称、包标识、数据库文件、协议与图标；保持自动更新关闭。
 
 这些是代码功能说明，不表示七牛正式控制台已集成，也不表示每种第三方客户端已完成端到端验收。

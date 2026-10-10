@@ -11,6 +11,7 @@ export interface DeepLinkImportRequest {
     | "claude"
     | "claude-desktop"
     | "workbuddy"
+    | "dsh"
     | "antigravity"
     | "mcode"
     | "codex"

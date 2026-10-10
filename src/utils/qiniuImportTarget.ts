@@ -40,9 +40,11 @@ export function changeQiniuImportTarget(
       ? "codex"
       : app === "antigravity"
         ? "gemini"
-        : app === "openclaw" || app === "hermes"
-          ? "opencode"
-          : app;
+        : app === "dsh"
+          ? "workbuddy"
+          : app === "openclaw" || app === "hermes"
+            ? "opencode"
+            : app;
   const config = getQiniuDefaultProvider(presetApp)!.settingsConfig;
   const endpoint =
     presetApp === "codex"

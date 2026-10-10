@@ -18,6 +18,7 @@ export type AppType =
 export interface SkillApps {
   workbuddy?: boolean;
   antigravity?: boolean;
+  dsh?: boolean;
   claude: boolean;
   "claude-desktop"?: boolean;
   codex: boolean;

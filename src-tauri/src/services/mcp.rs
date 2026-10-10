@@ -219,7 +219,7 @@ impl McpService {
             }
             AppType::Mcode => mcp::mcode::sync(&server.id, Some(&server.server))?,
             AppType::Pi => mcp::pi::sync(&server.id, Some(&server.server))?,
-            AppType::WorkBuddy | AppType::Antigravity => {}
+            AppType::WorkBuddy | AppType::Antigravity | AppType::Dsh => {}
         }
         Ok(())
     }
@@ -261,7 +261,7 @@ impl McpService {
             }
             AppType::Mcode => mcp::mcode::sync(id, None)?,
             AppType::Pi => mcp::pi::sync(id, None)?,
-            AppType::WorkBuddy | AppType::Antigravity => {}
+            AppType::WorkBuddy | AppType::Antigravity | AppType::Dsh => {}
         }
         Ok(())
     }

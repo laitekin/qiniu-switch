@@ -93,6 +93,9 @@ export function changelogUrl(
   language: WhatsNewLanguage,
   version?: string,
 ): string {
+  if (version === "4.0.7") {
+    return "https://github.com/laitekin/qiniu-switch/releases/tag/qiniu-v4.0.7";
+  }
   const siteLanguage = language === "zh-TW" ? "zh" : language;
   const base = `https://ccswitch.io/${siteLanguage}/changelog`;
   return version ? `${base}/${version}` : base;

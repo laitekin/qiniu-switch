@@ -90,6 +90,7 @@ fn parse_provider_deeplink(
             | "openclaw"
             | "hermes"
             | "workbuddy"
+            | "dsh"
             | "antigravity"
             | "mcode"
             | "pi"

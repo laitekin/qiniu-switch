@@ -655,8 +655,11 @@ impl SkillService {
                     return Ok(custom.join("skills"));
                 }
             }
-            AppType::ClaudeDesktop | AppType::Mcode | AppType::WorkBuddy | AppType::Antigravity => {
-            }
+            AppType::ClaudeDesktop
+            | AppType::Mcode
+            | AppType::WorkBuddy
+            | AppType::Antigravity
+            | AppType::Dsh => {}
             AppType::Codex => {
                 if let Some(custom) = crate::settings::get_codex_override_dir() {
                     return Ok(custom.join("skills"));
@@ -710,6 +713,7 @@ impl SkillService {
             AppType::Pi => crate::pi_config::get_pi_agent_dir()?.join("skills"),
             AppType::WorkBuddy => crate::workbuddy_config::config_dir().join("skills"),
             AppType::Antigravity => crate::antigravity_config::config_dir().join("skills"),
+            AppType::Dsh => crate::dsh_config::config_dir().join("skills"),
         })
     }
 

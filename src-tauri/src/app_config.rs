@@ -41,6 +41,7 @@ impl McpApps {
             AppType::ClaudeDesktop => false,
             AppType::WorkBuddy => false,
             AppType::Antigravity => false,
+            AppType::Dsh => false,
         }
     }
 
@@ -59,6 +60,7 @@ impl McpApps {
             AppType::ClaudeDesktop => {} // Claude Desktop 3P provider config doesn't support MCP here
             AppType::WorkBuddy => {}
             AppType::Antigravity => {}
+            AppType::Dsh => {}
         }
     }
 
@@ -142,6 +144,7 @@ impl SkillApps {
             AppType::ClaudeDesktop => false,
             AppType::WorkBuddy => false,
             AppType::Antigravity => false,
+            AppType::Dsh => false,
         }
     }
 
@@ -160,6 +163,7 @@ impl SkillApps {
             AppType::ClaudeDesktop => {} // Claude Desktop 3P profiles don't use Qiniu Switch skill sync
             AppType::WorkBuddy => {}
             AppType::Antigravity => {}
+            AppType::Dsh => {}
         }
     }
 
@@ -425,6 +429,7 @@ pub enum AppType {
     Mcode,
     WorkBuddy,
     Antigravity,
+    Dsh,
 }
 
 impl AppType {
@@ -442,6 +447,7 @@ impl AppType {
             AppType::Mcode => "mcode",
             AppType::WorkBuddy => "workbuddy",
             AppType::Antigravity => "antigravity",
+            AppType::Dsh => "dsh",
         }
     }
 
@@ -459,6 +465,7 @@ impl AppType {
                 | AppType::Pi
                 | AppType::Mcode
                 | AppType::WorkBuddy
+                | AppType::Dsh
         )
     }
 
@@ -484,6 +491,7 @@ impl AppType {
             AppType::Mcode,
             AppType::WorkBuddy,
             AppType::Antigravity,
+            AppType::Dsh,
         ]
         .into_iter()
     }
@@ -507,6 +515,7 @@ impl FromStr for AppType {
             "mcode" => Ok(AppType::Mcode),
             "workbuddy" => Ok(AppType::WorkBuddy),
             "antigravity" | "anti-gravity" => Ok(AppType::Antigravity),
+            "dsh" | "deepseek-harness" | "deepseek-harness-desktop" => Ok(AppType::Dsh),
             other => Err(AppError::localized(
                 "unsupported_app",
                 format!("不支持的应用标识: '{other}'。可选值: claude, claude-desktop, codex, gemini, grokbuild, opencode, openclaw, hermes, pi。"),
@@ -550,7 +559,11 @@ impl CommonConfigSnippets {
             AppType::OpenCode => self.opencode.as_ref(),
             AppType::OpenClaw => self.openclaw.as_ref(),
             AppType::Hermes => self.hermes.as_ref(),
-            AppType::Pi | AppType::Mcode | AppType::WorkBuddy | AppType::Antigravity => None,
+            AppType::Pi
+            | AppType::Mcode
+            | AppType::WorkBuddy
+            | AppType::Antigravity
+            | AppType::Dsh => None,
         }
     }
 
@@ -565,7 +578,11 @@ impl CommonConfigSnippets {
             AppType::OpenCode => self.opencode = snippet,
             AppType::OpenClaw => self.openclaw = snippet,
             AppType::Hermes => self.hermes = snippet,
-            AppType::Pi | AppType::Mcode | AppType::WorkBuddy | AppType::Antigravity => {}
+            AppType::Pi
+            | AppType::Mcode
+            | AppType::WorkBuddy
+            | AppType::Antigravity
+            | AppType::Dsh => {}
         }
     }
 }
@@ -891,9 +908,11 @@ impl MultiAppConfig {
             AppType::Hermes => &mut config.prompts.hermes.prompts,
             // Pi was added after prompts moved to SQLite. Keeping it out of
             // this legacy config avoids a second, unused prompt state.
-            AppType::Pi | AppType::Mcode | AppType::WorkBuddy | AppType::Antigravity => {
-                return Ok(false)
-            }
+            AppType::Pi
+            | AppType::Mcode
+            | AppType::WorkBuddy
+            | AppType::Antigravity
+            | AppType::Dsh => return Ok(false),
         };
 
         prompts.insert(id, prompt);
@@ -937,9 +956,11 @@ impl MultiAppConfig {
                 AppType::OpenCode => &self.mcp.opencode.servers,
                 AppType::OpenClaw => continue, // OpenClaw MCP is still in development, skip
                 AppType::Hermes => continue,   // Hermes didn't exist in v3.6.x, skip
-                AppType::Pi | AppType::Mcode | AppType::WorkBuddy | AppType::Antigravity => {
-                    continue
-                } // Added after legacy prompt migration
+                AppType::Pi
+                | AppType::Mcode
+                | AppType::WorkBuddy
+                | AppType::Antigravity
+                | AppType::Dsh => continue, // Added after legacy prompt migration
             };
 
             for (id, entry) in old_servers {

@@ -683,6 +683,8 @@ export interface AdditiveInput {
   openclawModels?: (provider: Provider) => { id: string; name?: string }[];
   /** Hermes：model.provider 指向的那家 */
   hermesCurrentId?: string | null;
+  /** DeepSeek Harness：当前默认模型对应的 Qiniu Switch 供应商 */
+  dshCurrentId?: string | null;
   isHermesManaged?: (provider: Provider) => boolean;
   /** Pi：读不到当前配置时一律不能改 */
   piStateUnavailable?: boolean;
@@ -839,6 +841,19 @@ export function buildAdditiveSections(input: AdditiveInput): ProviderSection[] {
           label: t("providerCard.action.enable"),
           onClick: () => actions.setDefault(p),
           disabledReason: readOnlyReason,
+        });
+      }
+    }
+
+    if (app === "dsh") {
+      if (p.id === input.dshCurrentId) {
+        isDefault = true;
+        status = { label: t("providerCard.status.current"), dot: "muted" };
+      } else {
+        buttons.push({
+          key: "use",
+          label: t("providerCard.action.enable"),
+          onClick: () => actions.setDefault(p),
         });
       }
     }

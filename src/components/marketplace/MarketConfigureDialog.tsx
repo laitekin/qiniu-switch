@@ -159,7 +159,7 @@ export function MarketConfigureDialog({
         );
       } else {
         toast.success(
-          isAdditiveAppId(current.app)
+          isAdditiveAppId(current.app) && current.app !== "dsh"
             ? t("marketplace.configuredAdditive", {
                 defaultValue: "已添加到客户端，请选择该模型",
               })

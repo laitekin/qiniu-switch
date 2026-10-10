@@ -613,7 +613,8 @@ function App() {
         if (
           activeApp === "mcode" ||
           activeApp === "workbuddy" ||
-          activeApp === "antigravity"
+          activeApp === "antigravity" ||
+          activeApp === "dsh"
         )
           return;
         const conflicts = await checkEnvConflicts(activeApp);
@@ -1376,7 +1377,8 @@ function App() {
               activeApp === "hermes" ||
               activeApp === "pi" ||
               activeApp === "mcode" ||
-              activeApp === "workbuddy"
+              activeApp === "workbuddy" ||
+              activeApp === "dsh"
                 ? (provider) => setConfirmAction({ provider, action: "remove" })
                 : undefined
             }
@@ -1390,7 +1392,7 @@ function App() {
               activeApp === "openclaw"
                 ? (provider, modelId) =>
                     void setAsDefaultModel(provider, modelId)
-                : activeApp === "hermes"
+                : activeApp === "hermes" || activeApp === "dsh"
                   ? (provider) => void switchProvider(provider)
                   : undefined
             }

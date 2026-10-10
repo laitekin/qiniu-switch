@@ -56,6 +56,7 @@ const createDefaultProviders = (): ProvidersByApp => ({
   },
   workbuddy: {},
   antigravity: {},
+  dsh: {},
   gemini: {
     "gemini-1": {
       id: "gemini-1",
@@ -85,6 +86,7 @@ const createDefaultCurrent = (): CurrentProviderState => ({
   codex: "codex-1",
   workbuddy: "",
   antigravity: "",
+  dsh: "",
   gemini: "gemini-1",
   grokbuild: "",
   opencode: "",
@@ -209,6 +211,7 @@ let mcpConfigs: McpConfigState = {
   mcode: {},
   workbuddy: {},
   antigravity: {},
+  dsh: {},
 };
 
 const cloneProviders = (value: ProvidersByApp) =>
@@ -281,7 +284,8 @@ export const resetProviderState = () => {
     pi: {},
     mcode: {},
     workbuddy: {},
-  antigravity: {},
+    antigravity: {},
+    dsh: {},
   };
 };
 

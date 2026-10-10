@@ -4027,7 +4027,7 @@ checksum = "b5a041e753da8b807c9255f28de81879c78c876392ff2469cde94799b2896b9d"
 
 [[package]]
 name = "qiniu-switch"
-version = "4.0.6"
+version = "4.0.7"
 dependencies = [
  "anyhow",
  "arboard",

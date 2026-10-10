@@ -151,6 +151,7 @@ export function ProviderList({
     (provider: Provider): boolean => {
       switch (appId) {
         case "mcode":
+        case "dsh":
           return provider.meta?.liveConfigManaged === true;
         case "opencode":
           return opencodeLiveIds?.includes(provider.id) ?? false;
@@ -333,6 +334,7 @@ export function ProviderList({
           .map((model) => ({ id: model.id, name: model.name }));
       },
       hermesCurrentId: hermesModelConfig?.provider ?? null,
+      dshCurrentId: appId === "dsh" ? currentProviderId : null,
       isHermesManaged: (provider) =>
         isHermesReadOnlyProvider(provider.settingsConfig),
       piStateUnavailable: appId === "pi" && !isPiStateReady,

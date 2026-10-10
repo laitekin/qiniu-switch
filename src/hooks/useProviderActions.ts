@@ -281,6 +281,8 @@ export function useProviderActions(
           } else if (activeApp === "workbuddy") {
             messageKey = "notifications.workbuddyRestartRequired";
             defaultMessage = "已写入配置，请重启 WorkBuddy 后生效";
+          } else if (activeApp === "dsh") {
+            defaultMessage = "已设为 Harness 默认模型，新会话中生效";
           }
           toast.success(t(messageKey, { defaultValue: defaultMessage }), {
             closeButton: true,

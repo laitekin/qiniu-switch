@@ -316,6 +316,7 @@ export interface VisibleApps {
   mcode: boolean;
   workbuddy?: boolean;
   antigravity?: boolean;
+  dsh?: boolean;
 }
 
 // WebDAV 同步状态

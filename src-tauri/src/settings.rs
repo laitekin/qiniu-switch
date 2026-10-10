@@ -54,6 +54,8 @@ pub struct VisibleApps {
     pub workbuddy: bool,
     #[serde(default = "default_true")]
     pub antigravity: bool,
+    #[serde(default = "default_true")]
+    pub dsh: bool,
 }
 
 impl Default for VisibleApps {
@@ -71,6 +73,7 @@ impl Default for VisibleApps {
             mcode: true,
             workbuddy: true,
             antigravity: true,
+            dsh: true,
         }
     }
 }
@@ -91,6 +94,7 @@ impl VisibleApps {
             AppType::Mcode => self.mcode,
             AppType::WorkBuddy => self.workbuddy,
             AppType::Antigravity => self.antigravity,
+            AppType::Dsh => self.dsh,
         }
     }
 }
@@ -1072,7 +1076,7 @@ pub fn get_current_provider(app_type: &AppType) -> Option<String> {
         AppType::OpenClaw => settings.current_provider_openclaw.clone(),
         AppType::Hermes => settings.current_provider_hermes.clone(),
         AppType::Antigravity => settings.current_provider_antigravity.clone(),
-        AppType::Pi | AppType::Mcode | AppType::WorkBuddy => None,
+        AppType::Pi | AppType::Mcode | AppType::WorkBuddy | AppType::Dsh => None,
     }
 }
 
@@ -1092,7 +1096,7 @@ pub fn set_current_provider(app_type: &AppType, id: Option<&str>) -> Result<(), 
         AppType::OpenClaw => settings.current_provider_openclaw = id_owned.clone(),
         AppType::Hermes => settings.current_provider_hermes = id_owned.clone(),
         AppType::Antigravity => settings.current_provider_antigravity = id_owned.clone(),
-        AppType::Pi | AppType::Mcode | AppType::WorkBuddy => {}
+        AppType::Pi | AppType::Mcode | AppType::WorkBuddy | AppType::Dsh => {}
     })
 }
 

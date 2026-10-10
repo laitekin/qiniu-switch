@@ -92,5 +92,8 @@ describe("language and links", () => {
       "https://ccswitch.io/en/changelog/4.0.2",
     );
     expect(changelogUrl("zh-TW")).toBe("https://ccswitch.io/zh/changelog");
+    expect(changelogUrl("zh", "4.0.7")).toBe(
+      "https://github.com/laitekin/qiniu-switch/releases/tag/qiniu-v4.0.7",
+    );
   });
 });

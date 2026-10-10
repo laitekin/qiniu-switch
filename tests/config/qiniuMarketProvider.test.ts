@@ -132,7 +132,7 @@ describe("Qiniu marketplace client configuration", () => {
     });
   });
 
-  it.each(["opencode", "mcode", "workbuddy"] as const)(
+  it.each(["opencode", "mcode", "workbuddy", "dsh"] as const)(
     "%s has one model map entry and retains advertised limits",
     (app) => {
       const config = build(app).settingsConfig;
@@ -205,7 +205,11 @@ describe("Qiniu marketplace client configuration", () => {
       supportsChat: false,
     };
     for (const app of APP_IDS.filter(
-      (item) => item !== "workbuddy" && item !== "gemini" && item !== "antigravity",
+      (item) =>
+        item !== "workbuddy" &&
+        item !== "dsh" &&
+        item !== "gemini" &&
+        item !== "antigravity",
     )) {
       expect(marketModelSupportsApp(anthropic, app)).toBe(true);
       expect(() => build(app, anthropic)).not.toThrow();

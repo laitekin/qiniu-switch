@@ -72,6 +72,7 @@ export function AddProviderDialog({
     appId !== "mcode" &&
     appId !== "workbuddy" &&
     appId !== "antigravity" &&
+    appId !== "dsh" &&
     appId !== "grokbuild" &&
     appId !== "claude-desktop";
   // 两步：先选预设，再填写（每次打开都从第 1 步开始）
@@ -167,13 +168,17 @@ export function AddProviderDialog({
       setAuthSettingsTarget(null);
       return;
     }
+    if (appId === "dsh") {
+      closeDialog();
+      return;
+    }
     // 第 2 步的返回回到选预设
     if (step === "form") {
       setStep("pick");
       return;
     }
     closeDialog();
-  }, [authSettingsTarget, closeDialog, step]);
+  }, [appId, authSettingsTarget, closeDialog, step]);
   const formReadyToken = useMemo(
     () => Symbol("provider-form-ready"),
     [appId, open],
@@ -547,7 +552,7 @@ export function AddProviderDialog({
           : APP_DISPLAY_NAME[appId]
       }
       backLabel={
-        step === "form"
+        step === "form" && appId !== "dsh"
           ? t("providerPreset.backToPick")
           : t("provider.backToList")
       }

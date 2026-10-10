@@ -34,6 +34,7 @@ pub(crate) fn provider_exists_in_live_config(
             .map(|providers| providers.contains_key(provider_id)),
         AppType::WorkBuddy => crate::workbuddy_config::get_providers()
             .map(|providers| providers.contains_key(provider_id)),
+        AppType::Dsh => crate::dsh_config::provider_exists(provider_id),
         _ => Ok(false),
     }
 }
@@ -305,6 +306,7 @@ fn settings_contain_common_config(app_type: &AppType, settings: &Value, snippet:
         | AppType::Mcode
         | AppType::WorkBuddy
         | AppType::Antigravity
+        | AppType::Dsh
         | AppType::ClaudeDesktop => false,
     }
 }
@@ -383,6 +385,7 @@ pub(crate) fn remove_common_config_from_settings(
         | AppType::Mcode
         | AppType::WorkBuddy
         | AppType::Antigravity
+        | AppType::Dsh
         | AppType::ClaudeDesktop => Ok(settings.clone()),
     }
 }
@@ -703,6 +706,7 @@ pub(crate) fn write_live_snapshot(app_type: &AppType, provider: &Provider) -> Re
         AppType::Antigravity => {
             crate::antigravity_config::write_provider_live(&provider.settings_config)?
         }
+        AppType::Dsh => crate::dsh_config::set_provider(&provider.id, &provider.settings_config)?,
         AppType::Pi => {
             return Err(AppError::InvalidInput(
                 "Pi providers use the Pi provider service".to_string(),
@@ -996,6 +1000,7 @@ pub fn read_live_settings(app_type: AppType) -> Result<Value, AppError> {
         AppType::Mcode => Ok(json!(crate::mcode_config::get_providers()?)),
         AppType::WorkBuddy => Ok(json!(crate::workbuddy_config::get_providers()?)),
         AppType::Antigravity => crate::antigravity_config::read_live_settings(),
+        AppType::Dsh => crate::dsh_config::read_live_settings(),
         AppType::Pi => Err(AppError::InvalidInput(
             "Pi providers are read from Pi's native models file".to_string(),
         )),
@@ -1009,7 +1014,7 @@ pub fn read_live_settings(app_type: AppType) -> Result<Value, AppError> {
 pub fn import_default_config(state: &AppState, app_type: AppType) -> Result<bool, AppError> {
     // Antigravity's live settings do not expose its API key, so they cannot
     // become a complete provider profile through the generic import path.
-    if app_type == AppType::Antigravity {
+    if matches!(app_type, AppType::Antigravity | AppType::Dsh) {
         return Ok(false);
     }
     // Additive mode apps (OpenCode, OpenClaw) should use their dedicated
@@ -1115,7 +1120,8 @@ pub fn import_default_config(state: &AppState, app_type: AppType) -> Result<bool
         | AppType::Pi
         | AppType::Mcode
         | AppType::WorkBuddy
-        | AppType::Antigravity => {
+        | AppType::Antigravity
+        | AppType::Dsh => {
             unreachable!("additive mode apps are handled by early return")
         }
     };

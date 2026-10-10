@@ -1,0 +1,19 @@
+{
+  "version": "4.0.7",
+  "items": [
+    {
+      "type": "new",
+      "zh": "模型广场可配置 DeepSeek Harness Desktop",
+      "zh-TW": "模型廣場可設定 DeepSeek Harness Desktop",
+      "en": "Configure DeepSeek Harness Desktop and set a Qiniu model as default from the marketplace",
+      "ja": "モデル広場から DeepSeek Harness Desktop に七牛モデルを設定できます"
+    },
+    {
+      "type": "fix",
+      "zh": "修复模型广场页头无法拖动桌面窗口",
+      "zh-TW": "修復模型廣場頁首無法拖動桌面視窗",
+      "en": "Fixed window dragging from the model marketplace header",
+      "ja": "モデル広場のヘッダーからウィンドウを移動できない問題を修正"
+    }
+  ]
+}

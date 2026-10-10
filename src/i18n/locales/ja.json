@@ -1078,7 +1078,8 @@
     "pi": "Pi",
     "mcode": "MiniMax Code",
     "workbuddy": "WorkBuddy",
-    "antigravity": "Antigravity"
+    "antigravity": "Antigravity",
+    "dsh": "DeepSeek Harness Desktop"
   },
   "mcode": {
     "empty": {
@@ -5135,6 +5136,9 @@
     "integration": "導入ガイド",
     "mediaHint": "このモデルはアプリ内チャットとクライアント設定に対応していません",
     "officialDetails": "七牛公式サイトの詳細"
+  },
+  "dsh": {
+    "configHint": "モデル設定は ~/.dsh/settings.yaml、API Key は ~/.dsh/.credentials.yaml に別々に保存されます。"
   },
   "antigravity": {
     "envHint": "Antigravity CLI はプロセス環境から API キーとカスタムエンドポイントを読み取ります。Qiniu Switch はシェルプロファイルを変更しません。"

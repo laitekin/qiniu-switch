@@ -2,7 +2,7 @@
 
 基于 [CC Switch](https://github.com/farion1231/cc-switch) v4.0.6 的七牛模型接入桌面应用。保留新版侧边栏、供应商切换和工具管理能力，并加入七牛模型广场、模型选择、管理查询和专属导入协议。应用标识、数据库、图标和协议均与原版分开。
 
-> **已有数据库提示**：若看到“数据库 v20，应用仅支持 v19”，说明打开的是旧的 Qiniu Switch 3.x 程序。请退出旧程序，安装当前 4.0.6 安装包；不要删除数据库或手动修改 `PRAGMA user_version`。见[故障排查](docs/qiniu-switch/故障排查.md)。自动更新尚未启用。
+> **已有数据库提示**：若看到“数据库 v20，应用仅支持 v19”，说明打开的是旧的 Qiniu Switch 3.x 程序。请退出旧程序，安装当前 4.0.7 安装包；不要删除数据库或手动修改 `PRAGMA user_version`。见[故障排查](docs/qiniu-switch/故障排查.md)。自动更新尚未启用。
 
 ## 开始使用
 
@@ -54,6 +54,8 @@ PATH="/opt/homebrew/opt/llvm/bin:/opt/homebrew/opt/lld/bin:$PATH" \
 2. 输入**模型 API Key** 并连接。应用调用七牛 `/v1/models`，按真实返回的模型 ID 选择；目录中已知退役或不可用的 ID 与别名不会计入可用数量。
 3. 选择模型后，可在应用内试用支持对话的模型，或选择兼容的客户端生成供应商配置。部分客户端仍需确认其自身版本、认证方式和模型协议。
 4. 若已有 `qiniuswitch://v1/import` 链接，打开后会先显示配置预览，再选择客户端和接口返回的模型，由用户确认导入。仓库内的 HTML 页面是本地演示，不是七牛正式控制台页面。
+
+**DeepSeek Harness Desktop**：在侧栏选择该客户端，可添加 Qiniu OpenAI Chat Completions 端点、API Key 和模型，也可从模型广场直接配置。Qiniu Switch 将模型路由写入 `$DSH_HOME/settings.yaml`（默认 `~/.dsh/settings.yaml`），将 Key 写入 `$DSH_HOME/.credentials.yaml` 的凭据引用，设为默认后新会话使用。其他 Harness 供应商和设置保持保留；目前仅接入 OpenAI Chat Completions 模型。配置格式依据 [DeepSeek 官方供应商指南](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/guide/providers.zh.md) 和 [本地凭据说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/credentials/credentials-local/README.md)。
 
 侧边栏“授权中心”可输入七牛 **AK/SK**，查询受支持的 Key、用量、账单和日志管理接口。这与模型 API Key 是两套凭据：AK/SK 用于管理接口签名，模型 API Key 用于模型调用。当前管理操作为只读；不提供网页登录 Cookie 接管。
 

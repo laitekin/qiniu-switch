@@ -98,7 +98,8 @@ impl Database {
             AppType::ClaudeDesktop
             | AppType::OpenClaw
             | AppType::WorkBuddy
-            | AppType::Antigravity => None,
+            | AppType::Antigravity
+            | AppType::Dsh => None,
         };
 
         if let Some(column) = column {

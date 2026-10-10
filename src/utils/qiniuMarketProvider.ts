@@ -28,7 +28,8 @@ export function marketModelSupportsApp(
     return model.protocols.some((protocol) =>
       ["gemini-native", "vertex-bypass"].includes(protocol),
     );
-  if (app === "workbuddy") return model.protocols.includes("openai-chat");
+  if (app === "workbuddy" || app === "dsh")
+    return model.protocols.includes("openai-chat");
   return model.protocols.some((protocol) =>
     ["openai-chat", "anthropic-messages"].includes(protocol),
   );
@@ -194,6 +195,7 @@ export function buildQiniuMarketProvider(
       break;
     case "mcode":
     case "workbuddy":
+    case "dsh":
       provider.settingsConfig = {
         name,
         vendor: "Qiniu",
@@ -203,7 +205,7 @@ export function buildQiniuMarketProvider(
         options: { baseURL: baseUrl, apiKey: apiKey.trim() },
         models: modelMap,
       };
-      if (app === "workbuddy") {
+      if (app === "workbuddy" || app === "dsh") {
         provider.settingsConfig.models[modelId].options = {
           supportsImages: model.inputModalities.includes("image"),
           supportsToolCall: model.capabilities.some((capability) =>
