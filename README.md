@@ -29,6 +29,25 @@ pnpm tauri build --target universal-apple-darwin --bundles dmg
 
 安装包位于 `src-tauri/target/universal-apple-darwin/release/bundle/dmg/`。未经 Apple 开发者证书签名、公证的本地包，首次在其他 Mac 上打开可能需要系统安全确认。
 
+在 Apple 芯片 Mac 上交叉编译 Windows x64 的 NSIS 安装版，先准备工具链（配置依据见 [Tauri Windows Installer 文档](https://v2.tauri.app/distribute/windows-installer/)）：
+
+```bash
+brew install llvm lld nsis
+rustup target add x86_64-pc-windows-msvc
+cargo install --locked cargo-xwin
+```
+
+本机的 Tauri CLI 不接受直接使用 `--bundles nsis`，应通过配置指定目标：
+
+```bash
+PATH="/opt/homebrew/opt/llvm/bin:/opt/homebrew/opt/lld/bin:$PATH" \
+  pnpm tauri build --runner cargo-xwin \
+  --target x86_64-pc-windows-msvc \
+  --config '{"bundle":{"targets":["nsis"]}}' --ci
+```
+
+产物位于 `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/`，为 Windows `.exe` 安装程序。`.msi` 需在 Windows 机器上通过 WiX 构建。交叉编译包尚未在 Windows 实机运行验证，也未进行 Windows 代码签名。
+
 ## 在新版界面中使用七牛模型
 
 1. 侧边栏打开“模型广场”，浏览七牛公开模型目录、价格、能力和详情。已退役与暂不可用模型单列展示，不计入“探索模型”的可用数量。
