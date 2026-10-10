@@ -25,6 +25,7 @@ import {
 import { settingsApi } from "@/lib/api/settings";
 import { qiniuMarketApi, type QiniuMarketModel } from "@/lib/api/qiniuMarket";
 import { cn } from "@/lib/utils";
+import { DRAG_REGION_ATTR, DRAG_REGION_STYLE } from "@/lib/platform";
 import { APP_IDS } from "@/config/appConfig";
 import { marketModelSupportsApp } from "@/utils/qiniuMarketProvider";
 import { MarketMarkdown } from "./MarketMarkdown";
@@ -340,19 +341,32 @@ export function ModelMarketplace({
   );
   return (
     <section
-      className="min-h-full bg-gradient-to-b from-blue-50/55 via-background to-background px-6 pb-8 pt-6 dark:from-blue-950/15"
+      className="min-h-full bg-gradient-to-b from-blue-50/55 via-background to-background px-6 pb-8 dark:from-blue-950/15"
       aria-labelledby="model-market-title"
     >
+      <div
+        className="-mx-6 h-6"
+        {...DRAG_REGION_ATTR}
+        style={DRAG_REGION_STYLE as React.CSSProperties}
+      />
       <div className="mx-auto max-w-[1440px] space-y-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
+        <div
+          className="flex flex-wrap items-start justify-between gap-4"
+          {...DRAG_REGION_ATTR}
+          style={DRAG_REGION_STYLE as React.CSSProperties}
+        >
+          <div {...DRAG_REGION_ATTR}>
             <h1
               id="model-market-title"
               className="text-2xl font-semibold tracking-tight"
+              {...DRAG_REGION_ATTR}
             >
               {t("marketplace.title", { defaultValue: "AI 大模型广场" })}
             </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p
+              className="mt-2 text-sm text-muted-foreground"
+              {...DRAG_REGION_ATTR}
+            >
               {t("marketplace.subtitle", {
                 defaultValue: "发现模型，体验并配置到你的客户端。",
               })}
@@ -361,6 +375,7 @@ export function ModelMarketplace({
           <Button
             variant="outline"
             size="sm"
+            style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
             disabled={catalog.isFetching}
             onClick={() => void catalog.refetch()}
           >
