@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -28,16 +28,23 @@ import { cn } from "@/lib/utils";
 import { DRAG_REGION_ATTR, DRAG_REGION_STYLE } from "@/lib/platform";
 import { APP_IDS } from "@/config/appConfig";
 import { marketModelSupportsApp } from "@/utils/qiniuMarketProvider";
+import { isTokenPlanModel, type QiniuKeyMode } from "@/utils/qiniuTokenPlan";
 import { MarketMarkdown } from "./MarketMarkdown";
 import { MarketVendorSelect } from "./MarketVendorSelect";
 
 interface ModelMarketplaceProps {
   onConfigure: (model: QiniuMarketModel) => void;
   onChat: (model: QiniuMarketModel) => void;
+  keyMode?: QiniuKeyMode;
+  planModelIds?: string[];
+  planStatus?: "loading" | "ready" | "error";
+  onPlanRefresh?: () => void;
   connection?:
     | ReactNode
     | ((models: QiniuMarketModel[], ready: boolean) => ReactNode);
 }
+
+const EMPTY_PLAN_MODEL_IDS: string[] = [];
 
 function canConfigureModel(model: QiniuMarketModel) {
   return APP_IDS.some((app) => marketModelSupportsApp(model, app));
@@ -66,12 +73,23 @@ function ModelIcon({ model }: { model: QiniuMarketModel }) {
 function ModelPrices({
   model,
   compact = false,
+  planMode = false,
 }: {
   model: QiniuMarketModel;
   compact?: boolean;
+  planMode?: boolean;
 }) {
   const { t } = useTranslation();
   const prices = compact ? model.prices.slice(0, 2) : model.prices;
+  if (planMode && compact) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        {t("marketplace.planPricing", {
+          defaultValue: "Token Plan 按套餐积分扣减，以控制台为准",
+        })}
+      </p>
+    );
+  }
   const range = (value?: number[]) => {
     if (
       !value ||
@@ -86,12 +104,25 @@ function ModelPrices({
   if (!prices.length) {
     return (
       <p className="text-xs text-muted-foreground">
-        {t("marketplace.priceUnavailable", { defaultValue: "价格以官网为准" })}
+        {planMode
+          ? t("marketplace.planPricing", {
+              defaultValue: "Token Plan 按套餐积分扣减，以控制台为准",
+            })
+          : t("marketplace.priceUnavailable", {
+              defaultValue: "价格以官网为准",
+            })}
       </p>
     );
   }
   return (
     <div className="space-y-2">
+      {planMode && (
+        <p className="text-xs text-muted-foreground">
+          {t("marketplace.planPaygReference", {
+            defaultValue: "套餐按积分扣减；下方仅为按量参考价。",
+          })}
+        </p>
+      )}
       <dl
         className={cn("flex flex-wrap gap-x-4 gap-y-2", !compact && "flex-col")}
       >
@@ -185,12 +216,14 @@ function ModelActions({
 function ModelCard({
   model,
   featured,
+  planMode,
   onDetail,
   onConfigure,
   onChat,
 }: Pick<ModelMarketplaceProps, "onConfigure" | "onChat"> & {
   model: QiniuMarketModel;
   featured?: boolean;
+  planMode: boolean;
   onDetail: (model: QiniuMarketModel) => void;
 }) {
   const { t } = useTranslation();
@@ -228,6 +261,11 @@ function ModelCard({
               {t("marketplace.new", { defaultValue: "新上架" })}
             </span>
           )}
+          {planMode && (
+            <span className="shrink-0 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-600 dark:bg-blue-950/60 dark:text-blue-300">
+              Token Plan
+            </span>
+          )}
         </div>
         <div className="mt-4 flex flex-wrap gap-1.5">
           {model.capabilities.slice(0, 4).map((capability) => (
@@ -247,7 +285,7 @@ function ModelCard({
         </p>
       </button>
       <div className="mt-auto border-t border-border-default pt-3">
-        <ModelPrices model={model} compact />
+        <ModelPrices model={model} compact planMode={planMode} />
         <div className="mt-4 flex flex-wrap gap-2">
           <ModelActions
             model={model}
@@ -264,12 +302,26 @@ export function ModelMarketplace({
   onConfigure,
   onChat,
   connection,
+  keyMode = "payg",
+  planModelIds = EMPTY_PLAN_MODEL_IDS,
+  planStatus = "ready",
+  onPlanRefresh,
 }: ModelMarketplaceProps) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [vendor, setVendor] = useState("");
   const [capability, setCapability] = useState("");
   const [selected, setSelected] = useState<QiniuMarketModel | null>(null);
+  const previousMode = useRef(keyMode);
+  useEffect(() => {
+    if (previousMode.current !== keyMode) {
+      previousMode.current = keyMode;
+      setQuery("");
+      setVendor("");
+      setCapability("");
+      setSelected(null);
+    }
+  }, [keyMode]);
   const catalog = useQuery({
     queryKey: ["qiniu", "model-market"],
     queryFn: qiniuMarketApi.list,
@@ -285,21 +337,35 @@ export function ModelMarketplace({
   });
   const detailModel = detail.data ?? selected;
   const models = catalog.data?.models ?? [];
+  const planMode = keyMode === "token-plan";
+  const visibleModels = useMemo(
+    () =>
+      planMode
+        ? planStatus === "ready"
+          ? models.filter((model) => isTokenPlanModel(model, planModelIds))
+          : []
+        : models,
+    [models, planMode, planStatus, planModelIds],
+  );
+  const planLoading = planMode && planStatus === "loading";
+  const planError = planMode && planStatus === "error";
   const vendors = useMemo(
     () =>
-      [...new Set(models.map((model) => model.vendor).filter(Boolean))].sort(),
-    [models],
+      [
+        ...new Set(visibleModels.map((model) => model.vendor).filter(Boolean)),
+      ].sort(),
+    [visibleModels],
   );
   const capabilities = useMemo(
-    () => [...new Set(models.flatMap((model) => model.capabilities))],
-    [models],
+    () => [...new Set(visibleModels.flatMap((model) => model.capabilities))],
+    [visibleModels],
   );
   useEffect(() => {
     if (catalog.data && vendor && !vendors.includes(vendor)) setVendor("");
   }, [catalog.data, vendor, vendors]);
   const filtered = useMemo(() => {
     const keyword = query.trim().toLocaleLowerCase();
-    return models.filter(
+    return visibleModels.filter(
       (model) =>
         (!vendor || model.vendor === vendor) &&
         (!capability || model.capabilities.includes(capability)) &&
@@ -315,7 +381,7 @@ export function ModelMarketplace({
             .toLocaleLowerCase()
             .includes(keyword)),
     );
-  }, [models, query, vendor, capability]);
+  }, [visibleModels, query, vendor, capability]);
   const hasFilters = !!(query.trim() || vendor || capability);
   const available = filtered.filter(
     (model) => model.available && !model.retired,
@@ -334,6 +400,7 @@ export function ModelMarketplace({
       key={model.id}
       model={model}
       featured={featured}
+      planMode={planMode}
       onDetail={setSelected}
       onConfigure={onConfigure}
       onChat={onChat}
@@ -376,8 +443,11 @@ export function ModelMarketplace({
             variant="outline"
             size="sm"
             style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
-            disabled={catalog.isFetching}
-            onClick={() => void catalog.refetch()}
+            disabled={catalog.isFetching || planLoading}
+            onClick={() => {
+              void catalog.refetch();
+              if (planMode) onPlanRefresh?.();
+            }}
           >
             <RefreshCw
               className={cn(
@@ -390,8 +460,29 @@ export function ModelMarketplace({
           </Button>
         </div>
         {typeof connection === "function"
-          ? connection(models, catalog.isSuccess)
+          ? connection(
+              visibleModels,
+              catalog.isSuccess && (!planMode || planStatus === "ready"),
+            )
           : connection}
+        {planError && (
+          <div
+            role="alert"
+            className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/20 dark:text-red-300"
+          >
+            {t("marketplace.planLoadError", {
+              defaultValue: "Token Plan 模型清单加载失败，请重试。",
+            })}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onPlanRefresh}
+              className="ml-2"
+            >
+              {t("common.retry", { defaultValue: "重试" })}
+            </Button>
+          </div>
+        )}
         <div className="space-y-3">
           <div className="flex flex-wrap gap-3">
             <div className="relative min-w-[220px] flex-1">
@@ -463,15 +554,19 @@ export function ModelMarketplace({
             </Button>
           </div>
         )}
-        {catalog.isPending ? (
+        {catalog.isPending || planLoading ? (
           <div
             role="status"
             className="flex min-h-64 items-center justify-center gap-2 text-sm text-muted-foreground"
           >
             <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-            {t("marketplace.loading", { defaultValue: "正在获取七牛模型…" })}
+            {planLoading
+              ? t("marketplace.planLoading", {
+                  defaultValue: "正在获取 Token Plan 模型…",
+                })
+              : t("marketplace.loading", { defaultValue: "正在获取七牛模型…" })}
           </div>
-        ) : (
+        ) : planError ? null : (
           <>
             {arrivals.length > 0 && (
               <section
@@ -553,10 +648,15 @@ export function ModelMarketplace({
           </>
         )}
         <p className="text-center text-xs text-muted-foreground">
-          {t("marketplace.source", {
-            defaultValue:
-              "模型信息来自七牛云，实际可用模型以你的 API Key 为准。",
-          })}
+          {planMode
+            ? t("marketplace.planSource", {
+                defaultValue:
+                  "套餐清单来自七牛官网，实际权限与积分以你的订阅专用 Key 和控制台为准。",
+              })
+            : t("marketplace.source", {
+                defaultValue:
+                  "模型信息来自七牛云，实际可用模型以你的 API Key 为准。",
+              })}
         </p>
       </div>
       <Dialog
@@ -667,9 +767,13 @@ export function ModelMarketplace({
               </dl>
               <div className="space-y-3 border-t border-border-default pt-4">
                 <h3 className="text-sm font-medium">
-                  {t("marketplace.pricing", { defaultValue: "模型价格" })}
+                  {planMode
+                    ? t("marketplace.planPriceTitle", {
+                        defaultValue: "套餐积分与按量参考价",
+                      })
+                    : t("marketplace.pricing", { defaultValue: "模型价格" })}
                 </h3>
-                <ModelPrices model={detailModel} />
+                <ModelPrices model={detailModel} planMode={planMode} />
               </div>
               {detailModel.announcement && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-3 dark:border-amber-800 dark:bg-amber-950/20">

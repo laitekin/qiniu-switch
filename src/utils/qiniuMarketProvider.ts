@@ -10,6 +10,7 @@ import {
   buildGrokBuildConfig,
   GROK_BUILD_DEFAULT_CONTEXT_WINDOW,
 } from "@/utils/grokBuildConfig";
+import type { QiniuKeyMode } from "@/utils/qiniuTokenPlan";
 
 const OPENAI_BASE = "https://api.qnaigc.com/v1";
 const ANTHROPIC_BASE = "https://api.qnaigc.com";
@@ -53,6 +54,7 @@ export function buildQiniuMarketProvider(
   app: AppId,
   apiKey: string,
   id: string,
+  keyMode: QiniuKeyMode = "payg",
 ): Provider {
   if (
     !marketModelSupportsApp(model, app) ||
@@ -72,13 +74,16 @@ export function buildQiniuMarketProvider(
   const api = anthropic ? "anthropic-messages" : "openai-completions";
   const context = tokenLimit(model.contextWindow);
   const output = tokenLimit(model.maxOutput);
-  const name = `七牛云 · ${model.name}`;
+  const name = `${keyMode === "token-plan" ? "七牛 Token Plan" : "七牛云"} · ${model.name}`;
   const provider: Provider = {
     id,
     name,
     icon: "qiniu",
     category: "aggregator",
-    websiteUrl: "https://www.qiniu.com",
+    websiteUrl:
+      keyMode === "token-plan"
+        ? "https://www.qiniu.com/ai/plan"
+        : "https://www.qiniu.com",
     createdAt: Date.now(),
     settingsConfig: {},
   };

@@ -11,6 +11,7 @@ use std::time::Duration;
 use url::Url;
 
 const SOURCE_URL: &str = "https://www.qiniu.com/ai/models";
+const PLAN_SOURCE_URL: &str = "https://www.qiniu.com/ai/plan";
 const CATALOG_URL: &str =
     "https://web-api.qiniu.com/api/proxy/ai-inference/inapi/v2/models?sort=rank&order=asc";
 const DETAIL_BASE: &str = "https://api.qnaigc.com/v1/market/model/";
@@ -73,6 +74,115 @@ pub struct QiniuMarketCatalog {
     models: Vec<QiniuMarketModel>,
     source_url: &'static str,
     fetched_at: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct QiniuTokenPlanCatalog {
+    models: Vec<String>,
+    source_url: &'static str,
+    fetched_at: String,
+}
+
+/// Public Token Plan model list from Qiniu's server-rendered plan page. This
+/// describes the published plan, not the entitlements of a particular key.
+#[tauri::command]
+pub async fn qiniu_market_token_plan_models() -> Result<QiniuTokenPlanCatalog, String> {
+    let html = plan_page_request().await?;
+    Ok(QiniuTokenPlanCatalog {
+        models: parse_plan_models(&html)?,
+        source_url: PLAN_SOURCE_URL,
+        fetched_at: Utc::now().to_rfc3339(),
+    })
+}
+
+async fn plan_page_request() -> Result<String, String> {
+    let client = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .timeout(Duration::from_secs(30))
+        .connect_timeout(Duration::from_secs(10))
+        .build()
+        .map_err(|_| "qiniu_plan_connection_failed")?;
+    let mut response = client
+        .get(PLAN_SOURCE_URL)
+        .header("Accept", "text/html")
+        .send()
+        .await
+        .map_err(|_| "qiniu_plan_connection_failed")?;
+    if !response.status().is_success() {
+        return Err(format!("qiniu_plan_http_{}", response.status().as_u16()));
+    }
+    if response
+        .content_length()
+        .is_some_and(|length| length > RESPONSE_LIMIT as u64)
+    {
+        return Err("qiniu_plan_response_too_large".into());
+    }
+    let mut body = Vec::new();
+    while let Some(chunk) = response
+        .chunk()
+        .await
+        .map_err(|_| "qiniu_plan_connection_failed")?
+    {
+        if body.len() + chunk.len() > RESPONSE_LIMIT {
+            return Err("qiniu_plan_response_too_large".into());
+        }
+        body.extend_from_slice(&chunk);
+    }
+    String::from_utf8(body).map_err(|_| "qiniu_plan_invalid_response".into())
+}
+
+fn parse_plan_models(html: &str) -> Result<Vec<String>, String> {
+    let marker = "id=\"__NEXT_DATA__\"";
+    let script = &html[html.find(marker).ok_or("qiniu_plan_invalid_response")? + marker.len()..];
+    let payload = &script[script.find('>').ok_or("qiniu_plan_invalid_response")? + 1..];
+    let payload = &payload[..payload
+        .find("</script>")
+        .ok_or("qiniu_plan_invalid_response")?];
+    let page: Value = serde_json::from_str(payload).map_err(|_| "qiniu_plan_invalid_response")?;
+    let plan = page
+        .pointer("/props/pageProps/planData")
+        .ok_or("qiniu_plan_invalid_response")?;
+    let has_enterprise_s = plan
+        .pointer("/pricing/plans")
+        .and_then(Value::as_array)
+        .is_some_and(|plans| {
+            plans
+                .iter()
+                .any(|tier| tier.get("id").and_then(Value::as_str) == Some("Enterprise-s"))
+        });
+    if !has_enterprise_s {
+        return Err("qiniu_plan_invalid_response".into());
+    }
+    let groups = plan
+        .pointer("/models/groups")
+        .and_then(Value::as_array)
+        .ok_or("qiniu_plan_invalid_response")?;
+    let mut seen = HashSet::new();
+    let mut models = Vec::new();
+    for group in groups {
+        let entries = group
+            .get("models")
+            .and_then(Value::as_array)
+            .ok_or("qiniu_plan_invalid_response")?;
+        for entry in entries {
+            let id = entry
+                .as_str()
+                .or_else(|| entry.get("name").and_then(Value::as_str));
+            if let Some(id) = id
+                .map(str::trim)
+                .filter(|id| model_url(DETAIL_BASE, id, false).is_ok())
+            {
+                if seen.insert(id.to_owned()) {
+                    models.push(id.to_owned());
+                }
+            }
+        }
+    }
+    if models.is_empty() {
+        return Err("qiniu_plan_invalid_response".into());
+    }
+    Ok(models)
 }
 
 #[tauri::command]
@@ -524,5 +634,42 @@ mod tests {
         let models = parse_catalog(&response, today()).unwrap();
         assert_eq!(models.len(), 1);
         assert!(models[0].icon.is_none());
+    }
+
+    #[test]
+    fn reads_live_token_plan_models_from_next_data() {
+        let page = json!({
+            "props": {"pageProps": {"planData": {
+                "pricing": {"plans": [{"id": "Enterprise-s"}]},
+                "models": {"groups": [
+                    {"models": [
+                        {"name": "deepseek/deepseek-v4.1-flash", "hot": true},
+                        "minimax/minimax-m3",
+                        "minimax/minimax-m3",
+                        "../invalid"
+                    ]}
+                ]}
+            }}}
+        });
+        let html = format!(
+            "<html><script id=\"__NEXT_DATA__\" type=\"application/json\">{page}</script></html>"
+        );
+        assert_eq!(
+            parse_plan_models(&html).unwrap(),
+            ["deepseek/deepseek-v4.1-flash", "minimax/minimax-m3"]
+        );
+        assert!(parse_plan_models("<html></html>").is_err());
+    }
+
+    #[test]
+    fn token_plan_parser_rejects_unrelated_pricing_page() {
+        let page = json!({
+            "props": {"pageProps": {"planData": {
+                "pricing": {"plans": [{"id": "other"}]},
+                "models": {"groups": [{"models": ["minimax/minimax-m3"]}]}
+            }}}
+        });
+        let html = format!("<script id=\"__NEXT_DATA__\">{page}</script>");
+        assert!(parse_plan_models(&html).is_err());
     }
 }

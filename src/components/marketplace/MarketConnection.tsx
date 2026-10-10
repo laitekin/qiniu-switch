@@ -5,11 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchModelsForConfig, type FetchedModel } from "@/lib/api/model-fetch";
 import type { QiniuMarketModel } from "@/lib/api/qiniuMarket";
+import { settingsApi } from "@/lib/api/settings";
+import { usableModelsForKey, type QiniuKeyMode } from "@/utils/qiniuTokenPlan";
 
 export type MarketConnectionStatus = "idle" | "loading" | "ready" | "error";
 
 const EMPTY_FETCHED_MODELS: FetchedModel[] = [];
 const EMPTY_CATALOG_MODELS: QiniuMarketModel[] = [];
+const EMPTY_PLAN_IDS: string[] = [];
 
 interface Props {
   apiKey: string;
@@ -17,27 +20,13 @@ interface Props {
   initialStatus?: MarketConnectionStatus;
   catalogModels?: QiniuMarketModel[];
   catalogReady?: boolean;
+  keyMode?: QiniuKeyMode;
+  planModelIds?: string[];
+  planReady?: boolean;
+  onModeChange?: (mode: QiniuKeyMode) => void;
   onApiKeyChange: (key: string) => void;
   onModelsChange: (models: FetchedModel[]) => void;
   onStatusChange?: (status: MarketConnectionStatus) => void;
-}
-
-function excludeUnavailableModels(
-  models: FetchedModel[],
-  catalog: QiniuMarketModel[],
-): FetchedModel[] {
-  const unavailableIds = new Set(
-    catalog
-      .filter((model) => model.retired || !model.available)
-      .flatMap((model) => [model.id, ...model.apiIds]),
-  );
-  return Array.from(
-    new Map(
-      models
-        .filter((model) => model.id.trim() && !unavailableIds.has(model.id))
-        .map((model) => [model.id, model]),
-    ).values(),
-  );
 }
 
 export function MarketConnection({
@@ -46,6 +35,10 @@ export function MarketConnection({
   initialStatus,
   catalogModels = EMPTY_CATALOG_MODELS,
   catalogReady = true,
+  keyMode = "payg",
+  planModelIds = EMPTY_PLAN_IDS,
+  planReady = true,
+  onModeChange,
   onApiKeyChange,
   onModelsChange,
   onStatusChange,
@@ -58,16 +51,20 @@ export function MarketConnection({
       : (initialStatus ?? (initialModels.length ? "ready" : "idle")),
   );
   const [count, setCount] = useState(
-    () => excludeUnavailableModels(initialModels, catalogModels).length,
+    () =>
+      usableModelsForKey(initialModels, catalogModels, keyMode, planModelIds)
+        .length,
   );
   const sequence = useRef(0);
   const previousKey = useRef(apiKey);
+  const previousMode = useRef(keyMode);
   const callbacks = useRef({ onModelsChange, onStatusChange });
   callbacks.current = { onModelsChange, onStatusChange };
 
   useEffect(() => {
-    if (previousKey.current !== apiKey) {
+    if (previousKey.current !== apiKey || previousMode.current !== keyMode) {
       previousKey.current = apiKey;
+      previousMode.current = keyMode;
       sequence.current += 1;
       setStatus("idle");
       setCount(0);
@@ -77,14 +74,23 @@ export function MarketConnection({
     return () => {
       sequence.current += 1;
     };
-  }, [apiKey]);
+  }, [apiKey, keyMode]);
 
   useEffect(() => {
-    setCount(excludeUnavailableModels(initialModels, catalogModels).length);
-  }, [initialModels, catalogModels]);
+    setCount(
+      usableModelsForKey(initialModels, catalogModels, keyMode, planModelIds)
+        .length,
+    );
+  }, [initialModels, catalogModels, keyMode, planModelIds]);
 
   const connect = async () => {
-    if (!apiKey.trim() || !catalogReady || status === "loading") return;
+    if (
+      !apiKey.trim() ||
+      !catalogReady ||
+      (keyMode === "token-plan" && !planReady) ||
+      status === "loading"
+    )
+      return;
     const current = ++sequence.current;
     setStatus("loading");
     callbacks.current.onStatusChange?.("loading");
@@ -97,7 +103,12 @@ export function MarketConnection({
         "https://api.qnaigc.com/v1/models",
       );
       if (current !== sequence.current) return;
-      const models = excludeUnavailableModels(result, catalogModels);
+      const models = usableModelsForKey(
+        result,
+        catalogModels,
+        keyMode,
+        planModelIds,
+      );
       setCount(models.length);
       setStatus("ready");
       callbacks.current.onModelsChange(models);
@@ -111,13 +122,41 @@ export function MarketConnection({
 
   return (
     <div className="rounded-xl border border-border-default bg-background p-4">
+      {onModeChange && (
+        <div
+          role="group"
+          aria-label={t("marketplace.keyMode", {
+            defaultValue: "API Key 类型",
+          })}
+          className="mb-4 flex flex-wrap gap-2"
+        >
+          {(["payg", "token-plan"] as const).map((mode) => (
+            <Button
+              key={mode}
+              type="button"
+              size="sm"
+              variant={keyMode === mode ? "default" : "outline"}
+              aria-pressed={keyMode === mode}
+              onClick={() => onModeChange(mode)}
+            >
+              {mode === "payg"
+                ? t("marketplace.paygMode", { defaultValue: "按量 API" })
+                : "Token Plan"}
+            </Button>
+          ))}
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3">
         <label
           htmlFor={inputId}
           className="flex shrink-0 items-center gap-2 text-sm font-medium"
         >
           <KeyRound size={16} aria-hidden="true" />
-          {t("marketplace.apiKey", { defaultValue: "模型 API Key" })}
+          {keyMode === "token-plan"
+            ? t("marketplace.planApiKey", {
+                defaultValue: "订阅专用 API Key",
+              })
+            : t("marketplace.apiKey", { defaultValue: "模型 API Key" })}
         </label>
         <Input
           id={inputId}
@@ -134,7 +173,12 @@ export function MarketConnection({
           type="button"
           size="sm"
           onClick={() => void connect()}
-          disabled={!apiKey.trim() || !catalogReady || status === "loading"}
+          disabled={
+            !apiKey.trim() ||
+            !catalogReady ||
+            (keyMode === "token-plan" && !planReady) ||
+            status === "loading"
+          }
         >
           {status === "loading" && (
             <Loader2
@@ -161,13 +205,41 @@ export function MarketConnection({
           {t("marketplace.sessionKey", { defaultValue: "仅本次会话使用" })}
         </span>
       </div>
+      {keyMode === "token-plan" && (
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <span>
+            {t("marketplace.planKeyHint", {
+              defaultValue:
+                "请使用订阅专用 Key。此处按官网套餐模型筛选，实际权益与积分以七牛控制台为准。",
+            })}
+          </span>
+          <Button
+            type="button"
+            variant="link"
+            size="sm"
+            className="h-auto p-0 text-xs"
+            onClick={() =>
+              void settingsApi.openExternal(
+                "https://portal.qiniu.com/ai-inference/subscription?tier=Enterprise-s",
+              )
+            }
+          >
+            {t("marketplace.viewPlan", { defaultValue: "查看套餐" })}
+          </Button>
+        </div>
+      )}
       {status === "ready" && (
         <p role="status" className="mt-2 text-xs text-muted-foreground">
           {count
-            ? t("marketplace.connectedModels", {
-                count,
-                defaultValue: "已连接 · {{count}} 个可用模型",
-              })
+            ? keyMode === "token-plan"
+              ? t("marketplace.connectedPlanModels", {
+                  count,
+                  defaultValue: "已连接 · {{count}} 个套餐清单匹配模型",
+                })
+              : t("marketplace.connectedModels", {
+                  count,
+                  defaultValue: "已连接 · {{count}} 个可用模型",
+                })
             : t("marketplace.emptyAvailableModels", {
                 defaultValue: "已连接，暂无可用模型",
               })}

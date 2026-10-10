@@ -50,7 +50,11 @@ const imageModel: QiniuMarketModel = {
   prices: [],
 };
 
-function show() {
+function show(plan?: {
+  keyMode: "token-plan";
+  planModelIds: string[];
+  planStatus: "ready" | "error" | "loading";
+}) {
   const onConfigure = vi.fn();
   const onChat = vi.fn();
   render(
@@ -59,7 +63,7 @@ function show() {
         new QueryClient({ defaultOptions: { queries: { retry: false } } })
       }
     >
-      <ModelMarketplace onConfigure={onConfigure} onChat={onChat} />
+      <ModelMarketplace onConfigure={onConfigure} onChat={onChat} {...plan} />
     </QueryClientProvider>,
   );
   return { onConfigure, onChat };
@@ -78,6 +82,31 @@ describe("Qiniu model marketplace", () => {
       contextWindow: "128K",
       overview: "## 官方说明\n\n支持真实接口返回的模型。",
     });
+  });
+
+  it("shows only plan models and plan credit wording in Token Plan mode", async () => {
+    show({
+      keyMode: "token-plan",
+      planModelIds: ["text-alpha"],
+      planStatus: "ready",
+    });
+    const card = await screen.findByRole("article", { name: "Text Alpha" });
+    expect(screen.queryByRole("article", { name: "Image Beta" })).toBeNull();
+    expect(
+      within(card).getByText("marketplace.planPricing"),
+    ).toBeInTheDocument();
+    expect(within(card).queryByText("¥0.002")).toBeNull();
+    expect(
+      screen.getByRole("heading", { name: /marketplace.explore/ }),
+    ).toHaveTextContent("1");
+  });
+
+  it("never falls back to all models when the plan list fails", async () => {
+    show({ keyMode: "token-plan", planModelIds: [], planStatus: "error" });
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "marketplace.planLoadError",
+    );
+    expect(screen.queryByRole("article")).toBeNull();
   });
 
   it("filters the fetched catalog and passes the selected model to configuration", async () => {

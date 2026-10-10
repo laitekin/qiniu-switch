@@ -1727,6 +1727,7 @@ pub fn run() {
             commands::auth_start_login,
             commands::qiniu_auth_status,
             commands::qiniu_market_models,
+            commands::qiniu_market_token_plan_models,
             commands::qiniu_market_model_detail,
             commands::qiniu_market_chat,
             commands::workbuddy_read_memory,

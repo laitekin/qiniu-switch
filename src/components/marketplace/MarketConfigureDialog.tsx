@@ -28,6 +28,7 @@ import {
   buildQiniuMarketProvider,
   marketModelSupportsApp,
 } from "@/utils/qiniuMarketProvider";
+import type { QiniuKeyMode } from "@/utils/qiniuTokenPlan";
 
 interface Props {
   model: QiniuMarketModel | null;
@@ -36,6 +37,7 @@ interface Props {
   apiKey: string;
   modelId: string;
   initialApp: AppId;
+  keyMode?: QiniuKeyMode;
   onConfigured: (app: AppId, providerId: string) => void;
 }
 
@@ -57,6 +59,7 @@ export function MarketConfigureDialog({
   apiKey,
   modelId,
   initialApp,
+  keyMode = "payg",
   onConfigured,
 }: Props) {
   const { t } = useTranslation();
@@ -81,7 +84,7 @@ export function MarketConfigureDialog({
     setOutcome("");
     attempt.current = null;
     inFlight.current = false;
-  }, [open, model?.id, modelId, apiKey, initialApp]);
+  }, [open, model?.id, modelId, apiKey, initialApp, keyMode]);
 
   const finish = () => {
     const current = attempt.current;
@@ -111,6 +114,7 @@ export function MarketConfigureDialog({
           app,
           apiKey,
           `qiniu-market-${crypto.randomUUID()}`,
+          keyMode,
         ),
         saved: false,
         uncertain: false,
@@ -199,10 +203,15 @@ export function MarketConfigureDialog({
         <div className="min-h-0 space-y-4 overflow-y-auto px-6 py-5">
           <div className="rounded-lg bg-muted/50 p-3">
             <p className="font-medium">
-              {t("marketplace.configureNew", {
-                name: model?.name ?? "",
-                defaultValue: "新增 七牛云 · {{name}}",
-              })}
+              {keyMode === "token-plan"
+                ? t("marketplace.configurePlan", {
+                    name: model?.name ?? "",
+                    defaultValue: "新增 七牛 Token Plan · {{name}}",
+                  })
+                : t("marketplace.configureNew", {
+                    name: model?.name ?? "",
+                    defaultValue: "新增 七牛云 · {{name}}",
+                  })}
             </p>
             <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
               {modelId}

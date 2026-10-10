@@ -8,6 +8,49 @@ import type { QiniuMarketModel } from "@/lib/api/qiniuMarket";
 vi.mock("@/lib/api/model-fetch", () => ({ fetchModelsForConfig: vi.fn() }));
 
 describe("Marketplace connection", () => {
+  it("uses only plan models returned by the subscription key", async () => {
+    const onModelsChange = vi.fn();
+    const catalogModels = [
+      { id: "plan-id", apiIds: ["plan-id", "plan-alias"], available: true },
+      { id: "payg-id", apiIds: ["payg-id"], available: true },
+    ] as QiniuMarketModel[];
+    vi.mocked(fetchModelsForConfig).mockResolvedValueOnce([
+      { id: "plan-alias", ownedBy: null },
+      { id: "payg-id", ownedBy: null },
+    ]);
+    render(
+      <MarketConnection
+        apiKey="sk-plan-test"
+        keyMode="token-plan"
+        planModelIds={["plan-id"]}
+        planReady
+        catalogModels={catalogModels}
+        onApiKeyChange={vi.fn()}
+        onModelsChange={onModelsChange}
+      />,
+    );
+    expect(screen.getByLabelText("订阅专用 API Key")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "连接" }));
+    await waitFor(() =>
+      expect(onModelsChange).toHaveBeenLastCalledWith([
+        { id: "plan-alias", ownedBy: null },
+      ]),
+    );
+  });
+
+  it("blocks connection when the public plan list is unavailable", () => {
+    render(
+      <MarketConnection
+        apiKey="sk-plan-test"
+        keyMode="token-plan"
+        planReady={false}
+        onApiKeyChange={vi.fn()}
+        onModelsChange={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "连接" })).toBeDisabled();
+  });
+
   it("excludes retired catalog IDs and aliases from the usable model count", async () => {
     const onModelsChange = vi.fn();
     const catalogModels = [
@@ -94,6 +137,36 @@ describe("Marketplace connection", () => {
     );
     expect(props.onModelsChange).toHaveBeenLastCalledWith([]);
     expect(props.onStatusChange).toHaveBeenLastCalledWith("idle");
+  });
+
+  it("discards a pay-as-you-go response after switching to Token Plan", async () => {
+    let resolve!: (models: FetchedModel[]) => void;
+    vi.mocked(fetchModelsForConfig).mockImplementationOnce(
+      () =>
+        new Promise((done) => {
+          resolve = done;
+        }),
+    );
+    const callbacks = {
+      onApiKeyChange: vi.fn(),
+      onModelsChange: vi.fn(),
+      onStatusChange: vi.fn(),
+    };
+    const { rerender } = render(
+      <MarketConnection {...callbacks} apiKey="sk-test" keyMode="payg" />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "连接" }));
+    rerender(
+      <MarketConnection
+        {...callbacks}
+        apiKey="sk-test"
+        keyMode="token-plan"
+        planModelIds={["plan-id"]}
+      />,
+    );
+    await act(async () => resolve([{ id: "payg-id", ownedBy: null }]));
+    expect(callbacks.onModelsChange).toHaveBeenLastCalledWith([]);
+    expect(callbacks.onStatusChange).toHaveBeenLastCalledWith("idle");
   });
 
   it("allows reconnecting after navigation interrupted a model request", () => {

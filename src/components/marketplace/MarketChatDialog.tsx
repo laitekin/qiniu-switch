@@ -14,6 +14,7 @@ import {
   sendMarketChat,
   type MarketChatMessage,
 } from "@/lib/api/qiniuMarketChat";
+import type { QiniuKeyMode } from "@/utils/qiniuTokenPlan";
 
 interface Props {
   open: boolean;
@@ -21,6 +22,7 @@ interface Props {
   apiKey: string;
   modelId: string;
   modelName?: string;
+  keyMode?: QiniuKeyMode;
 }
 
 export function MarketChatDialog({
@@ -29,6 +31,7 @@ export function MarketChatDialog({
   apiKey,
   modelId,
   modelName,
+  keyMode = "payg",
 }: Props) {
   const { t } = useTranslation();
   const [messages, setMessages] = useState<MarketChatMessage[]>([]);
@@ -118,9 +121,13 @@ export function MarketChatDialog({
               {modelName || modelId}
             </DialogTitle>
             <DialogDescription>
-              {t("marketplace.chatHint", {
-                defaultValue: "文字体验 · 按实际用量计费 · 关闭后清空",
-              })}
+              {keyMode === "token-plan"
+                ? t("marketplace.planChatHint", {
+                    defaultValue: "文字体验 · 按套餐积分扣减 · 关闭后清空",
+                  })
+                : t("marketplace.chatHint", {
+                    defaultValue: "文字体验 · 按实际用量计费 · 关闭后清空",
+                  })}
             </DialogDescription>
           </div>
           <div className="flex shrink-0 gap-1">

@@ -41,8 +41,16 @@ export interface QiniuMarketCatalog {
   sourceUrl?: string;
 }
 
+export interface QiniuTokenPlanCatalog {
+  models: string[];
+  fetchedAt?: string;
+  sourceUrl: string;
+}
+
 export const qiniuMarketApi = {
   list: (): Promise<QiniuMarketCatalog> => invoke("qiniu_market_models"),
+  tokenPlanModels: (): Promise<QiniuTokenPlanCatalog> =>
+    invoke("qiniu_market_token_plan_models"),
   detail: (modelId: string): Promise<QiniuMarketModel> =>
     invoke("qiniu_market_model_detail", { modelId }),
 };

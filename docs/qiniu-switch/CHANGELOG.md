@@ -1,5 +1,11 @@
 # Qiniu Switch 变更说明
 
+## Qiniu Switch v4.0.8（2026-10-10）
+
+- 模型广场新增 Token Plan 模式：订阅专用 Key、官网实时套餐模型清单、Key 可见模型与公开目录三方交集；失败时不会退回展示按量模型。
+- 套餐模式将积分扣减与按量参考价格分开说明，生成的客户端供应商标明“七牛 Token Plan”。
+
+
 ## Qiniu Switch v4.0.7（2026-10-10）
 
 - 新增 DeepSeek Harness Desktop 客户端入口、模型广场配置和供应商切换；使用官方 `settings.yaml` 与独立凭据文件，不覆盖已有 Harness 供应商。

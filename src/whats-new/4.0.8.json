@@ -1,0 +1,12 @@
+{
+  "version": "4.0.8",
+  "items": [
+    {
+      "type": "new",
+      "zh": "模型广场新增七牛 Token Plan 模式与套餐模型筛选",
+      "zh-TW": "模型廣場新增七牛 Token Plan 模式與套餐模型篩選",
+      "en": "Added Qiniu Token Plan mode with plan-scoped models in the marketplace",
+      "ja": "モデル広場に七牛 Token Plan モードと対象モデルの絞り込みを追加"
+    }
+  ]
+}

@@ -18,6 +18,12 @@ const props = {
 };
 
 describe("Marketplace text chat", () => {
+  it("labels Token Plan chat as credit usage", () => {
+    render(<MarketChatDialog {...props} keyMode="token-plan" />);
+    expect(screen.getByText(/按套餐积分扣减/)).toBeInTheDocument();
+    expect(screen.queryByText(/按实际用量计费/)).toBeNull();
+  });
+
   it("sends only on explicit submission and retains the real conversation context", async () => {
     vi.mocked(sendMarketChat)
       .mockResolvedValueOnce({ content: "Actual response" })

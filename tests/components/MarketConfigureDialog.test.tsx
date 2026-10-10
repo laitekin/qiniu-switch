@@ -57,6 +57,15 @@ describe("Marketplace configuration", () => {
     expect(providersApi.switch).toHaveBeenCalledWith(provider.id, "workbuddy");
     expect(props.onConfigured).toHaveBeenCalledWith("workbuddy", provider.id);
   });
+  it("keeps a Token Plan provider distinguishable from a pay-as-you-go provider", async () => {
+    render(<MarketConfigureDialog {...props} keyMode="token-plan" />);
+    await userEvent.click(screen.getByRole("button", { name: "确认配置" }));
+    await waitFor(() => expect(props.onConfigured).toHaveBeenCalled());
+    const provider = vi.mocked(providersApi.add).mock.calls[0][0];
+    expect(provider.name).toBe("七牛 Token Plan · Model");
+    expect(provider.websiteUrl).toBe("https://www.qiniu.com/ai/plan");
+    expect(provider.settingsConfig.models).toHaveProperty("actual-id");
+  });
   it("saves a routing-dependent provider without changing routing or enabling it", async () => {
     vi.mocked(proxyApi.getProxyTakeoverStatus).mockResolvedValue({
       codex: false,

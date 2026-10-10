@@ -9,7 +9,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { toast } from "@/lib/toast";
 import { invoke } from "@tauri-apps/api/core";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { FetchedModel } from "@/lib/api/model-fetch";
 import { qiniuMarketApi, type QiniuMarketModel } from "@/lib/api/qiniuMarket";
 import { ModelMarketplace } from "@/components/marketplace/ModelMarketplace";
@@ -19,6 +19,7 @@ import {
 } from "@/components/marketplace/MarketConnection";
 import { MarketChatDialog } from "@/components/marketplace/MarketChatDialog";
 import { MarketConfigureDialog } from "@/components/marketplace/MarketConfigureDialog";
+import { isTokenPlanModel, type QiniuKeyMode } from "@/utils/qiniuTokenPlan";
 import { WorkBuddyMemoryPanel } from "@/components/workbuddy/WorkBuddyMemoryPanel";
 import {
   ExternalLink,
@@ -155,6 +156,7 @@ interface SyncStatusUpdatedPayload {
 }
 
 type OpenClawConfigTab = "env" | "tools" | "agents";
+const EMPTY_PLAN_MODEL_IDS: string[] = [];
 
 const getInitialApp = (): AppId => {
   const saved = localStorage.getItem(APP_STORAGE_KEY) as AppId | null;
@@ -184,6 +186,14 @@ function App() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [workbuddyMemoryOpen, setWorkbuddyMemoryOpen] = useState(false);
   const [marketApiKey, setMarketApiKey] = useState("");
+  const [marketKeyMode, setMarketKeyMode] = useState<QiniuKeyMode>("payg");
+  const tokenPlan = useQuery({
+    queryKey: ["qiniu", "token-plan-models"],
+    queryFn: qiniuMarketApi.tokenPlanModels,
+    enabled: currentView === "marketplace" && marketKeyMode === "token-plan",
+    staleTime: 15 * 60 * 1000,
+    retry: 1,
+  });
   const [marketModels, setMarketModels] = useState<FetchedModel[]>([]);
   const [marketConnectionStatus, setMarketConnectionStatus] =
     useState<MarketConnectionStatus>("idle");
@@ -1501,6 +1511,17 @@ function App() {
       ) {
         throw new Error("unsupported");
       }
+      if (
+        marketKeyMode === "token-plan" &&
+        (!tokenPlan.data || !isTokenPlanModel(details, tokenPlan.data.models))
+      ) {
+        toast.error(
+          t("marketplace.planModelUnavailable", {
+            defaultValue: "此模型不在当前 Token Plan 清单内",
+          }),
+        );
+        return;
+      }
       const available = new Set(marketModels.map((item) => item.id));
       const modelId = [details.id, ...details.apiIds, ...model.apiIds].find(
         (id) => available.has(id),
@@ -1551,6 +1572,18 @@ function App() {
             className="min-h-0 flex-1 overflow-y-auto scroll-stable"
           >
             <ModelMarketplace
+              keyMode={marketKeyMode}
+              planModelIds={tokenPlan.data?.models ?? EMPTY_PLAN_MODEL_IDS}
+              planStatus={
+                marketKeyMode === "payg"
+                  ? "ready"
+                  : tokenPlan.isError
+                    ? "error"
+                    : tokenPlan.isSuccess
+                      ? "ready"
+                      : "loading"
+              }
+              onPlanRefresh={() => void tokenPlan.refetch()}
               onConfigure={(model) =>
                 void handleMarketAction("configure", model)
               }
@@ -1562,7 +1595,24 @@ function App() {
                     initialModels={marketModels}
                     initialStatus={marketConnectionStatus}
                     catalogModels={catalogModels}
-                    catalogReady={catalogReady}
+                    catalogReady={
+                      catalogReady &&
+                      (marketKeyMode === "payg" || tokenPlan.isSuccess)
+                    }
+                    keyMode={marketKeyMode}
+                    planModelIds={
+                      tokenPlan.data?.models ?? EMPTY_PLAN_MODEL_IDS
+                    }
+                    planReady={tokenPlan.isSuccess}
+                    onModeChange={(mode) => {
+                      marketActionSequence.current += 1;
+                      setMarketActionLoading(false);
+                      setMarketKeyMode(mode);
+                      setMarketApiKey("");
+                      setMarketModels([]);
+                      setMarketConnectionStatus("idle");
+                      setMarketAction(null);
+                    }}
                     onApiKeyChange={(key) => {
                       marketActionSequence.current += 1;
                       setMarketActionLoading(false);
@@ -1849,6 +1899,7 @@ function App() {
         apiKey={marketConnectionStatus === "ready" ? marketApiKey : ""}
         modelId={marketAction?.modelId ?? ""}
         modelName={marketAction?.model.name}
+        keyMode={marketKeyMode}
       />
       <MarketConfigureDialog
         open={marketAction?.kind === "configure"}
@@ -1859,6 +1910,7 @@ function App() {
         apiKey={marketApiKey}
         modelId={marketAction?.modelId ?? ""}
         initialApp={marketAction?.initialApp ?? activeApp}
+        keyMode={marketKeyMode}
         onConfigured={(app, providerId) =>
           void handleMarketConfigured(app, providerId)
         }
