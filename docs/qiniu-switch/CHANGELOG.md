@@ -1,5 +1,11 @@
 # Qiniu Switch 变更说明
 
+## Qiniu Switch v4.0.10（2026-10-10）
+
+- 所有侧边栏客户端都有七牛云默认供应商入口，预填各自兼容的 Base URL 和模型配置；API Key 可留空，填入并启用前不写入客户端配置。
+- Grok Build、OpenClaw、Hermes、Antigravity 和 DeepSeek Harness Desktop 复用已有七牛预设或协议配置，补齐此前空白的供应商页。
+- 不覆盖已有七牛供应商；已主动删除默认条目的用户不会被强制恢复。数据库 schema 保持 v20。
+
 ## Qiniu Switch v4.0.9（2026-10-10）
 
 - 按量 API 与 Token Plan 的 Key 分开保存在运行中的应用内存；切换模式不再丢失输入，退出应用后清除。

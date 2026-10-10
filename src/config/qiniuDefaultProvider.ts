@@ -8,6 +8,15 @@ import { opencodeProviderPresets } from "./opencodeProviderPresets";
 import { piProviderPresets } from "./piProviderPresets";
 import { mcodeProviderPresets } from "./mcodeProviderPresets";
 import { workbuddyProviderPresets } from "./workbuddyProviderPresets";
+import { openclawProviderPresets } from "./openclawProviderPresets";
+import { hermesProviderPresets } from "./hermesProviderPresets";
+import { grokBuildProviderPresets } from "./grokBuildProviderPresets";
+import {
+  buildGrokBuildConfig,
+  GROK_BUILD_DEFAULT_CONTEXT_WINDOW,
+  GROK_BUILD_DEFAULT_MODEL,
+  parseGrokBuildConfig,
+} from "@/utils/grokBuildConfig";
 
 // Reuse the same catalog as the add-provider form; no separate model list.
 export function getQiniuDefaultProvider(app: AppId): Provider | undefined {
@@ -20,13 +29,9 @@ export function getQiniuDefaultProvider(app: AppId): Provider | undefined {
     pi: piProviderPresets,
     mcode: mcodeProviderPresets,
     workbuddy: workbuddyProviderPresets,
+    openclaw: openclawProviderPresets,
+    hermes: hermesProviderPresets,
   };
-  if (!(app in catalogs)) return undefined;
-  const preset = catalogs[app as keyof typeof catalogs].find(
-    (item) => item.icon === "qiniu",
-  );
-  if (!preset) return undefined;
-
   const provider: Provider = {
     id: "qiniu-default",
     name: "七牛云",
@@ -35,7 +40,37 @@ export function getQiniuDefaultProvider(app: AppId): Provider | undefined {
     category: "aggregator",
     settingsConfig: {},
   };
-  if (app === "codex") {
+  if (app === "grokbuild") {
+    const preset = grokBuildProviderPresets.find((p) => p.icon === "qiniu")!;
+    provider.settingsConfig = {
+      config: buildGrokBuildConfig({
+        model: GROK_BUILD_DEFAULT_MODEL,
+        baseUrl: preset.endpointCandidates?.[0] ?? "",
+        name: "Qiniu",
+        apiKey: "",
+        apiBackend: "chat_completions",
+        contextWindow: GROK_BUILD_DEFAULT_CONTEXT_WINDOW,
+      }),
+    };
+  } else if (app === "antigravity") {
+    const preset = geminiProviderPresets.find((p) => p.icon === "qiniu")!;
+    provider.settingsConfig = {
+      settings: { modelProvider: "gemini" },
+      env: {
+        GOOGLE_GEMINI_BASE_URL: preset.baseURL,
+        GEMINI_MODEL: preset.model,
+        GEMINI_API_KEY: "",
+      },
+    };
+  } else if (app === "dsh") {
+    const preset = workbuddyProviderPresets.find((p) => p.icon === "qiniu")!;
+    provider.settingsConfig = {
+      name: "七牛云",
+      api: "openai-completions",
+      options: { ...preset.settingsConfig.options, apiKey: "" },
+      models: preset.settingsConfig.models,
+    };
+  } else if (app === "codex") {
     const source = codexProviderPresets.find((p) => p.icon === "qiniu")!;
     provider.settingsConfig = { auth: source.auth, config: source.config };
   } else if (app === "claude-desktop") {
@@ -55,7 +90,13 @@ export function getQiniuDefaultProvider(app: AppId): Provider | undefined {
         ]),
       ),
     };
-  } else if ("settingsConfig" in preset) {
+  } else {
+    if (!(app in catalogs)) return undefined;
+    const preset = catalogs[app as keyof typeof catalogs].find(
+      (item) => item.icon === "qiniu",
+    );
+    if (!preset) return undefined;
+    if (!("settingsConfig" in preset)) return undefined;
     provider.settingsConfig = preset.settingsConfig;
     if (app === "gemini") {
       provider.settingsConfig = {
@@ -79,5 +120,9 @@ export function needsQiniuApiKey(provider: Provider): boolean {
     config.auth?.OPENAI_API_KEY,
     config.options?.apiKey,
     config.apiKey,
+    config.api_key,
+    typeof config.config === "string"
+      ? parseGrokBuildConfig(config.config).apiKey
+      : undefined,
   ].some((key) => typeof key === "string" && key.trim());
 }

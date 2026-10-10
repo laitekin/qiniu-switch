@@ -1,0 +1,12 @@
+{
+  "version": "4.0.10",
+  "items": [
+    {
+      "type": "new",
+      "zh": "所有客户端预置七牛云供应商，填入 API Key 后即可配置",
+      "zh-TW": "所有客戶端預置七牛雲供應商，填入 API Key 後即可設定",
+      "en": "Qiniu providers are prefilled for every client; add your API key to configure them",
+      "ja": "全クライアントに七牛雲の接続先を用意し、API キー入力後に設定できます"
+    }
+  ]
+}
