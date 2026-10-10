@@ -5112,7 +5112,7 @@
     "refreshModels": "モデルを更新",
     "connect": "接続",
     "disconnect": "Key を消去",
-    "sessionKey": "このセッションのみ使用",
+    "sessionKey": "アプリ終了時に消去",
     "connectedModels": "接続済み · {{count}} 個のモデルを利用可能",
     "emptyAvailableModels": "接続済みですが、利用可能なモデルがありません",
     "connectionFailed": "接続に失敗しました。API Key を確認して再試行してください",

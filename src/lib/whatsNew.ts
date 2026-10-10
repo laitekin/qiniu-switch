@@ -93,7 +93,7 @@ export function changelogUrl(
   language: WhatsNewLanguage,
   version?: string,
 ): string {
-  if (version === "4.0.7" || version === "4.0.8") {
+  if (["4.0.7", "4.0.8", "4.0.9"].includes(version ?? "")) {
     return `https://github.com/laitekin/qiniu-switch/releases/tag/qiniu-v${version}`;
   }
   const siteLanguage = language === "zh-TW" ? "zh" : language;

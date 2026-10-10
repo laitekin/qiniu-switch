@@ -1,0 +1,19 @@
+{
+  "version": "4.0.9",
+  "items": [
+    {
+      "type": "fix",
+      "zh": "切换按量与 Token Plan 时保留各自的 API Key",
+      "zh-TW": "切換按量與 Token Plan 時保留各自的 API Key",
+      "en": "Keep separate API keys when switching between pay-as-you-go and Token Plan",
+      "ja": "従量課金と Token Plan の切り替え時に各 API キーを保持"
+    },
+    {
+      "type": "improve",
+      "zh": "模型广场改用固定页头和横向分隔栏",
+      "zh-TW": "模型廣場改用固定頁首與橫向分隔列",
+      "en": "Refreshed the model marketplace with a fixed header and section bars",
+      "ja": "モデル広場に固定ヘッダーと区切りバーを追加"
+    }
+  ]
+}

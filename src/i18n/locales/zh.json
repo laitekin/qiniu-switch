@@ -5112,7 +5112,7 @@
     "refreshModels": "刷新模型",
     "connect": "连接",
     "disconnect": "清除 Key",
-    "sessionKey": "仅本次会话使用",
+    "sessionKey": "退出应用后清除",
     "connectedModels": "已连接 · {{count}} 个可用模型",
     "emptyAvailableModels": "已连接，暂无可用模型",
     "connectionFailed": "连接失败，请检查 API Key 后重试",

@@ -19,7 +19,8 @@ import {
 } from "@/components/marketplace/MarketConnection";
 import { MarketChatDialog } from "@/components/marketplace/MarketChatDialog";
 import { MarketConfigureDialog } from "@/components/marketplace/MarketConfigureDialog";
-import { isTokenPlanModel, type QiniuKeyMode } from "@/utils/qiniuTokenPlan";
+import { useQiniuMarketCredentials } from "@/hooks/useQiniuMarketCredentials";
+import { isTokenPlanModel } from "@/utils/qiniuTokenPlan";
 import { WorkBuddyMemoryPanel } from "@/components/workbuddy/WorkBuddyMemoryPanel";
 import {
   ExternalLink,
@@ -185,8 +186,12 @@ function App() {
   );
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [workbuddyMemoryOpen, setWorkbuddyMemoryOpen] = useState(false);
-  const [marketApiKey, setMarketApiKey] = useState("");
-  const [marketKeyMode, setMarketKeyMode] = useState<QiniuKeyMode>("payg");
+  const {
+    mode: marketKeyMode,
+    setMode: setMarketKeyMode,
+    apiKey: marketApiKey,
+    setApiKey: setMarketApiKey,
+  } = useQiniuMarketCredentials();
   const tokenPlan = useQuery({
     queryKey: ["qiniu", "token-plan-models"],
     queryFn: qiniuMarketApi.tokenPlanModels,
@@ -1567,74 +1572,64 @@ function App() {
     switch (currentView) {
       case "marketplace":
         return (
-          <div
-            id="main-content"
-            className="min-h-0 flex-1 overflow-y-auto scroll-stable"
-          >
-            <ModelMarketplace
-              keyMode={marketKeyMode}
-              planModelIds={tokenPlan.data?.models ?? EMPTY_PLAN_MODEL_IDS}
-              planStatus={
-                marketKeyMode === "payg"
-                  ? "ready"
-                  : tokenPlan.isError
-                    ? "error"
-                    : tokenPlan.isSuccess
-                      ? "ready"
-                      : "loading"
-              }
-              onPlanRefresh={() => void tokenPlan.refetch()}
-              onConfigure={(model) =>
-                void handleMarketAction("configure", model)
-              }
-              onChat={(model) => void handleMarketAction("chat", model)}
-              connection={(catalogModels, catalogReady) => (
-                <div id="market-connection">
-                  <MarketConnection
-                    apiKey={marketApiKey}
-                    initialModels={marketModels}
-                    initialStatus={marketConnectionStatus}
-                    catalogModels={catalogModels}
-                    catalogReady={
-                      catalogReady &&
-                      (marketKeyMode === "payg" || tokenPlan.isSuccess)
-                    }
-                    keyMode={marketKeyMode}
-                    planModelIds={
-                      tokenPlan.data?.models ?? EMPTY_PLAN_MODEL_IDS
-                    }
-                    planReady={tokenPlan.isSuccess}
-                    onModeChange={(mode) => {
-                      marketActionSequence.current += 1;
-                      setMarketActionLoading(false);
-                      setMarketKeyMode(mode);
-                      setMarketApiKey("");
-                      setMarketModels([]);
-                      setMarketConnectionStatus("idle");
-                      setMarketAction(null);
-                    }}
-                    onApiKeyChange={(key) => {
-                      marketActionSequence.current += 1;
-                      setMarketActionLoading(false);
-                      setMarketApiKey(key);
-                      setMarketModels([]);
-                      setMarketConnectionStatus("idle");
-                      setMarketAction(null);
-                    }}
-                    onModelsChange={setMarketModels}
-                    onStatusChange={setMarketConnectionStatus}
-                  />
-                  {marketActionLoading && (
-                    <p role="status" className="mt-2 text-xs text-fg-2">
-                      {t("marketplace.checkingModel", {
-                        defaultValue: "正在核对模型信息…",
-                      })}
-                    </p>
-                  )}
-                </div>
-              )}
-            />
-          </div>
+          <ModelMarketplace
+            keyMode={marketKeyMode}
+            planModelIds={tokenPlan.data?.models ?? EMPTY_PLAN_MODEL_IDS}
+            planStatus={
+              marketKeyMode === "payg"
+                ? "ready"
+                : tokenPlan.isError
+                  ? "error"
+                  : tokenPlan.isSuccess
+                    ? "ready"
+                    : "loading"
+            }
+            onPlanRefresh={() => void tokenPlan.refetch()}
+            onConfigure={(model) => void handleMarketAction("configure", model)}
+            onChat={(model) => void handleMarketAction("chat", model)}
+            connection={(catalogModels, catalogReady) => (
+              <div id="market-connection">
+                <MarketConnection
+                  apiKey={marketApiKey}
+                  initialModels={marketModels}
+                  initialStatus={marketConnectionStatus}
+                  catalogModels={catalogModels}
+                  catalogReady={
+                    catalogReady &&
+                    (marketKeyMode === "payg" || tokenPlan.isSuccess)
+                  }
+                  keyMode={marketKeyMode}
+                  planModelIds={tokenPlan.data?.models ?? EMPTY_PLAN_MODEL_IDS}
+                  planReady={tokenPlan.isSuccess}
+                  onModeChange={(mode) => {
+                    marketActionSequence.current += 1;
+                    setMarketActionLoading(false);
+                    setMarketKeyMode(mode);
+                    setMarketModels([]);
+                    setMarketConnectionStatus("idle");
+                    setMarketAction(null);
+                  }}
+                  onApiKeyChange={(key) => {
+                    marketActionSequence.current += 1;
+                    setMarketActionLoading(false);
+                    setMarketApiKey(key);
+                    setMarketModels([]);
+                    setMarketConnectionStatus("idle");
+                    setMarketAction(null);
+                  }}
+                  onModelsChange={setMarketModels}
+                  onStatusChange={setMarketConnectionStatus}
+                />
+                {marketActionLoading && (
+                  <p role="status" className="mt-2 text-xs text-fg-2">
+                    {t("marketplace.checkingModel", {
+                      defaultValue: "正在核对模型信息…",
+                    })}
+                  </p>
+                )}
+              </div>
+            )}
+          />
         );
       case "usage":
         return (

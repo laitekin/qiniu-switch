@@ -84,6 +84,18 @@ describe("Qiniu model marketplace", () => {
     });
   });
 
+  it("uses a fixed shell header above the scrolling model content", async () => {
+    show();
+    const title = screen.getByRole("heading", { name: "marketplace.title" });
+    const header = title.closest("header");
+    const content = screen.getByRole("region", { name: "marketplace.title" });
+    expect(header).toHaveClass("border-b");
+    expect(header?.nextElementSibling).toBe(content);
+    expect(content).toHaveClass("overflow-y-auto");
+    expect(content).toHaveAttribute("id", "main-content");
+    await screen.findByRole("article", { name: "Text Alpha" });
+  });
+
   it("shows only plan models and plan credit wording in Token Plan mode", async () => {
     show({
       keyMode: "token-plan",

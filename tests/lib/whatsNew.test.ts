@@ -98,5 +98,8 @@ describe("language and links", () => {
     expect(changelogUrl("zh", "4.0.8")).toBe(
       "https://github.com/laitekin/qiniu-switch/releases/tag/qiniu-v4.0.8",
     );
+    expect(changelogUrl("zh", "4.0.9")).toBe(
+      "https://github.com/laitekin/qiniu-switch/releases/tag/qiniu-v4.0.9",
+    );
   });
 });

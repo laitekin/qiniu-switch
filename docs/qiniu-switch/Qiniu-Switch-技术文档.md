@@ -22,7 +22,7 @@
 管理 AK/SK   → Rust 原生会话 → 管理请求 HMAC-SHA1 签名 → 脱敏结果 → 授权中心
 ```
 
-管理 AK/SK 不等于模型 API Key，Cookie 不参与这里的管理接口认证。Token Plan 使用订阅专用模型 API Key，不与按量 Key 共用模式。手动输入的 AK/SK 只保存在原生进程当前会话；模型 API Key 在模型广场连接时只在前端会话中使用，一旦保存为供应商，会按项目现有的供应商存储方式持久化。开发、日志和文档中都不能写入真实 Key。
+管理 AK/SK 不等于模型 API Key，Cookie 不参与这里的管理接口认证。Token Plan 使用订阅专用模型 API Key，不与按量 Key 共用模式。手动输入的 AK/SK 只保存在原生进程当前会话；模型广场的按量与 Token Plan Key 分开留在 React 内存状态，切换模式保留 Key、重置模型连接，退出应用即清除。一旦保存为供应商，会按项目现有的供应商存储方式持久化。开发、日志和文档中都不能写入真实 Key。
 
 ## 模型目录与可用数量
 
@@ -38,7 +38,7 @@ Token Plan 模式由 Rust 从七牛公开套餐页的 `__NEXT_DATA__.props.pageP
 
 `qiniuswitch://v1/import` 先进入 Rust 解析与暂存，再在前端展示脱敏预览；七牛类型导入时允许选择目标客户端和接口返回的模型。确认后由 `ProviderService::add` 保存，`enabled=true` 时会再显式切换。`add` 是否立即投影到客户端 live 配置取决于具体客户端和模式，因此不要把 `enabled=false` 解释为绝不会改动客户端文件。Mock HTML 中的链接仅供本地演示；URL 携带完整模型 Key 时存在浏览器历史与协议转发的泄露面，正式控制台接入应采用短时交接机制。
 
-本应用的产品名为 Qiniu Switch，Tauri identifier 为 `com.qiniuswitch.desktop`，协议为 `qiniuswitch://`，默认数据库为 `~/.qiniu-switch/qiniu-switch.db`。这与 CC Switch 的应用数据分开；两者仍可能共同管理同一个 Claude Code、Codex 等第三方客户端配置，不能同时让两个切换器接管同一客户端。自动更新被关闭，新版须手动安装。v4.0.8 支持数据库 schema v20；从旧版程序启动会出现截图中的 v20/v19 错误，不能通过降级数据库解决。
+本应用的产品名为 Qiniu Switch，Tauri identifier 为 `com.qiniuswitch.desktop`，协议为 `qiniuswitch://`，默认数据库为 `~/.qiniu-switch/qiniu-switch.db`。这与 CC Switch 的应用数据分开；两者仍可能共同管理同一个 Claude Code、Codex 等第三方客户端配置，不能同时让两个切换器接管同一客户端。自动更新被关闭，新版须手动安装。v4.0.9 支持数据库 schema v20；从旧版程序启动会出现截图中的 v20/v19 错误，不能通过降级数据库解决。
 
 ## 证据、结论与调用路径
 

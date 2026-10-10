@@ -202,7 +202,7 @@ export function MarketConnection({
           </Button>
         )}
         <span className="text-xs text-muted-foreground">
-          {t("marketplace.sessionKey", { defaultValue: "仅本次会话使用" })}
+          {t("marketplace.sessionKey", { defaultValue: "退出应用后清除" })}
         </span>
       </div>
       {keyMode === "token-plan" && (

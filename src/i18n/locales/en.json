@@ -5112,7 +5112,7 @@
     "refreshModels": "Refresh models",
     "connect": "Connect",
     "disconnect": "Clear key",
-    "sessionKey": "For this session only",
+    "sessionKey": "Cleared when the app closes",
     "connectedModels": "Connected · {{count}} available models",
     "emptyAvailableModels": "Connected, no models available",
     "connectionFailed": "Connection failed. Check your API key and try again",

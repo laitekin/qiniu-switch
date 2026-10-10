@@ -2,7 +2,7 @@
 
 基于 [CC Switch](https://github.com/farion1231/cc-switch) v4.0.6 的七牛模型接入桌面应用。保留新版侧边栏、供应商切换和工具管理能力，并加入七牛模型广场、模型选择、管理查询和专属导入协议。应用标识、数据库、图标和协议均与原版分开。
 
-> **已有数据库提示**：若看到“数据库 v20，应用仅支持 v19”，说明打开的是旧的 Qiniu Switch 3.x 程序。请退出旧程序，安装当前 4.0.8 安装包；不要删除数据库或手动修改 `PRAGMA user_version`。见[故障排查](docs/qiniu-switch/故障排查.md)。自动更新尚未启用。
+> **已有数据库提示**：若看到“数据库 v20，应用仅支持 v19”，说明打开的是旧的 Qiniu Switch 3.x 程序。请退出旧程序，安装当前 4.0.9 安装包；不要删除数据库或手动修改 `PRAGMA user_version`。见[故障排查](docs/qiniu-switch/故障排查.md)。自动更新尚未启用。
 
 ## 开始使用
 
@@ -56,6 +56,8 @@ PATH="/opt/homebrew/opt/llvm/bin:/opt/homebrew/opt/lld/bin:$PATH" \
 4. 若已有 `qiniuswitch://v1/import` 链接，打开后会先显示配置预览，再选择客户端和接口返回的模型，由用户确认导入。仓库内的 HTML 页面是本地演示，不是七牛正式控制台页面。
 
 **Token Plan**：在模型广场的 Key 区域切换到“Token Plan”，输入订阅专用 API Key。应用实时读取[七牛套餐页](https://www.qiniu.com/ai/plan)的模型清单，只展示该清单、公开模型目录和当前 Key `/v1/models` 返回结果的交集；退役或不可用模型仍不计入可用数量。试用与配置沿用已验证的模型 ID，套餐模式显示积分扣减提示，不把按量价格当作套餐价格。无法从模型 Key 推断订阅等级或剩余积分，实际权益以[订阅控制台](https://portal.qiniu.com/ai-inference/subscription?tier=Enterprise-s)为准。按量 API 与 Token Plan Key 需分别使用。
+
+按量与 Token Plan Key 分别保存在应用内存中，切换模式会恢复各自的输入；重新连接后才更新该模式的可用模型。退出应用即清除 Key，不写入本地存储。
 
 **DeepSeek Harness Desktop**：在侧栏选择该客户端，可添加 Qiniu OpenAI Chat Completions 端点、API Key 和模型，也可从模型广场直接配置。Qiniu Switch 将模型路由写入 `$DSH_HOME/settings.yaml`（默认 `~/.dsh/settings.yaml`），将 Key 写入 `$DSH_HOME/.credentials.yaml` 的凭据引用，设为默认后新会话使用。其他 Harness 供应商和设置保持保留；目前仅接入 OpenAI Chat Completions 模型。配置格式依据 [DeepSeek 官方供应商指南](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/guide/providers.zh.md) 和 [本地凭据说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/credentials/credentials-local/README.md)。
 

@@ -5113,7 +5113,7 @@
     "refreshModels": "重新整理模型",
     "connect": "連接",
     "disconnect": "清除 Key",
-    "sessionKey": "僅本次工作階段使用",
+    "sessionKey": "退出應用後清除",
     "connectedModels": "已連接 · {{count}} 個可用模型",
     "emptyAvailableModels": "已連接，暫無可用模型",
     "connectionFailed": "連接失敗，請檢查 API Key 後重試",
