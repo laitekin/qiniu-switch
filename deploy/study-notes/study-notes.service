@@ -1,0 +1,15 @@
+[Unit]
+Description=Study notes static page (Go)
+After=network.target
+
+[Service]
+ExecStart=/opt/study-notes/studynotes -addr 127.0.0.1:8430
+DynamicUser=yes
+Restart=on-failure
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

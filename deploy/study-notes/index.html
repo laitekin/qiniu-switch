@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>学习笔记 · 阶段总结</title>
+<meta name="description" content="Python 基础、量化交易、算法、架构设计与云原生的阶段学习总结">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f6f3ee;
+  --surface: #fffdf9;
+  --surface-2: #f0ebe3;
+  --ink: #1f1c18;
+  --muted: #6b645b;
+  --line: #e2dbd0;
+  --accent: #0f766e;
+  --accent-soft: #d5ece8;
+  --amber: #b45309;
+  --amber-soft: #fbe9d0;
+  --violet: #6d28d9;
+  --violet-soft: #ebe3fb;
+  --rose: #be123c;
+  --rose-soft: #fbe1e7;
+  --blue: #1d4ed8;
+  --blue-soft: #dfe7fb;
+  --code-bg: #1f1c18;
+  --code-ink: #f3ede4;
+  --shadow: 0 1px 2px rgba(31,28,24,.06), 0 8px 24px rgba(31,28,24,.06);
+  --radius: 14px;
+  --clawd: #d97757;
+  --clawd-soft: #f7e1d7;
+  --clawd-eye: #1f1c18;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14130f; --surface: #1c1a16; --surface-2: #25221d; --ink: #ede7dd; --muted: #a39b8f; --line: #343029;
+    --accent: #2dd4bf; --accent-soft: #123a36; --amber: #f59e0b; --amber-soft: #3a2a12;
+    --violet: #a78bfa; --violet-soft: #2a2140; --rose: #fb7185; --rose-soft: #3d1a22;
+    --blue: #7aa2ff; --blue-soft: #1b2645; --code-bg: #0d0c0a; --code-ink: #ede7dd;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+    --clawd-soft: #3b231a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14130f; --surface: #1c1a16; --surface-2: #25221d; --ink: #ede7dd; --muted: #a39b8f; --line: #343029;
+  --accent: #2dd4bf; --accent-soft: #123a36; --amber: #f59e0b; --amber-soft: #3a2a12;
+  --violet: #a78bfa; --violet-soft: #2a2140; --rose: #fb7185; --rose-soft: #3d1a22;
+  --blue: #7aa2ff; --blue-soft: #1b2645; --code-bg: #0d0c0a; --code-ink: #ede7dd;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+  --clawd-soft: #3b231a;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 16px/1.75 "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; }
+code, pre { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; }
+:not(pre) > code { background: var(--surface-2); border: 1px solid var(--line); padding: 1px 6px; border-radius: 6px; font-size: .88em; }
+
+/* ---------- top bar ---------- */
+.bar {
+  position: sticky; top: 0; z-index: 20;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: saturate(1.4) blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.bar-in { max-width: 1180px; margin: 0 auto; padding: 0 16px; height: 60px; display: flex; align-items: center; gap: 20px; }
+.brand { font-family: "Noto Serif SC", serif; font-weight: 800; font-size: 18px; text-decoration: none; white-space: nowrap; }
+.brand span { color: var(--accent); }
+.nav { display: flex; gap: 4px; min-width: 0; overflow-x: auto; scrollbar-width: none; flex: 1; }
+.nav::-webkit-scrollbar { display: none; }
+.nav a { text-decoration: none; font-size: 14px; color: var(--muted); padding: 6px 12px; border-radius: 999px; white-space: nowrap; transition: .15s; }
+.nav a:hover { color: var(--ink); background: var(--surface-2); }
+.nav a.on { color: var(--accent); background: var(--accent-soft); font-weight: 500; }
+.theme-btn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); width: 36px; height: 36px; border-radius: 10px; cursor: pointer; flex: none; display: grid; place-items: center; }
+.theme-btn svg { width: 18px; height: 18px; }
+.progress { position: absolute; left: 0; bottom: -1px; height: 2px; background: var(--accent); width: 0; }
+
+/* ---------- hero ---------- */
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+.hero { padding: 72px 0 40px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 48px; align-items: center; }
+.eyebrow { display: inline-flex; gap: 8px; align-items: center; font-size: 13px; letter-spacing: .08em; color: var(--accent); font-weight: 500; }
+.eyebrow::before { content: ""; width: 24px; height: 1px; background: currentColor; }
+h1 { font-family: "Noto Serif SC", serif; font-weight: 800; font-size: clamp(34px, 5vw, 56px); line-height: 1.2; margin: 14px 0 18px; letter-spacing: -.01em; }
+h1 em { font-style: normal; background: linear-gradient(transparent 62%, var(--amber-soft) 62%); }
+.lead { color: var(--muted); font-size: 17px; max-width: 34em; margin: 0; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 32px; max-width: 520px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.stat b { display: block; font-family: "Noto Serif SC", serif; font-size: 28px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 13px; color: var(--muted); }
+.hero-art { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); }
+.hero-art svg { width: 100%; height: auto; display: block; }
+
+/* ---------- map ---------- */
+.map { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin: 8px 0 24px; }
+.map a { text-decoration: none; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; transition: .18s; display: block; }
+.map a:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: transparent; }
+.map i { font-style: normal; font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--c); }
+.map b { display: block; font-size: 15px; margin-top: 2px; }
+.map small { color: var(--muted); font-size: 12px; }
+
+/* ---------- sections ---------- */
+section.sec { padding: 56px 0 8px; }
+.sec-head { display: flex; gap: 18px; align-items: flex-end; border-bottom: 1px solid var(--line); padding-bottom: 18px; margin-bottom: 28px; }
+.sec-no { font-family: "Noto Serif SC", serif; font-weight: 800; font-size: 56px; line-height: .9; color: var(--c); opacity: .9; }
+.sec-head h2 { font-family: "Noto Serif SC", serif; font-size: clamp(24px, 3vw, 32px); margin: 0; line-height: 1.25; }
+.sec-head p { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
+.c-teal { --c: var(--accent); --cs: var(--accent-soft); }
+.c-amber { --c: var(--amber); --cs: var(--amber-soft); }
+.c-violet { --c: var(--violet); --cs: var(--violet-soft); }
+.c-rose { --c: var(--rose); --cs: var(--rose-soft); }
+.c-blue { --c: var(--blue); --cs: var(--blue-soft); }
+
+h3.sub { font-size: 18px; margin: 36px 0 14px; display: flex; align-items: center; gap: 10px; }
+h3.sub::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--c); transform: rotate(45deg); }
+
+/* Q&A cards */
+.qa-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.qa { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px; position: relative; display: flex; flex-direction: column; min-width: 0; }
+.qa.wide { grid-column: span 2; }
+.qa .q { display: flex; gap: 12px; align-items: flex-start; font-weight: 700; font-size: 16px; line-height: 1.55; }
+.qa .q i { font-style: normal; flex: none; font-family: "JetBrains Mono", monospace; font-size: 12px; font-weight: 600; color: var(--c); background: var(--cs); padding: 2px 8px; border-radius: 6px; margin-top: 2px; }
+.qa .a { margin-top: 10px; color: var(--ink); font-size: 15px; }
+.qa .a p { margin: 0 0 8px; }
+.qa .a p:last-child { margin-bottom: 0; }
+.verdict { display: inline-block; font-size: 13px; font-weight: 700; color: var(--c); background: var(--cs); padding: 1px 10px; border-radius: 999px; margin-right: 6px; }
+.note { margin-top: 12px; font-size: 14px; color: var(--muted); border-left: 3px solid var(--line); padding: 2px 0 2px 12px; }
+.note b { color: var(--ink); font-weight: 500; }
+pre { background: var(--code-bg); color: var(--code-ink); border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.65; overflow-x: auto; margin: 10px 0 0; }
+pre .k { color: #f0a868; } pre .s { color: #9fd49a; } pre .c { color: #8b8478; } pre .n { color: #8ab4f8; }
+
+/* figure */
+figure.fig { margin: 20px 0 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+figure.fig svg { width: 100%; height: auto; display: block; }
+figure.fig figcaption { margin-top: 12px; font-size: 13px; color: var(--muted); display: flex; gap: 8px; }
+figure.fig figcaption b { color: var(--c); font-weight: 600; white-space: nowrap; }
+.two { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.two > figure.fig { margin: 0; }
+
+/* svg theming */
+.s-box { fill: var(--surface-2); stroke: var(--line); stroke-width: 1.2; }
+.s-acc { fill: var(--cs); stroke: var(--c); stroke-width: 1.4; }
+.s-solid { fill: var(--c); }
+.s-line { stroke: var(--muted); stroke-width: 1.4; fill: none; }
+.s-cline { stroke: var(--c); stroke-width: 1.6; fill: none; }
+.s-dash { stroke: var(--muted); stroke-width: 1.2; fill: none; stroke-dasharray: 4 4; }
+.s-t { fill: var(--ink); font: 500 13px "Noto Sans SC", sans-serif; }
+.s-tb { fill: var(--ink); font: 700 14px "Noto Sans SC", sans-serif; }
+.s-tm { fill: var(--muted); font: 400 11.5px "Noto Sans SC", sans-serif; }
+.s-tc { fill: var(--c); font: 700 12px "JetBrains Mono", monospace; }
+.s-tw { fill: var(--surface); font: 700 13px "Noto Sans SC", sans-serif; }
+.s-mono { fill: var(--muted); font: 400 11px "JetBrains Mono", monospace; }
+.s-up { fill: #16a34a; } .s-down { fill: #dc2626; }
+.s-upl { stroke: #16a34a; stroke-width: 1.4; } .s-downl { stroke: #dc2626; stroke-width: 1.4; }
+
+/* tables */
+.tbl { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; font-size: 14.5px; }
+.tbl-wrap { overflow-x: auto; border-radius: var(--radius); }
+.tbl th, .tbl td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tbl th { background: var(--surface-2); font-weight: 700; font-size: 13px; color: var(--muted); letter-spacing: .02em; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl td:first-child { font-weight: 700; white-space: nowrap; }
+.tag { display: inline-block; font-size: 12px; padding: 0 8px; border-radius: 6px; background: var(--cs); color: var(--c); margin: 2px 4px 2px 0; font-weight: 500; white-space: nowrap; }
+
+/* chips / tiles */
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; }
+.tile h4 { margin: 0 0 6px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+.tile h4 .dot { width: 26px; height: 26px; border-radius: 8px; background: var(--cs); color: var(--c); display: grid; place-items: center; font-size: 13px; font-weight: 700; font-family: "JetBrains Mono", monospace; }
+.tile p { margin: 0; font-size: 14px; color: var(--muted); }
+
+.quote { margin: 28px 0 0; padding: 22px 26px; background: var(--cs); border-radius: var(--radius); font-family: "Noto Serif SC", serif; font-size: 18px; line-height: 1.7; color: var(--ink); position: relative; }
+.quote::before { content: "“"; position: absolute; top: -8px; left: 14px; font-size: 64px; color: var(--c); opacity: .35; line-height: 1; }
+
+.wrap-up { margin: 72px 0 0; background: var(--ink); color: var(--bg); border-radius: 22px; padding: 40px; display: grid; grid-template-columns: 1fr 1.4fr; gap: 32px; }
+.wrap-up h2 { font-family: "Noto Serif SC", serif; font-size: 30px; margin: 0; line-height: 1.3; }
+.wrap-up ol { margin: 0; padding-left: 20px; }
+.wrap-up li { margin-bottom: 8px; opacity: .92; }
+.wrap-up li b { color: var(--bg); }
+/* ---------- clawd ---------- */
+.clawd { fill: var(--clawd); }
+.clawd-eye { fill: var(--clawd-eye); }
+.cw { display: inline-block; width: 1em; height: auto; vertical-align: -0.1em; }
+.cw-bob { animation: bob 2.4s ease-in-out infinite; transform-origin: 50% 100%; }
+.cw-blink .clawd-eye { animation: blink 4.5s infinite; transform-origin: center; transform-box: fill-box; }
+@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes blink { 0%,94%,100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
+.brand .cw { width: 26px; margin-right: 6px; vertical-align: -5px; }
+.hero-clawd { position: relative; }
+.hero-clawd .pet { position: absolute; right: 18px; top: -34px; width: 92px; }
+.bubble { position: absolute; right: 120px; top: -40px; background: var(--clawd); color: #fff; font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 12px 12px 4px 12px; box-shadow: var(--shadow); white-space: nowrap; }
+.sec-head { position: relative; }
+.sec-head .peek { position: absolute; right: 0; bottom: -1px; width: 54px; opacity: .95; }
+.tip { display: flex; gap: 14px; align-items: flex-start; margin: 20px 0 0; background: var(--clawd-soft); border: 1px dashed var(--clawd); border-radius: var(--radius); padding: 14px 18px; font-size: 14.5px; }
+.tip svg { width: 44px; flex: none; margin-top: 2px; }
+.tip b { color: var(--clawd); }
+.wrap-up { position: relative; overflow: hidden; }
+.wrap-up .parade { position: absolute; right: 24px; bottom: 14px; display: flex; gap: 10px; opacity: .9; }
+.wrap-up .parade svg { width: 34px; }
+.wrap-up .parade svg:nth-child(2) { animation-delay: .3s; }
+.wrap-up .parade svg:nth-child(3) { animation-delay: .6s; }
+footer .cw { width: 22px; margin: 0 4px; }
+@media (prefers-reduced-motion: reduce) { .cw-bob, .cw-blink .clawd-eye { animation: none; } }
+@media (max-width: 680px) { .sec-head .peek { width: 40px; } .hero-clawd .pet { width: 70px; top: -26px; } .bubble { right: 92px; top: -30px; font-size: 12px; } .wrap-up { padding-bottom: 64px; } }
+
+footer { text-align: center; color: var(--muted); font-size: 13px; padding: 40px 0 48px; }
+
+.reveal { opacity: 0; transform: translateY(12px); transition: opacity .5s ease, transform .5s ease; }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
+
+@media (max-width: 960px) {
+  .hero { grid-template-columns: 1fr; padding-top: 44px; gap: 28px; }
+  .map { grid-template-columns: repeat(3, 1fr); }
+  .tiles { grid-template-columns: repeat(2, 1fr); }
+  .wrap-up { grid-template-columns: 1fr; padding: 28px; }
+}
+@media (max-width: 680px) {
+  .qa-grid, .two { grid-template-columns: 1fr; }
+  .qa.wide { grid-column: auto; }
+  .map { grid-template-columns: repeat(2, 1fr); }
+  .tiles { grid-template-columns: 1fr; }
+  .sec-no { font-size: 40px; }
+  .stats { grid-template-columns: repeat(3, 1fr); }
+  .stat b { font-size: 22px; }
+  .brand { font-size: 16px; }
+  figure.fig { padding: 12px; }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="clawd" viewBox="0 0 15 10">
+      <g class="clawd" shape-rendering="crispEdges">
+        <rect x="2" y="0" width="11" height="7"/>
+        <rect x="0" y="2" width="2" height="2"/>
+        <rect x="13" y="2" width="2" height="2"/>
+        <rect x="3" y="7" width="1" height="2"/><rect x="5" y="7" width="1" height="2"/>
+        <rect x="9" y="7" width="1" height="2"/><rect x="11" y="7" width="1" height="2"/>
+      </g>
+      <g class="clawd-eye" shape-rendering="crispEdges">
+        <rect x="4" y="2" width="1" height="2"/><rect x="10" y="2" width="1" height="2"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="bar">
+  <div class="bar-in">
+    <a class="brand" href="#top"><svg class="cw cw-blink" viewBox="0 0 15 10" aria-hidden="true"><use href="#clawd"/></svg>学习<span>·</span>笔记</a>
+    <nav class="nav" id="nav">
+      <a href="#python">Python</a>
+      <a href="#quant">量化交易</a>
+      <a href="#algo">算法</a>
+      <a href="#stack">选型与 C++</a>
+      <a href="#arch">架构设计</a>
+      <a href="#cloud">云原生</a>
+      <a href="#summary">总结</a>
+    </nav>
+    <button class="theme-btn" id="theme" aria-label="切换深浅色">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main class="wrap" id="top">
+
+  <!-- ================= HERO ================= -->
+  <div class="hero">
+    <div>
+      <div class="eyebrow">阶段学习总结</div>
+      <h1>从 <em>Python 语法</em><br>到 <em>云原生架构</em></h1>
+      <p class="lead">这一阶段围绕编程基础、量化交易实践、算法、架构设计与云原生基础设施展开。每个主题都整理成「问题 → 结论 → 我的理解」，并配上示意图帮助记忆。</p>
+      <div class="stats">
+        <div class="stat"><b>6</b><span>学习模块</span></div>
+        <div class="stat"><b>17</b><span>思考题</span></div>
+        <div class="stat"><b>9</b><span>示意图</span></div>
+      </div>
+    </div>
+    <div class="hero-art hero-clawd" aria-hidden="true">
+      <span class="bubble">一起来复习吧！</span>
+      <svg class="cw pet cw-bob cw-blink" viewBox="0 0 15 10"><use href="#clawd"/></svg>
+      <!-- knowledge map -->
+      <svg viewBox="0 0 440 300">
+        <g class="c-teal"><line x1="220" y1="150" x2="90" y2="60" class="s-dash"/></g>
+        <line x1="220" y1="150" x2="350" y2="60" class="s-dash"/>
+        <line x1="220" y1="150" x2="70" y2="160" class="s-dash"/>
+        <line x1="220" y1="150" x2="370" y2="160" class="s-dash"/>
+        <line x1="220" y1="150" x2="120" y2="250" class="s-dash"/>
+        <line x1="220" y1="150" x2="320" y2="250" class="s-dash"/>
+        <circle cx="220" cy="150" r="46" fill="var(--ink)"/>
+        <text x="220" y="146" text-anchor="middle" class="s-tw" style="fill:var(--bg)">知识</text>
+        <text x="220" y="164" text-anchor="middle" class="s-tw" style="fill:var(--bg)">体系</text>
+        <g class="c-teal"><rect x="40" y="38" width="100" height="42" rx="12" class="s-acc"/><text x="90" y="64" text-anchor="middle" class="s-tb">Python</text></g>
+        <g class="c-amber"><rect x="300" y="38" width="100" height="42" rx="12" class="s-acc"/><text x="350" y="64" text-anchor="middle" class="s-tb">量化交易</text></g>
+        <g class="c-violet"><rect x="20" y="139" width="100" height="42" rx="12" class="s-acc"/><text x="70" y="165" text-anchor="middle" class="s-tb">算法</text></g>
+        <g class="c-rose"><rect x="320" y="139" width="100" height="42" rx="12" class="s-acc"/><text x="370" y="165" text-anchor="middle" class="s-tb">C++ / SWIG</text></g>
+        <g class="c-blue"><rect x="70" y="229" width="100" height="42" rx="12" class="s-acc"/><text x="120" y="255" text-anchor="middle" class="s-tb">架构设计</text></g>
+        <g class="c-teal"><rect x="270" y="229" width="100" height="42" rx="12" class="s-acc"/><text x="320" y="255" text-anchor="middle" class="s-tb">云原生</text></g>
+      </svg>
+    </div>
+  </div>
+
+  <div class="map">
+    <a href="#python" class="c-teal"><i>01</i><b>Python 基础</b><small>9 道思考题</small></a>
+    <a href="#quant" class="c-amber"><i>02</i><b>量化交易</b><small>8 道思考题</small></a>
+    <a href="#algo" class="c-violet"><i>03</i><b>算法</b><small>排序 · 搜索 · DP</small></a>
+    <a href="#stack" class="c-rose"><i>04</i><b>选型与 C++</b><small>SWIG 混合编程</small></a>
+    <a href="#arch" class="c-blue"><i>05</i><b>架构设计</b><small>复杂度 · 流程</small></a>
+    <a href="#cloud" class="c-teal"><i>06</i><b>云原生</b><small>IaC · K8s · 安全</small></a>
+  </div>
+
+  <!-- ================= 01 PYTHON ================= -->
+  <section class="sec c-teal" id="python">
+    <div class="sec-head reveal">
+      <svg class="cw peek cw-blink" viewBox="0 0 15 10" aria-hidden="true"><use href="#clawd"/></svg>
+      <div class="sec-no">01</div>
+      <div><h2>Python 基本语法</h2><p>基础语法已在本地实践过，这里集中整理思考题。</p></div>
+    </div>
+
+    <div class="qa-grid">
+      <article class="qa wide reveal">
+        <div class="q"><i>Q1</i>Jupyter Notebook 的使用体验</div>
+        <div class="a">
+          <p>Jupyter 是「所见即所得」的交互式编码：一段代码一个单元格，运行结果、图表直接显示在下面，特别适合<b>数据分析、画图和记录实验过程</b>。PyCharm 也内置了 Notebook 插件，两者可以配合使用。</p>
+          <div class="note"><b>我的看法：</b>探索性分析用 Jupyter 很顺手；但实际项目通常规模较大、模块较多，工程化开发、调试与重构还是 PyCharm 这类 IDE 更合适。</div>
+        </div>
+      </article>
+
+      <article class="qa reveal">
+        <div class="q"><i>Q2</i>创建空列表：<code>[]</code> 还是 <code>list()</code>？</div>
+        <div class="a">
+          <p><span class="verdict">优先 []</span>字面量直接由解释器创建列表；<code>list()</code> 需要先查找名字 <code>list</code> 再发起一次函数调用，多一步开销，写法也更长。</p>
+<pre><span class="c"># python -m timeit</span>
+<span class="n">[]</span>      <span class="c">#  ~15 ns</span>
+<span class="n">list</span>()  <span class="c">#  ~40 ns</span></pre>
+        </div>
+      </article>
+
+      <article class="qa reveal">
+        <div class="q"><i>Q3</i>两种字典初始化方式哪个更高效？</div>
+        <div class="a">
+          <p><span class="verdict">字面量 {...}</span><code>dict({'name': 'jason', ...})</code> 会先创建一个字典，再调用 <code>dict()</code> 复制出另一个，多了不必要的操作。</p>
+<pre>d = {<span class="s">'name'</span>: <span class="s">'jason'</span>, <span class="s">'age'</span>: <span class="n">20</span>}  <span class="c"># ✓</span>
+d = <span class="n">dict</span>({<span class="s">'name'</span>: <span class="s">'jason'</span>})     <span class="c"># ✗ 多一次拷贝</span></pre>
+        </div>
+      </article>
+
+      <article class="qa reveal">
+        <div class="q"><i>Q4</i>列表能作为字典的键吗？</div>
+        <div class="a">
+          <p><span class="verdict">不能</span>运行会报 <code>TypeError: unhashable type: 'list'</code>。字典的键必须<b>可哈希</b>（不可变且能比较），列表是可变对象。可以改用字符串 <code>'education'</code> 或元组作为键。</p>
+        </div>
+      </article>
+
+      <article class="qa reveal">
+        <div class="q"><i>Q5</i>两种字符串拼接方式哪个更优？</div>
+        <div class="a">
+          <p>首先两者结果就不同：<code>s += str(n)</code> 不加空格，<code>' '.join(l)</code> 会在元素间插入空格。</p>
+          <p>性能上 <code>join</code> 一次性计算总长度并分配内存，大量拼接时更优；循环里反复 <code>+=</code> 可能产生多次拷贝。</p>
+        </div>
+      </article>
+
+      <article class="qa reveal">
+        <div class="q"><i>Q6</i>大文件如何统计词频？</div>
+        <div class="a">
+          <p><b>分块 / 逐行流式读取</b>，避免一次性读入内存，边读边用 <code>Counter</code> 累加；数据量更大时可以分片统计后再合并（MapReduce 思路），或者用 bitmap 等紧凑结构降低内存。</p>
+        </div>
+      </article>
+
+      <article class="qa reveal">
+        <div class="q"><i>Q7</i>数据库连接和查询需要多个 try/except 吗？</div>
+        <div class="a">
+          <p><span class="verdict">不需要</span>不必为每条可能出错的语句嵌套一层。用一个 try 包住整个事务，按异常类型分别处理，并在 <code>finally</code> 或 <code>with</code> 中释放连接。</p>
+        </div>
+      </article>
+
+      <article class="qa reveal">
+        <div class="q"><i>Q8</i><code>from m import *</code> 与 <code>import m</code> 的区别</div>
+        <div class="a">
+          <p><code>import m</code> 把<b>模块对象</b>放进当前命名空间，使用时写 <code>m.func</code>；<code>from m import *</code> 把模块公开的名字直接倒进当前命名空间，容易覆盖同名变量，可读性差。</p>
+        </div>
+      </article>
+
+      <article class="qa wide reveal">
+        <div class="q"><i>Q9</i>异步代码中如何处理返回结果？</div>
+        <div class="a">
+          <p>直接 <code>result = await fetch()</code>，然后顺序处理 <code>result</code>，比回调或手动管理 Future 更清晰。</p>
+<pre><span class="k">async def</span> <span class="n">main</span>():
+    result = <span class="k">await</span> fetch(<span class="s">"https://api.example.com"</span>)
+    handle(result)</pre>
+        </div>
+      </article>
+    </div>
+    <div class="tip reveal"><svg viewBox="0 0 15 10" class="cw-bob" aria-hidden="true"><use href="#clawd"/></svg><div><b>Clawd 小贴士 · </b>写 Python 时多想一步「这行代码背后创建了几个对象、调用了几次函数」，就能避开大部分性能坑。</div></div>
+  </section>
+
+  <!-- ================= 02 QUANT ================= -->
+  <section class="sec c-amber" id="quant">
+    <div class="sec-head reveal">
+      <svg class="cw peek cw-blink" viewBox="0 0 15 10" aria-hidden="true"><use href="#clawd"/></svg>
+      <div class="sec-no">02</div>
+      <div><h2>量化交易</h2><p>用 Python 实现买入、卖出等交易流程，并思考行情数据与系统性能问题。</p></div>
+    </div>
+
+    <div class="qa-grid">
+      <article class="qa wide reveal">
+        <div class="q"><i>Q1</i>高频交易和中低频交易，哪个更适合使用 Python？</div>
+        <div class="a">
+          <p><span class="verdict">中低频</span>中低频交易更适合用 Python 完成策略开发、数据处理、回测和系统编排。高频交易对延迟及其抖动非常敏感，关键执行路径通常需要 C++ 等性能更可控的实现；Python 在高频场景中仍可用于研究和监控。</p>
+        </div>
+        <figure class="fig" style="margin-top:16px">
+          <svg viewBox="0 0 760 150" role="img" aria-label="交易频率与语言适用性">
+            <defs><linearGradient id="gfreq" x1="0" x2="1"><stop offset="0" stop-color="var(--amber)" stop-opacity=".15"/><stop offset="1" stop-color="var(--rose)" stop-opacity=".35"/></linearGradient></defs>
+            <rect x="20" y="40" width="720" height="34" rx="17" fill="url(#gfreq)"/>
+            <text x="40" y="62" class="s-t">日频 / 周频</text>
+            <text x="300" y="62" class="s-t">分钟级</text>
+            <text x="520" y="62" class="s-t">秒级</text>
+            <text x="640" y="62" class="s-t">微秒级 HFT</text>
+            <line x1="460" y1="30" x2="460" y2="84" class="s-dash"/>
+            <text x="230" y="110" text-anchor="middle" class="s-tb" style="fill:var(--amber)">Python 主场：策略 · 回测 · 数据 · 编排</text>
+            <text x="600" y="110" text-anchor="middle" class="s-tb" style="fill:var(--rose)">C++ / FPGA：低延迟执行</text>
+            <text x="230" y="130" text-anchor="middle" class="s-tm">pandas / numpy / 生态丰富，开发效率高</text>
+            <text x="600" y="130" text-anchor="middle" class="s-tm">延迟与抖动可控，Python 仅做研究与监控</text>
+            <text x="20" y="22" class="s-mono">← 频率低</text>
+            <text x="740" y="22" text-anchor="end" class="s-mono">频率高 →</text>
+          </svg>
+        </figure>
+      </article>
+
+      <article class="qa reveal">
+        <div class="q"><i>Q2</i>能用 timestamp 代替 nonce 吗？</div>
+        <div class="a">
+          <p><span class="verdict">可以，但有条件</span>时间戳可以作为 nonce 的值，但必须符合交易所的校验规则：</p>
+          <p>· <b>时间型 nonce</b>（如 Gemini）要求与服务器时间接近；<br>· <b>递增型 nonce</b> 要求同一 API Key 的每次请求严格递增。</p>
+          <div class="note">同一秒内并发请求、系统时钟回拨，都会让「直接取时间戳」失败。建议用毫秒/微秒时间戳 + 单调递增保护。</div>
+        </div>
+      </article>
+
+      <article class="qa reveal">
+        <div class="q"><i>Q3</i>WebSocket 会丢包吗？订单簿爬虫该怎么办？</div>
+        <div class="a">
+          <p><span class="verdict">会</span>TCP 保证单连接内有序，但断线重连、服务端推送丢弃都会造成消息缺失。</p>
+          <p>应用层要做探测：检查消息<b>序列号是否连续</b>、定期对比 checksum；一旦发现缺口，就重新拉取订单簿快照，再继续应用增量。</p>
+        </div>
+      </article>
+
+      <article class="qa wide reveal">
+        <div class="q"><i>Q4</i>如何用 Tick 数据生成 5 分钟、小时和日 OHLCV？</div>
+        <div class="a">
+          <p>OHLCV 是一段时间内的行情摘要，也就是一根 K 线：先按时间排序，再按 5 分钟 / 1 小时 / 1 天分组，每组<b>首笔价格 = Open，最高 = High，最低 = Low，末笔 = Close，成交量之和 = Volume</b>。还要明确时区、窗口边界（左闭右开）以及空窗口的处理。</p>
+<pre>ohlcv = (ticks.set_index(<span class="s">"ts"</span>).sort_index()
+         .resample(<span class="s">"5min"</span>)
+         .agg({<span class="s">"price"</span>: <span class="s">"ohlc"</span>, <span class="s">"qty"</span>: <span class="s">"sum"</span>}))</pre>
+        </div>
+        <figure class="fig">
+          <svg viewBox="0 0 760 230" role="img" aria-label="Tick 数据聚合为 K 线示意图">
+            <text x="20" y="22" class="s-tc">TICK 流（5 分钟窗口内）</text>
+            <rect x="20" y="34" width="420" height="160" rx="10" class="s-box"/>
+            <!-- tick polyline -->
+            <polyline class="s-cline" points="40,120 70,104 95,112 120,86 150,96 175,66 205,80 230,58 260,92 290,118 315,150 345,128 370,136 400,110 420,100"/>
+            <g fill="var(--amber)">
+              <circle cx="40" cy="120" r="5"/><circle cx="230" cy="58" r="5"/><circle cx="315" cy="150" r="5"/><circle cx="420" cy="100" r="5"/>
+            </g>
+            <text x="40" y="140" text-anchor="middle" class="s-tm">Open</text>
+            <text x="230" y="48" text-anchor="middle" class="s-tm">High</text>
+            <text x="315" y="172" text-anchor="middle" class="s-tm">Low</text>
+            <text x="420" y="90" text-anchor="middle" class="s-tm">Close</text>
+            <g fill="var(--muted)" opacity=".5">
+              <rect x="40" y="182" width="6" height="8"/><rect x="95" y="178" width="6" height="12"/><rect x="150" y="184" width="6" height="6"/><rect x="205" y="176" width="6" height="14"/><rect x="260" y="181" width="6" height="9"/><rect x="315" y="174" width="6" height="16"/><rect x="370" y="183" width="6" height="7"/>
+            </g>
+            <text x="230" y="214" text-anchor="middle" class="s-tm">每根小柱 = 一笔成交量，求和得 Volume</text>
+            <!-- arrow -->
+            <path d="M458 114 H540" class="s-cline"/><path d="M532 106 L542 114 L532 122" class="s-cline"/>
+            <text x="499" y="104" text-anchor="middle" class="s-tm">resample</text>
+            <!-- candle -->
+            <text x="560" y="22" class="s-tc">一根 K 线</text>
+            <line x1="620" y1="58" x2="620" y2="150" class="s-upl"/>
+            <rect x="600" y="100" width="40" height="20" rx="3" class="s-up"/>
+            <g class="s-mono">
+              <text x="660" y="62">H 最高价</text>
+              <text x="660" y="104">C 收盘价</text>
+              <text x="660" y="124">O 开盘价</text>
+              <text x="660" y="154">L 最低价</text>
+              <text x="560" y="190">V = Σ 成交量</text>
+            </g>
+          </svg>
+          <figcaption><b>图 1</b>同一窗口内的 Tick 被压缩成 O/H/L/C/V 五个值；收盘高于开盘为阳线。</figcaption>
+        </figure>
+      </article>
+
+      <article class="qa reveal">
+        <div class="q"><i>Q5</i>ZMQ 发布者的 <code>time.sleep(1)</code> 移到循环末尾会怎样？</div>
+        <div class="a">
+          <p>发布者启动后会<b>立即</b>发送第一条消息，而此时订阅者可能还没完成连接和订阅，于是最初的消息会丢失（ZMQ 的 "slow joiner" 问题）。</p>
+          <div class="note"><code>sleep</code> 本质是在等连接建立，只能降低概率。可靠的做法是<b>就绪确认</b>（订阅者回报 ready）或消息恢复机制。</div>
+        </div>
+      </article>
+
+      <article class="qa reveal">
+        <div class="q"><i>Q6</i>如果有多个发布者，ZMQ 应该怎么做？</div>
+        <div class="a">
+          <p>让每个 <code>PUB</code> 绑定自己的地址，由 <code>SUB</code> 同时 connect 多个发布者；规模较大时用 <code>XSUB/XPUB</code> 代理汇聚和分发。</p>
+          <div class="note">普通发布订阅没有自动补发，关键行情仍需在消息中透传<b>消息 ID / 序号</b>，做缺口检查与重新同步。</div>
+        </div>
+      </article>
+
+      <article class="qa wide reveal">
+        <figure class="fig" style="margin:0;border:0;padding:0">
+          <svg viewBox="0 0 760 210" role="img" aria-label="ZMQ 多发布者与 XSUB XPUB 代理">
+            <text x="20" y="20" class="s-tc">多发布者 → XSUB/XPUB 代理 → 多订阅者</text>
+            <g>
+              <rect x="20" y="40" width="130" height="40" rx="10" class="s-acc"/><text x="85" y="65" text-anchor="middle" class="s-t">PUB · 交易所 A</text>
+              <rect x="20" y="95" width="130" height="40" rx="10" class="s-acc"/><text x="85" y="120" text-anchor="middle" class="s-t">PUB · 交易所 B</text>
+              <rect x="20" y="150" width="130" height="40" rx="10" class="s-acc"/><text x="85" y="175" text-anchor="middle" class="s-t">PUB · 交易所 C</text>
+            </g>
+            <path d="M150 60 C210 60 230 115 290 115 M150 115 H290 M150 170 C210 170 230 115 290 115" class="s-line"/>
+            <rect x="290" y="80" width="180" height="70" rx="12" fill="var(--ink)"/>
+            <text x="380" y="110" text-anchor="middle" class="s-tw" style="fill:var(--bg)">XSUB ⇄ XPUB</text>
+            <text x="380" y="132" text-anchor="middle" class="s-mono" style="fill:var(--bg);opacity:.7">zmq.proxy()</text>
+            <path d="M470 115 C530 115 550 60 610 60 M470 115 H610 M470 115 C530 115 550 170 610 170" class="s-line"/>
+            <g>
+              <rect x="610" y="40" width="130" height="40" rx="10" class="s-box"/><text x="675" y="65" text-anchor="middle" class="s-t">SUB · 策略</text>
+              <rect x="610" y="95" width="130" height="40" rx="10" class="s-box"/><text x="675" y="120" text-anchor="middle" class="s-t">SUB · 风控</text>
+              <rect x="610" y="150" width="130" height="40" rx="10" class="s-box"/><text x="675" y="175" text-anchor="middle" class="s-t">SUB · 落库</text>
+            </g>
+            <text x="220" y="40" class="s-mono">seq=1024</text>
+            <text x="520" y="40" class="s-mono">检查 seq 连续</text>
+          </svg>
+          <figcaption><b>图 2</b>代理解耦发布者和订阅者的地址；每条消息携带序号，订阅端发现缺口就重新同步。</figcaption>
+        </figure>
+      </article>
+
+      <article class="qa reveal">
+        <div class="q"><i>Q7</i>回测系统调用频率极高，如何降低调用代价？</div>
+        <div class="a">
+          <p>· 不要每处理一个 Tick 就查一次数据库，<b>按时间范围批量读取</b>，在内存中连续处理；<br>· 为常用查询建立合适的<b>索引</b>；<br>· 对重复使用的 K 线做<b>缓存或预聚合</b>（Redis 等缓存组件），避免数据层的大量 IO。</p>
+        </div>
+      </article>
+
+      <article class="qa reveal">
+        <div class="q"><i>Q8</i>Django RESTful API 如何实现安全认证？</div>
+        <div class="a">
+          <p>常见方案：</p>
+          <p><span class="tag">Session + Cookie</span><span class="tag">Token</span><span class="tag">JWT</span><span class="tag">双 Token 刷新</span></p>
+          <p>双 Token：短期 Access Token 用于请求鉴权，长期 Refresh Token 用于续期，兼顾安全与体验。配合 HTTPS、权限类和限流使用。</p>
+        </div>
+      </article>
+    </div>
+    <div class="tip reveal"><svg viewBox="0 0 15 10" class="cw-bob" aria-hidden="true"><use href="#clawd"/></svg><div><b>Clawd 小贴士 · </b>行情系统的第一原则：<b>永远假设消息会丢</b>。序号 + 快照重建，比任何 sleep 都可靠。</div></div>
+  </section>
+
+  <!-- ================= 03 ALGO ================= -->
+  <section class="sec c-violet" id="algo">
+    <div class="sec-head reveal">
+      <svg class="cw peek cw-blink" viewBox="0 0 15 10" aria-hidden="true"><use href="#clawd"/></svg>
+      <div class="sec-no">03</div>
+      <div><h2>算法了解</h2><p>排序、图的遍历，以及回溯与动态规划的思路差异。</p></div>
+    </div>
+
+    <h3 class="sub reveal">常见排序</h3>
+    <div class="tbl-wrap reveal">
+      <table class="tbl">
+        <thead><tr><th>算法</th><th>平均复杂度</th><th>最坏</th><th>稳定</th><th>核心思想</th></tr></thead>
+        <tbody>
+          <tr><td>冒泡排序</td><td><code>O(n²)</code></td><td><code>O(n²)</code></td><td>✓</td><td>相邻元素两两比较交换，大的逐步「冒」到末尾</td></tr>
+          <tr><td>快速排序</td><td><code>O(n log n)</code></td><td><code>O(n²)</code></td><td>✗</td><td>选基准分区，左小右大，递归处理两侧</td></tr>
+          <tr><td>归并排序</td><td><code>O(n log n)</code></td><td><code>O(n log n)</code></td><td>✓</td><td>分治：拆成两半分别排序，再合并有序序列</td></tr>
+          <tr><td>桶排序</td><td><code>O(n + k)</code></td><td><code>O(n²)</code></td><td>✓</td><td>按值域分桶，桶内排序后依次拼接，适合分布均匀的数据</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="sub reveal">DFS 与 BFS</h3>
+    <figure class="fig reveal">
+      <svg viewBox="0 0 760 220" role="img" aria-label="深度优先与广度优先遍历顺序对比">
+        <g id="tree">
+        </g>
+        <!-- DFS tree -->
+        <text x="190" y="20" text-anchor="middle" class="s-tc">DFS 深度优先 · 栈 / 递归</text>
+        <g class="s-line"><path d="M190 52 L110 112 M190 52 L270 112 M110 112 L70 172 M110 112 L150 172 M270 112 L230 172 M270 112 L310 172"/></g>
+        <g>
+          <circle cx="190" cy="52" r="17" class="s-solid"/><text x="190" y="57" text-anchor="middle" class="s-tw">1</text>
+          <circle cx="110" cy="112" r="17" class="s-solid"/><text x="110" y="117" text-anchor="middle" class="s-tw">2</text>
+          <circle cx="70" cy="172" r="17" class="s-solid"/><text x="70" y="177" text-anchor="middle" class="s-tw">3</text>
+          <circle cx="150" cy="172" r="17" class="s-solid"/><text x="150" y="177" text-anchor="middle" class="s-tw">4</text>
+          <circle cx="270" cy="112" r="17" class="s-solid"/><text x="270" y="117" text-anchor="middle" class="s-tw">5</text>
+          <circle cx="230" cy="172" r="17" class="s-solid"/><text x="230" y="177" text-anchor="middle" class="s-tw">6</text>
+          <circle cx="310" cy="172" r="17" class="s-solid"/><text x="310" y="177" text-anchor="middle" class="s-tw">7</text>
+        </g>
+        <text x="190" y="210" text-anchor="middle" class="s-tm">一条路走到底，再回溯 —— 适合路径搜索、连通性</text>
+        <line x1="380" y1="30" x2="380" y2="200" class="s-dash"/>
+        <!-- BFS tree -->
+        <g class="c-amber">
+        <text x="570" y="20" text-anchor="middle" class="s-tc">BFS 广度优先 · 队列</text>
+        <g class="s-line"><path d="M570 52 L490 112 M570 52 L650 112 M490 112 L450 172 M490 112 L530 172 M650 112 L610 172 M650 112 L690 172"/></g>
+        <rect x="420" y="96" width="300" height="32" rx="16" fill="var(--amber-soft)" opacity=".6"/>
+        <rect x="420" y="156" width="300" height="32" rx="16" fill="var(--amber-soft)" opacity=".6"/>
+          <circle cx="570" cy="52" r="17" class="s-solid"/><text x="570" y="57" text-anchor="middle" class="s-tw">1</text>
+          <circle cx="490" cy="112" r="17" class="s-solid"/><text x="490" y="117" text-anchor="middle" class="s-tw">2</text>
+          <circle cx="650" cy="112" r="17" class="s-solid"/><text x="650" y="117" text-anchor="middle" class="s-tw">3</text>
+          <circle cx="450" cy="172" r="17" class="s-solid"/><text x="450" y="177" text-anchor="middle" class="s-tw">4</text>
+          <circle cx="530" cy="172" r="17" class="s-solid"/><text x="530" y="177" text-anchor="middle" class="s-tw">5</text>
+          <circle cx="610" cy="172" r="17" class="s-solid"/><text x="610" y="177" text-anchor="middle" class="s-tw">6</text>
+          <circle cx="690" cy="172" r="17" class="s-solid"/><text x="690" y="177" text-anchor="middle" class="s-tw">7</text>
+        <text x="570" y="210" text-anchor="middle" class="s-tm">一层一层向外扩展 —— 适合无权图最短路径</text>
+        </g>
+      </svg>
+      <figcaption><b>图 3</b>节点中的数字是访问顺序。</figcaption>
+    </figure>
+
+    <h3 class="sub reveal">回溯 vs 动态规划</h3>
+    <div class="two">
+      <div class="tile reveal">
+        <h4><span class="dot">BT</span>回溯</h4>
+        <p>在搜索树上做选择 → 递归 → <b>撤销选择</b>，关键是保存并恢复上一步的状态，同时用剪枝减少无效分支。典型题：全排列、N 皇后、组合求和。</p>
+      </div>
+      <div class="tile reveal">
+        <h4><span class="dot">DP</span>动态规划</h4>
+        <p>找到<b>状态定义</b>和<b>状态转移方程</b>（如 <code>dp[i] = max(dp[i-1], dp[i-2] + v[i])</code>），利用重叠子问题避免重复计算。典型题：背包、最长子序列。</p>
+      </div>
+    </div>
+    <div class="tip reveal"><svg viewBox="0 0 15 10" class="cw-bob" aria-hidden="true"><use href="#clawd"/></svg><div><b>Clawd 小贴士 · </b>回溯是「试一试、不行就退回来」，动态规划是「把算过的记下来」。先写出递归，再想能不能加备忘录。</div></div>
+  </section>
+
+  <!-- ================= 04 STACK ================= -->
+  <section class="sec c-rose" id="stack">
+    <div class="sec-head reveal">
+      <svg class="cw peek cw-blink" viewBox="0 0 15 10" aria-hidden="true"><use href="#clawd"/></svg>
+      <div class="sec-no">04</div>
+      <div><h2>技术选型与 C++</h2><p>选择最合适的技术，而不是最流行的技术。</p></div>
+    </div>
+
+    <div class="two">
+      <figure class="fig reveal">
+        <svg viewBox="0 0 360 230" role="img" aria-label="技术分层选型">
+          <text x="20" y="22" class="s-tc">按层选型</text>
+          <rect x="20" y="38" width="320" height="56" rx="12" class="s-box"/>
+          <text x="40" y="62" class="s-tb">业务服务端</text>
+          <text x="40" y="82" class="s-tm">迭代快、生态成熟</text>
+          <g class="c-blue"><rect x="190" y="52" width="40" height="26" rx="6" class="s-acc"/><text x="210" y="70" text-anchor="middle" class="s-mono" style="fill:var(--c)">Py</text></g>
+          <g class="c-amber"><rect x="236" y="52" width="48" height="26" rx="6" class="s-acc"/><text x="260" y="70" text-anchor="middle" class="s-mono" style="fill:var(--c)">Java</text></g>
+          <g class="c-violet"><rect x="290" y="52" width="40" height="26" rx="6" class="s-acc"/><text x="310" y="70" text-anchor="middle" class="s-mono" style="fill:var(--c)">PHP</text></g>
+          <path d="M180 100 V118" class="s-line"/><path d="M174 112 L180 120 L186 112" class="s-line"/>
+          <rect x="20" y="124" width="320" height="56" rx="12" class="s-acc"/>
+          <text x="40" y="148" class="s-tb">Infra 基础设施层</text>
+          <text x="40" y="168" class="s-tm">性能、内存与延迟可控</text>
+          <rect x="270" y="138" width="56" height="26" rx="6" class="s-solid"/><text x="298" y="156" text-anchor="middle" class="s-tw" style="font-size:12px">C++</text>
+          <text x="180" y="210" text-anchor="middle" class="s-tm">没有银弹：根据团队、场景、性能要求权衡</text>
+        </svg>
+        <figcaption><b>图 4</b>Infra 层偏向 C++，纯服务端以 Python、Java、PHP 等为主。</figcaption>
+      </figure>
+      <figure class="fig reveal">
+        <svg viewBox="0 0 360 230" role="img" aria-label="SWIG 工作流程">
+          <text x="20" y="22" class="s-tc">SWIG：让 Python 调用 C++</text>
+          <rect x="20" y="40" width="100" height="44" rx="10" class="s-box"/><text x="70" y="62" text-anchor="middle" class="s-t">example.cpp</text><text x="70" y="77" text-anchor="middle" class="s-tm">C/C++ 实现</text>
+          <rect x="20" y="104" width="100" height="44" rx="10" class="s-box"/><text x="70" y="126" text-anchor="middle" class="s-t">example.i</text><text x="70" y="141" text-anchor="middle" class="s-tm">接口描述</text>
+          <path d="M120 126 H150" class="s-cline"/><path d="M144 120 L152 126 L144 132" class="s-cline"/>
+          <rect x="152" y="104" width="70" height="44" rx="10" class="s-solid"/><text x="187" y="131" text-anchor="middle" class="s-tw">SWIG</text>
+          <path d="M187 104 V84" class="s-cline"/>
+          <rect x="152" y="40" width="70" height="44" rx="10" class="s-acc"/><text x="187" y="60" text-anchor="middle" class="s-t" style="font-size:11px">_wrap.cxx</text><text x="187" y="75" text-anchor="middle" class="s-tm">包装代码</text>
+          <path d="M120 62 H152" class="s-line"/>
+          <path d="M222 62 H252" class="s-cline"/><path d="M246 56 L254 62 L246 68" class="s-cline"/>
+          <rect x="254" y="40" width="88" height="44" rx="10" class="s-acc"/><text x="298" y="60" text-anchor="middle" class="s-t">_example.so</text><text x="298" y="75" text-anchor="middle" class="s-tm">编译扩展</text>
+          <path d="M298 84 V170" class="s-cline"/><path d="M292 164 L298 172 L304 164" class="s-cline"/>
+          <rect x="20" y="172" width="322" height="40" rx="10" fill="var(--code-bg)"/>
+          <text x="36" y="197" class="s-mono" style="fill:var(--code-ink)">&gt;&gt;&gt; import example; example.fast_calc()</text>
+        </svg>
+        <figcaption><b>图 5</b>用 C/C++ 实现核心功能，SWIG 生成包装代码，Python 像普通模块一样加载调用。</figcaption>
+      </figure>
+    </div>
+    <div class="tip reveal"><svg viewBox="0 0 15 10" class="cw-bob" aria-hidden="true"><use href="#clawd"/></svg><div><b>Clawd 小贴士 · </b>把热点计算下沉到 C++，用 SWIG 暴露给 Python —— 既保留开发效率，又拿到执行性能。</div></div>
+  </section>
+
+  <!-- ================= 05 ARCH ================= -->
+  <section class="sec c-blue" id="arch">
+    <div class="sec-head reveal">
+      <svg class="cw peek cw-blink" viewBox="0 0 15 10" aria-hidden="true"><use href="#clawd"/></svg>
+      <div class="sec-no">05</div>
+      <div><h2>架构设计</h2><p>本周目标：建立完整的架构知识体系。</p></div>
+    </div>
+
+    <div class="quote reveal">架构设计不是简单地堆砌微服务、缓存、消息队列等技术，而是根据实际业务，找到并解决系统中最复杂的问题。</div>
+
+    <h3 class="sub reveal">复杂度的六个来源</h3>
+    <div class="tiles">
+      <div class="tile reveal"><h4><span class="dot">⚡</span>高性能</h4><p>单机性能与集群并发能力，响应时间与吞吐量。</p></div>
+      <div class="tile reveal"><h4><span class="dot">♻</span>高可用</h4><p>通过冗余消除单点，计算高可用与存储高可用。</p></div>
+      <div class="tile reveal"><h4><span class="dot">⇲</span>可扩展性</h4><p>预测变化、封装变化，新需求来时改动最小。</p></div>
+      <div class="tile reveal"><h4><span class="dot">🛡</span>安全</h4><p>功能安全（防 XSS / SQL 注入）与架构安全（防火墙、隔离）。</p></div>
+      <div class="tile reveal"><h4><span class="dot">¥</span>成本</h4><p>机器、带宽和人力成本，技术方案要算得过账。</p></div>
+      <div class="tile reveal"><h4><span class="dot">∑</span>数据规模</h4><p>数据量从量变到质变，需要分库分表、NoSQL 等手段。</p></div>
+    </div>
+
+    <h3 class="sub reveal">架构设计的完整流程</h3>
+    <figure class="fig reveal">
+      <svg viewBox="0 0 760 200" role="img" aria-label="架构设计流程">
+        <g>
+          <rect x="10" y="40" width="130" height="74" rx="14" class="s-acc"/>
+          <text x="75" y="70" text-anchor="middle" class="s-tc">STEP 1</text><text x="75" y="94" text-anchor="middle" class="s-tb">理解业务需求</text>
+          <rect x="162" y="40" width="130" height="74" rx="14" class="s-acc"/>
+          <text x="227" y="70" text-anchor="middle" class="s-tc">STEP 2</text><text x="227" y="94" text-anchor="middle" class="s-tb">识别核心复杂度</text>
+          <rect x="314" y="40" width="130" height="74" rx="14" class="s-acc"/>
+          <text x="379" y="70" text-anchor="middle" class="s-tc">STEP 3</text><text x="379" y="94" text-anchor="middle" class="s-tb">设计备选方案</text>
+          <rect x="466" y="40" width="130" height="74" rx="14" class="s-acc"/>
+          <text x="531" y="70" text-anchor="middle" class="s-tc">STEP 4</text><text x="531" y="94" text-anchor="middle" class="s-tb">评估与选择</text>
+          <rect x="618" y="40" width="130" height="74" rx="14" class="s-solid"/>
+          <text x="683" y="70" text-anchor="middle" class="s-tw" style="font-size:12px;opacity:.8">STEP 5</text><text x="683" y="94" text-anchor="middle" class="s-tw">详细设计</text>
+        </g>
+        <g class="s-cline">
+          <path d="M140 77 H160"/><path d="M292 77 H312"/><path d="M444 77 H464"/><path d="M596 77 H616"/>
+        </g>
+        <text x="75" y="140" text-anchor="middle" class="s-tm">需求 / 场景 / 约束</text>
+        <text x="227" y="140" text-anchor="middle" class="s-tm">抓主要矛盾</text>
+        <text x="379" y="140" text-anchor="middle" class="s-tm">3~5 个差异明显方案</text>
+        <text x="531" y="140" text-anchor="middle" class="s-tm">性能 · 稳定 · 成本</text>
+        <text x="531" y="156" text-anchor="middle" class="s-tm">开发难度 · 维护风险</text>
+        <text x="683" y="140" text-anchor="middle" class="s-tm">架构图 + 文档落地</text>
+        <path d="M531 166 C531 188 379 188 379 150" class="s-dash"/>
+        <text x="455" y="196" text-anchor="middle" class="s-mono">不满足 → 回到方案设计</text>
+      </svg>
+      <figcaption><b>图 6</b>先理解业务、识别核心问题，再设计多个备选方案进行比较，最后完成详细设计。</figcaption>
+    </figure>
+
+    <h3 class="sub reveal">技术点：解决什么 / 适用场景 / 引入的新问题</h3>
+    <div class="tbl-wrap reveal">
+      <table class="tbl">
+        <thead><tr><th>技术</th><th>解决的问题</th><th>引入的新问题</th></tr></thead>
+        <tbody>
+          <tr><td>读写分离</td><td>读多写少场景下分担主库读压力</td><td>主从复制延迟，读到旧数据</td></tr>
+          <tr><td>分库分表</td><td>单库容量与写入性能瓶颈</td><td>跨库 Join、分布式事务、全局 ID</td></tr>
+          <tr><td>NoSQL</td><td>灵活的数据结构、海量数据、高并发读写</td><td>事务与一致性能力较弱</td></tr>
+          <tr><td>缓存</td><td>热点数据降低 DB 压力，提升响应速度</td><td>缓存穿透 / 击穿 / 雪崩，数据一致性</td></tr>
+          <tr><td>负载均衡</td><td>流量分发到多台服务器，水平扩展</td><td>会话保持、健康检查、算法选择</td></tr>
+          <tr><td>CAP 理论</td><td>指导分布式系统在 C / A / P 间取舍</td><td>需要按业务选择 CP 或 AP</td></tr>
+          <tr><td>双机 / 集群</td><td>消除单点，提升可用性</td><td>主备切换、脑裂、数据同步</td></tr>
+          <tr><td>异地多活</td><td>城市级故障下依然可用</td><td>成本高、跨地域延迟、数据冲突</td></tr>
+          <tr><td>分层架构 / SOA</td><td>按职责或业务划分技术分层，降低耦合</td><td>层间调用开销，ESB 可能成为瓶颈</td></tr>
+          <tr><td>微服务</td><td>独立开发、部署、扩缩容</td><td>服务治理、链路追踪、运维复杂度</td></tr>
+        </tbody>
+      </table>
+    </div>
+<div class="tip reveal"><svg viewBox="0 0 15 10" class="cw-bob" aria-hidden="true"><use href="#clawd"/></svg><div><b>Clawd 小贴士 · </b>每引入一项技术，先问三个问题：它解决什么问题？适合什么场景？会带来什么新问题？</div></div>
+    <p class="note reveal" style="margin-top:16px">后续计划：通过实际项目练习需求分析、技术选型、架构图绘制和架构文档编写，逐步提升从发现问题、分析问题到设计并落地方案的能力。</p>
+  </section>
+
+  <!-- ================= 06 CLOUD ================= -->
+  <section class="sec c-teal" id="cloud">
+    <div class="sec-head reveal">
+      <svg class="cw peek cw-blink" viewBox="0 0 15 10" aria-hidden="true"><use href="#clawd"/></svg>
+      <div class="sec-no">06</div>
+      <div><h2>云原生开发技术</h2><p>架构设计与云原生息息相关：在 K8s 上部署时，必须结合架构设计一起考虑。</p></div>
+    </div>
+
+    <h3 class="sub reveal">基础设施即代码（IaC）与自动化部署</h3>
+    <figure class="fig reveal">
+      <svg viewBox="0 0 760 210" role="img" aria-label="Terraform 与 GitHub Actions 部署流水线">
+        <rect x="10" y="60" width="110" height="60" rx="12" class="s-box"/><text x="65" y="86" text-anchor="middle" class="s-tb">Git 仓库</text><text x="65" y="106" text-anchor="middle" class="s-tm">*.tf 代码</text>
+        <path d="M120 90 H150" class="s-cline"/>
+        <rect x="150" y="60" width="130" height="60" rx="12" class="s-acc"/><text x="215" y="86" text-anchor="middle" class="s-tb">PR 审核</text><text x="215" y="106" text-anchor="middle" class="s-tm">plan 结果评审</text>
+        <path d="M280 90 H310" class="s-cline"/>
+        <rect x="310" y="50" width="160" height="80" rx="12" class="s-solid"/><text x="390" y="80" text-anchor="middle" class="s-tw">GitHub Actions</text><text x="390" y="102" text-anchor="middle" class="s-tw" style="font-size:12px;opacity:.85">terraform apply</text>
+        <path d="M470 90 H500" class="s-cline"/>
+        <rect x="500" y="40" width="250" height="100" rx="12" class="s-box"/>
+        <text x="520" y="62" class="s-tb">云厂商（AWS 或其他）</text>
+        <g class="c-blue"><rect x="520" y="76" width="64" height="44" rx="8" class="s-acc"/><text x="552" y="103" text-anchor="middle" class="s-t">EC2</text></g>
+        <g class="c-blue"><rect x="592" y="76" width="64" height="44" rx="8" class="s-acc"/><text x="624" y="103" text-anchor="middle" class="s-t">VPC</text></g>
+        <g class="c-blue"><rect x="664" y="76" width="74" height="44" rx="8" class="s-acc"/><text x="701" y="103" text-anchor="middle" class="s-t">安全组</text></g>
+        <!-- OIDC + state -->
+        <rect x="320" y="160" width="140" height="40" rx="10" class="s-box"/><text x="390" y="185" text-anchor="middle" class="s-t">OIDC 临时凭证</text>
+        <path d="M390 160 V130" class="s-dash"/>
+        <rect x="520" y="160" width="160" height="40" rx="10" class="s-box"/><text x="600" y="185" text-anchor="middle" class="s-t">远程 State + 锁</text>
+        <path d="M470 180 H520" class="s-dash"/>
+        <text x="10" y="30" class="s-tc">代码 → 检查 → 审核 → 部署 → 记录</text>
+      </svg>
+      <figcaption><b>图 7</b>Terraform 用代码管理 EC2、网络、安全组；结合 GitHub Actions、OIDC（免长期密钥）和远程 State，实现经过检查、审核和记录的自动化部署。</figcaption>
+    </figure>
+
+    <div class="tiles" style="margin-top:16px">
+      <div class="tile reveal"><h4><span class="dot">M</span>Terraform Module</h4><p>面对几十上百个集群，把通用配置封装成 Module，不同环境 / 集群单独维护参数与 State，经 Git + CI/CD 统一管理。</p></div>
+      <div class="tile reveal"><h4><span class="dot">H</span>Helm + Argo CD</h4><p>Ingress、Prometheus、Grafana 等公共组件，用 Helm 打包，Argo CD 与 ApplicationSet 实现集中管理与差异化配置（GitOps）。</p></div>
+      <div class="tile reveal"><h4><span class="dot">⚙</span>流水线选型</h4><p>GitHub Actions 适合快速搭建简单流水线；Tekton 适合私有化与复杂流程；Operator / Crossplane 适合 K8s 体系成熟后声明式管理应用和云资源。</p></div>
+    </div>
+
+    <h3 class="sub reveal">主机重启不中断：高可用部署</h3>
+    <figure class="fig reveal">
+      <svg viewBox="0 0 760 230" role="img" aria-label="多副本 Pod 分散到不同节点">
+        <text x="10" y="22" class="s-tc">Deployment replicas: 3 · podAntiAffinity / topologySpreadConstraints</text>
+        <g>
+          <rect x="10" y="40" width="230" height="130" rx="14" class="s-box"/>
+          <text x="30" y="64" class="s-tb">Node A · zone-1</text>
+          <rect x="30" y="80" width="190" height="70" rx="10" class="s-acc"/><text x="125" y="110" text-anchor="middle" class="s-t">Pod app-1</text><text x="125" y="130" text-anchor="middle" class="s-tm">readiness ✓ liveness ✓</text>
+        </g>
+        <g>
+          <rect x="265" y="40" width="230" height="130" rx="14" class="s-box" style="stroke-dasharray:5 4"/>
+          <text x="285" y="64" class="s-tb">Node B · zone-2</text>
+          <text x="470" y="64" text-anchor="end" class="s-mono" style="fill:var(--rose)">重启中</text>
+          <rect x="285" y="80" width="190" height="70" rx="10" class="s-box" opacity=".5"/><text x="380" y="110" text-anchor="middle" class="s-t" opacity=".6">Pod app-2</text><text x="380" y="130" text-anchor="middle" class="s-tm">优雅退出 preStop</text>
+        </g>
+        <g>
+          <rect x="520" y="40" width="230" height="130" rx="14" class="s-box"/>
+          <text x="540" y="64" class="s-tb">Node C · zone-3</text>
+          <rect x="540" y="80" width="190" height="70" rx="10" class="s-acc"/><text x="635" y="110" text-anchor="middle" class="s-t">Pod app-3</text><text x="635" y="130" text-anchor="middle" class="s-tm">readiness ✓ liveness ✓</text>
+        </g>
+        <rect x="10" y="186" width="740" height="36" rx="10" fill="var(--ink)"/>
+        <text x="380" y="209" text-anchor="middle" class="s-tw" style="fill:var(--bg)">PodDisruptionBudget: minAvailable = 2 → 驱逐时始终至少保留 2 个副本在线</text>
+      </svg>
+      <figcaption><b>图 8</b>多副本 + 反亲和 / 拓扑分布 + PDB + 健康检查 + 优雅退出，单台主机重启不会中断服务。</figcaption>
+    </figure>
+
+    <h3 class="sub reveal">弹性伸缩的四个层次</h3>
+    <figure class="fig reveal">
+      <svg viewBox="0 0 760 240" role="img" aria-label="Kubernetes 弹性伸缩分层">
+        <g class="c-amber"><rect x="10" y="20" width="740" height="44" rx="10" class="s-acc"/>
+          <text x="30" y="48" class="s-tb">KEDA</text><text x="140" y="48" class="s-t">事件驱动：按消息积压、请求量等外部指标伸缩（可缩到 0）</text></g>
+        <g class="c-teal"><rect x="10" y="74" width="365" height="44" rx="10" class="s-acc"/>
+          <text x="30" y="102" class="s-tb">HPA</text><text x="90" y="102" class="s-t">横向：调整 Pod 副本数</text></g>
+        <g class="c-violet"><rect x="385" y="74" width="365" height="44" rx="10" class="s-acc"/>
+          <text x="405" y="102" class="s-tb">VPA</text><text x="465" y="102" class="s-t">纵向：调整单个 Pod 的 CPU/内存</text></g>
+        <g class="c-blue"><rect x="10" y="128" width="740" height="44" rx="10" class="s-acc"/>
+          <text x="30" y="156" class="s-tb">Cluster Autoscaler / Karpenter</text><text x="290" y="156" class="s-t">节点层：Pod 调度不下时增加节点，空闲时回收</text></g>
+        <rect x="10" y="182" width="740" height="44" rx="10" class="s-box"/>
+        <text x="380" y="209" text-anchor="middle" class="s-t">云厂商计算资源（EC2 / 虚拟机）</text>
+      </svg>
+      <figcaption><b>图 9</b>应用层（Pod 数量与规格）和基础设施层（节点数量）分别伸缩、协同工作。</figcaption>
+    </figure>
+
+    <h3 class="sub reveal">分层安全防护</h3>
+    <div class="tbl-wrap reveal">
+      <table class="tbl">
+        <thead><tr><th>层面</th><th>工具</th><th>作用</th></tr></thead>
+        <tbody>
+          <tr><td>权限</td><td><span class="tag">RBAC</span><span class="tag">OPA / Gatekeeper</span></td><td>最小权限；准入阶段按策略拦截不合规资源</td></tr>
+          <tr><td>网络</td><td><span class="tag">NetworkPolicy</span></td><td>默认拒绝，只放行必要的 Pod 间流量</td></tr>
+          <tr><td>镜像</td><td><span class="tag">Trivy</span></td><td>持续扫描镜像漏洞，阻止高危镜像上线</td></tr>
+          <tr><td>密钥</td><td><span class="tag">Vault</span></td><td>集中管理与轮换密钥，避免明文写入配置</td></tr>
+          <tr><td>运行时</td><td><span class="tag">Falco</span><span class="tag">seccomp</span></td><td>检测异常行为，限制容器可用的系统调用</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note reveal" style="margin-top:16px"><b>原则：</b>最小权限 · 默认拒绝 · 持续扫描 · 完整审计 · 及时修复。</p>
+
+    <div class="quote reveal">通过基础设施即代码、GitOps、多集群管理、自动扩缩容和分层安全防护，可以建设一套可重复部署、方便维护、能弹性伸缩且更安全可靠的云原生基础设施体系。</div>
+  </section>
+
+  <!-- ================= SUMMARY ================= -->
+  <section class="wrap-up reveal" id="summary">
+    <div>
+      <div class="eyebrow" style="color:var(--bg);opacity:.7">总结与体会</div>
+      <h2>技术要服务于业务，<br>K8s 是企业开发的基石</h2>
+    </div>
+    <ol>
+      <li><b>Python</b> 是策略研究、数据处理与系统编排的高效工具，理解底层开销才能写出高效代码。</li>
+      <li><b>量化交易</b>中，数据可靠性（nonce、丢包、序号）与调用效率（批量、缓存）同样重要。</li>
+      <li><b>架构设计</b>的核心是识别业务的主要复杂度，用多方案对比做出取舍，而不是堆砌技术。</li>
+      <li><b>云原生</b>技术栈非常多，深度参与项目时缺一不可；K8s 承载了高并发场景下的服务上线、更新和运维。</li>
+    </ol>
+    <div class="parade" aria-hidden="true">
+      <svg viewBox="0 0 15 10" class="cw-bob"><use href="#clawd"/></svg>
+      <svg viewBox="0 0 15 10" class="cw-bob"><use href="#clawd"/></svg>
+      <svg viewBox="0 0 15 10" class="cw-bob"><use href="#clawd"/></svg>
+    </div>
+  </section>
+
+  <footer>学习笔记 · 阶段总结 · 2026 <svg class="cw cw-blink" viewBox="0 0 15 10" aria-hidden="true"><use href="#clawd"/></svg> 与 Clawd 一起学习</footer>
+</main>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  try { var t = localStorage.getItem("theme"); if (t) root.setAttribute("data-theme", t); } catch (e) {}
+  document.getElementById("theme").addEventListener("click", function () {
+    var dark = root.getAttribute("data-theme") === "dark" ||
+      (!root.getAttribute("data-theme") && matchMedia("(prefers-color-scheme: dark)").matches);
+    var next = dark ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+
+  var bar = document.getElementById("progress");
+  var links = Array.prototype.slice.call(document.querySelectorAll("#nav a"));
+  var secs = links.map(function (a) { return document.querySelector(a.getAttribute("href")); });
+  function onScroll() {
+    var h = document.documentElement;
+    bar.style.width = (h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight) * 100) + "%";
+    var cur = -1;
+    secs.forEach(function (s, i) { if (s && s.getBoundingClientRect().top < 120) cur = i; });
+    links.forEach(function (a, i) { a.classList.toggle("on", i === cur); });
+  }
+  addEventListener("scroll", onScroll, { passive: true }); onScroll();
+
+  var els = document.querySelectorAll(".reveal");
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+    }, { rootMargin: "0px 0px -8% 0px" });
+    els.forEach(function (el) { io.observe(el); });
+  } else { els.forEach(function (el) { el.classList.add("in"); }); }
+})();
+</script>
+</body>
+</html>
