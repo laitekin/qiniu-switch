@@ -31,3 +31,9 @@ copilot-api
 CODEBUDDY.md
 mainWindow.js
 /.qiniu-mock.local.json
+
+# Local agent dependencies and generated document previews
+/.agents/
+/skills-lock.json
+/output/
+/tmp/
